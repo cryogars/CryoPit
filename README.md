@@ -9,7 +9,7 @@ This codebase is currently being redesigned, and CryoPit is still a Beta product
 ## Entity-Relationship Diagram
 The proposed ER diagram for CryoPit is below.
 <div align="center">
-  <a href="images/cryopit_erd_preview.png">
-    <img src="images/cryopit_erd_preview.png" width="1700">
+  <a href="images/erd.png">
+    <img src="images/erd.png" width="1700">
   </a>
 </div>
