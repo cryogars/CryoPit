@@ -1,0 +1,7 @@
+# CryoPit runtime dependencies
+# Install with:  pip install -r requirements.txt
+ 
+pandas==2.2.2
+pyproj==3.7.2
+streamlit==1.48.1
+python-dotenv>=1.0        # for .env loading (optional at runtime)
