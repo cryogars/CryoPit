@@ -1,14 +1,14 @@
-# CryoPit
+# ❄ CryoPit
 
-An application for digitizing snow pit field forms. 
+A snow-pit data logger for field snow science.
 
-## Warning ⚠️
 
-This codebase is currently being redesigned, and CryoPit is still a Beta product. Use at your own risk.
+Built was built by the CryoGARS research group at the Department of Geosciences, Boise State University. CryoPit is designed so any institution or research group can deploy and adapt it.
+
 
 ## Entity-Relationship Diagram
 
-The proposed ER diagram for CryoPit is below. This version (V1) is compatible with SQLite. However, the schema is designed for PostgreSQL/PostGIS migration (V2).
+The proposed ER diagram for CryoPit is below (same as the SnowEx DB's schema). This version (V1) is compatible with SQLite. However, the schema is designed for PostgreSQL/PostGIS migration (V2).
 
 <div align="center">
   <a href="images/erd.png">
