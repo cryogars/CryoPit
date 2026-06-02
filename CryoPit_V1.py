@@ -24,7 +24,7 @@ from pyproj import Transformer
 # ─────────────────────────────────────────────────────────────────────────────
 # CONFIG
 # ─────────────────────────────────────────────────────────────────────────────
-DB_PATH     = os.getenv("CRYOPIT_DB_PATH",   "snowpits.db")
+DB_PATH     = os.getenv("CRYOPIT_DB_PATH",   "CryoPit.db")
 INSTITUTION = os.getenv("CRYOPIT_INSTITUTION","CryoGARS · Boise State University")
 CAMPAIGN    = os.getenv("CRYOPIT_CAMPAIGN",   "SNEX25")
 APP_TITLE   = os.getenv("CRYOPIT_APP_TITLE",  "CryoPit")
