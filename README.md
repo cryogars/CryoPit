@@ -10,9 +10,10 @@ Built was built by the CryoGARS research group at the Department of Geosciences,
 
 The proposed ER diagram for CryoPit is below. This schema is the same as the [SnowEx DB's schema](https://snowexsql.readthedocs.io/en/latest/database_structure.html) with some modifications. The core tables — `campaigns`, `sites`, `layers`, `measurement_types`, `instruments`, `observers`, and `site_observers` — map directly to their SnowEx equivalents. CryoPit extends the schema in two ways:
 
-1. `site_instruments` is a CryoPit-specific table that logs which instruments were deployed at each pit and feeds the instrument checklist in the form and siteDetails CSV export;
+1. `site_instruments` is a CryoPit-specific table that logs which instruments were deployed at each pit, including serial their serial numbers; this information is exported as part of the siteDetails CSV.;
 2. `ssa_calibration` stores IceCube/IRIS calibration data (Spectralon reference levels and voltage readings) per pit; 
-3. `site_observers` is a many-to-many join table linking each pit to its full field team, following the same pattern as the SnowEx schema.
+
+Fields not present in the SnowEx schema, such as `pit_open_time`, `temp_time_start`, `temp_time_end`, `wise_serial`, `gps_device`, `density_cutter`, `snow_cover_condition`, and `standing_water`, are retained for field workflow completeness and based on the lateest pit sheet, and are exported to the siteDetails CSV header. You can find the latest (i.e., digitized) field sheet here.
 
 This version (V1) is compatible with SQLite. However, the schema is designed for PostgreSQL/PostGIS migration (V2).
 
