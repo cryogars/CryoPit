@@ -2,6 +2,8 @@
 
 A snow-pit data logger for field snow science built by the CryoGARS research group at the Department of Geosciences, Boise State University. CryoPit is designed so any institution or research group can deploy and adapt it.
 
+## What it Does
+
 
 ## Entity-Relationship Diagram
 
@@ -10,7 +12,7 @@ The proposed ER diagram for CryoPit is below. This schema is the same as the [Sn
 1. `site_instruments` is a CryoPit-specific table that logs which instruments were deployed at each pit, including serial their serial numbers; this information is exported as part of the siteDetails CSV.;
 2. `ssa_calibration` stores IceCube/IRIS calibration data (Spectralon reference levels and voltage readings) per pit; 
 
-Fields not present in the SnowEx schema, such as `pit_open_time`, `temp_time_start`, `temp_time_end`, `wise_serial`, `gps_device`, `density_cutter`, `snow_cover_condition`, `standing_water`, etc, are retained for field workflow completeness and based on the lateest pit sheet, and are exported to the siteDetails CSV header. You can find the latest (i.e., digitized) field sheet here.
+Fields not present in the SnowEx schema, such as `pit_open_time`, `temp_time_start`, `temp_time_end`, `wise_serial`, `gps_device`, `density_cutter`, `snow_cover_condition`, `standing_water`, etc, are retained for field workflow completeness and based on the lateest pit sheet, and are exported to the siteDetails CSV header. You can find the latest (i.e., digitized) field sheet [here](docs/reference/digitized_pit_sheet.pdf).
 
 This version (V1) is compatible with SQLite. However, the schema is designed for PostgreSQL/PostGIS migration (V2).
 
