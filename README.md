@@ -45,7 +45,7 @@ This opens CryoPit in your browser. On first run it creates the database automat
 
 ## Exports
 
-Exporting a pit produces a set of **SnowEx-style CSV files** ((https://nsidc.org/data/snex23_mar23_sp/versions/1)) — one per measurement category — delivered either as a single ZIP download or written to a folder. Files are named:
+Exporting a pit produces a set of **SnowEx-style CSV files** (https://nsidc.org/data/snex23_mar23_sp/versions/1) — one per measurement category — delivered either as a single ZIP download or written to a folder. Files are named:
 
 ```
 {CAMPAIGN}_{PitID}_{YYYYMMDD}_{parameter}_v01_0.csv
