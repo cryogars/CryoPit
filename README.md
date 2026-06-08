@@ -43,6 +43,24 @@ This opens CryoPit in your browser. On first run it creates the database automat
    dropdown to **Folder** — writes them to a folder path you specify.
 5. Open the **Profile** section to see the plotted snow profile.
 
+## Exports
+
+Exporting a pit produces a set of **SnowEx-style CSV files** ((https://nsidc.org/data/snex23_mar23_sp/versions/1)) — one per measurement category — delivered either as a single ZIP download or written to a folder. Files are named:
+
+```
+{CAMPAIGN}_{PitID}_{YYYYMMDD}_{parameter}_v01_0.csv
+```
+
+For example, `SNEX26_GM1_20260210_density_v01_0.csv`. The six files are:
+
+| File | Contents |
+|---|---|
+| `…_siteDetails_…` | Site metadata: location, coordinates, observers, weather, ground, equipment, instrument log |
+| `…_density_…` | Density by interval (samples A/B/C) |
+| `…_temperature_…` | Temperature profile by depth |
+| `…_LWC_…` | Liquid water content / permittivity (A/B) |
+| `…_stratigraphy_…` | Layers: grain type, grain size, hand hardness, wetness |
+| `…_SSA_…` | Specific surface area, with calibration metadata |
 
 ## Entity-Relationship Diagram
 
