@@ -32,7 +32,7 @@ API_PORT    = int(os.getenv("CRYOPIT_API_PORT","8502"))
 # PYTHON process — i.e. on whatever machine runs the app. Locally that's your
 # laptop; once deployed it's the server. An institution can point this at a
 # mounted Drive, an S3-backed mount, or a synced repo directory.
-EXPORT_DIR  = os.getenv("CRYOPIT_EXPORT_DIR", "exports")
+EXPORT_DIR  = os.getenv("CRYOPIT_EXPORT_DIR", "cryopit_exports")
 NO_DATA     = -9999
 
 # ─────────────────────────────────────────────────────────────────────────────
