@@ -121,7 +121,7 @@ CREATE TABLE IF NOT EXISTS measurement_types(
 CREATE TABLE IF NOT EXISTS sites(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     campaign_id INTEGER REFERENCES campaigns(id),
-    pit_id TEXT NOT NULL UNIQUE, name TEXT,
+    pit_id TEXT NOT NULL UNIQUE, name TEXT, location TEXT,
     date TEXT NOT NULL, pit_open_time TEXT,
     temp_time_start TEXT, temp_time_end TEXT,
     utm_easting REAL, utm_northing REAL,
@@ -189,10 +189,33 @@ INSERT OR IGNORE INTO instruments(name,model) VALUES
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
+    _guard_foreign_db(conn)
     conn.executescript(SCHEMA)
     _migrate(conn)
     conn.commit()
     conn.close()
+
+def _guard_foreign_db(conn):
+    """Warn if DB_PATH points at an existing database that isn't a CryoPit one.
+
+    Cases:
+      - empty/new file        -> fine, we're about to create the schema
+      - existing CryoPit DB   -> fine ('sites' table present)
+      - existing OTHER DB     -> has tables but no 'sites' -> likely someone
+                                 else's database. Surface a clear message instead
+                                 of silently injecting CryoPit tables into it.
+    """
+    tables = {r[0] for r in conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table'")}
+    tables.discard("sqlite_sequence")
+    if tables and "sites" not in tables:
+        st.error(
+            f"The database at '{DB_PATH}' already exists but does not look like a "
+            f"CryoPit database (no 'sites' table found). To avoid modifying an "
+            f"unrelated file, CryoPit will not initialize here. Point "
+            f"CRYOPIT_DB_PATH at a new path or an existing CryoPit database."
+        )
+        st.stop()
 
 def _migrate(conn):
     """Add columns introduced after a DB was first created.
@@ -204,6 +227,7 @@ def _migrate(conn):
     Existing rows get NULL for the new columns, so nothing is lost.
     """
     adds = [
+        ("sites", "location TEXT"),
         ("sites", "gps_uncertainty REAL"),
         ("sites", "gps_uncertainty_unit TEXT"),
         ("ssa_calibration", "operator TEXT"),
@@ -253,7 +277,7 @@ def save_pit(payload):
             conn.execute("DELETE FROM sites WHERE pit_id=?", (pid,))
 
             conn.execute("""INSERT INTO sites(
-                campaign_id,pit_id,name,date,pit_open_time,
+                campaign_id,pit_id,name,location,date,pit_open_time,
                 temp_time_start,temp_time_end,
                 utm_easting,utm_northing,utm_zone_number,utm_zone_letter,
                 latitude,longitude,coord_source,elevation,
@@ -264,8 +288,8 @@ def save_pit(payload):
                 wise_serial,gps_device,gps_uncertainty,gps_uncertainty_unit,density_cutter,
                 new_snow_depth,new_snow_swe,new_snow_density,
                 recorded_by,comments,flags)
-                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-                (camp_id, pid, m.get("site",""), m["date"],
+                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                (camp_id, pid, m.get("site",""), m.get("location",""), m["date"],
                  m.get("pit_open_time",""), m.get("temp_time_start",""), m.get("temp_time_end",""),
                  m.get("utm_easting"), m.get("utm_northing"),
                  m.get("utm_zone_number"), m.get("utm_zone_letter",""),
@@ -406,7 +430,7 @@ def _c(v):
 
 def _hdr(p, extra=None):
     rows = [
-        ["# Location",                  _c(p.get("location", p.get("name")))],
+        ["# Location",                  _c(p.get("location"))],
         ["# Site",                      _c(p.get("name"))],
         ["# PitID",                     _c(p.get("pit_id"))],
         ["# Date/Local Standard Time",  str(p.get("date",""))+"T"+str(p.get("pit_open_time",""))],
