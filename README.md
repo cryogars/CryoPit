@@ -95,3 +95,15 @@ LEFT JOIN campaigns c ON c.id = s.campaign_id
 LEFT JOIN observers o ON o.id = s.recorded_by
 ORDER BY s.date DESC;
 ```
+
+2. **Density profile for one pit** (layers join `measurement_types` by name):
+
+```sql
+SELECT l.depth_from_surface, l.top_cm, l.bottom_cm,
+       l.value AS density_a, l.value_b AS density_b, l.value_avg
+FROM layers l
+JOIN sites s ON s.id = l.site_id
+JOIN measurement_types mt ON mt.id = l.measurement_type_id
+WHERE s.pit_id = 'GM1' AND mt.name = 'density'
+ORDER BY l.depth_from_surface;
+```
