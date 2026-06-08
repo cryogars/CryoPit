@@ -29,6 +29,14 @@ This opens CryoPit in your browser. On first run it creates the database automat
 
 > Note: CryoPit currently runs a small local helper service on port 8502 for saving and exporting. It is designed for local use, i.e., running the app on the same machine as the browser. (Deployment to a shared server is on the roadmap; see below.)
 
+## Using the App
+
+1. Fill in **Identity** (location, date, and the required fields marked *). The Pit ID is generated automatically but can be edited.
+2. Work through the sections. Add temperature, density, LWC, stratigraphy, and SSA rows as needed. The progress bar and checklist track completeness.
+  - **Temperature** and **Density** can auto-generate their depth intervals (5 cm or 10 cm) from the total snow depth, so you only enter the readings.
+   - **LWC** can copy its intervals directly from the density section.
+
+
 
 ## Entity-Relationship Diagram
 
