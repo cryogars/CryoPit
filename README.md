@@ -11,7 +11,7 @@ A snow-pit data logger for field snow science built by the CryoGARS research gro
 
 ## Requirements
 * Python 3.10+
-* Dependencies are listed in [requirements.txt](requirements.txt).
+* Dependencies are listed in [requirements.txt](./requiremets.txt).
 
 
 ## Entity-Relationship Diagram
