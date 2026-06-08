@@ -1,8 +1,7 @@
 """
-CryoPit Snow Pit Logger v2.0
-Design B — Clinical white · Braun/laboratory aesthetic
+CryoPit Snow Pit Logger v1.0
 Streamlit shell · injected HTML form · local HTTP save endpoint
-SnowEx-compatible CSV export · UTM ↔ lat/lon · SQLite backend
+SnowEx-style (https://nsidc.org/data/snex23_mar23_sp/versions/1) CSV exports · UTM ↔ lat/lon · SQLite backend
 """
 
 import streamlit as st
