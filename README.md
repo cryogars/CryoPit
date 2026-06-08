@@ -27,7 +27,7 @@ streamlit run CryoPit_V1.py
 
 This opens CryoPit in your browser. On first run it creates the database automatically (default: `cryopit.db` in the working directory). You can point `CRYOPIT_DB_PATH` at a different location to reuse a database across sessions or machines — it must be a CryoPit-created database or at least have a compatible schema (see below), and the app needs read/write access to the path.
 
->> Note: CryoPit currently runs a small local helper service on port 8502 for saving and exporting. It is designed for local use, i.e., running the app on the same machine as the browser. (Deployment to a shared server is on the roadmap; see below.)
+> Note: CryoPit currently runs a small local helper service on port 8502 for saving and exporting. It is designed for local use, i.e., running the app on the same machine as the browser. (Deployment to a shared server is on the roadmap; see below.)
 
 
 ## Entity-Relationship Diagram
