@@ -19,6 +19,12 @@ Install them with
 pip install -r requirements.txt
 ```
 
+## Running the App
+
+```{bash}
+streamlit run CryoPit_V1.py
+```
+
 
 ## Entity-Relationship Diagram
 
