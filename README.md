@@ -80,3 +80,18 @@ This version (V1) is compatible with SQLite. However, the schema is designed for
     <img src="images/erd.png" width="1700">
   </a>
 </div>
+
+## Querying the DB
+
+The database is plain SQLite, so any SQLite client works. A few examples:
+
+1. **List all pits with campaign, observer, and depth:**
+
+```sql
+SELECT s.pit_id, s.date, c.name AS campaign, o.name AS recorded_by,
+       s.total_depth, s.latitude, s.longitude
+FROM sites s
+LEFT JOIN campaigns c ON c.id = s.campaign_id
+LEFT JOIN observers o ON o.id = s.recorded_by
+ORDER BY s.date DESC;
+```
