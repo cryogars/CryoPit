@@ -9,6 +9,10 @@ A snow-pit data logger for field snow science built by the CryoGARS research gro
 * **SQLite Database**: every pit is optionally saved to a relational schema (see Entity-Relationship Diagram below).
 * **Exports**: SnowEx-compatible CSVs, delivered either as a single ZIP download or written to a folder on the machine running the app.
 
+## Requirements
+* Python 3.10+
+* Dependencies are listed in [requirements.txt](requirements.txt).
+
 
 ## Entity-Relationship Diagram
 
