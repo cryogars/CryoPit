@@ -321,14 +321,25 @@ def save_pit(payload):
 
             total_depth = m.get("total_depth", 0) or 0
 
-            # Temperature
+            # Temperature — store the profile start time on the first (surface)
+            # row and end time on the last (ground) row; the section-level
+            # start/end fields are the single source for these.
             tid = mt_id("temperature")
-            for r in payload.get("temperature", []):
+            trows = payload.get("temperature", [])
+            t_start = m.get("temp_time_start","")
+            t_end   = m.get("temp_time_end","")
+            # order surface-first so first row = surface, last row = ground
+            trows_sorted = sorted(trows, key=lambda r: -(r.get("height") or 0))
+            n_t = len(trows_sorted)
+            for idx, r in enumerate(trows_sorted):
+                tr_time = ""
+                if idx == 0:        tr_time = t_start
+                elif idx == n_t-1:  tr_time = t_end
                 conn.execute("""INSERT INTO layers(site_id,measurement_type_id,
                     top_cm,depth_from_surface,value,time_recorded)
                     VALUES(?,?,?,?,?,?)""",
                     (site_id, tid, r.get("height"), total_depth - r.get("height",0),
-                     r.get("temp"), r.get("time","")))
+                     r.get("temp"), tr_time))
 
             # Density
             did = mt_id("density")
@@ -438,6 +449,7 @@ def _hdr(p, extra=None):
         ["# Northing",                  _c(p.get("utm_northing"))],
         ["# Latitude",                  _c(p.get("latitude"))],
         ["# Longitude",                 _c(p.get("longitude"))],
+        ["# Coordinate Datum",          "WGS84"],
         ["# Flags",                     _c(p.get("flags","None"))],
         ["# Pit Comments",              _c(p.get("comments"))],
     ]
@@ -513,11 +525,15 @@ def export_all(pit_id):
 
     # ── temperature ───────────────────────────────────────────────
     temp_data = lrows(mt("temperature"))
+    # Order surface-first: highest point (snow surface) at top, 0 (ground) at
+    # bottom — height-above-ground orientation. Time start/end only on the
+    # first (surface) and last (ground) rows; -9999 in between.
+    temp_data = sorted(temp_data, key=lambda d: -(d.get("top_cm") or 0))
     temp = _hdr(p) + [["# Depth (cm)","Temperature (deg C)","Time start/end"]]
     for i,d in enumerate(temp_data):
         t_val = _c(d.get("time_recorded"))
         if 0 < i < len(temp_data)-1: t_val = NO_DATA
-        temp.append([_c(d["depth_from_surface"]),_c(d["value"]),t_val])
+        temp.append([_c(d["top_cm"]),_c(d["value"]),t_val])
 
     # ── LWC ───────────────────────────────────────────────────────
     lwc_data  = lrows(mt("permittivity"))
@@ -1055,7 +1071,7 @@ html[data-theme="dark"] .tb-folder-pop{background:#0d0d12;border-color:var(--rul
       <div class="ri"><div class="rl">UTM Zone</div><input id="utmz" placeholder="11N" oninput="onUTM()" style="font-family:var(--mono)"></div>
       <div class="ri"><div class="rl">Elevation (m)</div><input type="number" id="elev" placeholder="—"></div>
     </div>
-    <div class="coord-or">— or enter lat / lon —</div>
+    <div class="coord-or">— or enter lat / lon · all coordinates are WGS84 —</div>
     <div class="row">
       <div class="ri"><div class="rl">Latitude (°N)</div><input id="lat" placeholder="65.157650" oninput="onLatLon();tick()" style="font-family:var(--mono)"><div class="coord-note" id="lat-note"></div></div>
       <div class="ri"><div class="rl">Longitude (°E)</div><input id="lon" placeholder="-147.502260" oninput="onLatLon();tick()" style="font-family:var(--mono)"><div class="coord-note" id="lon-note"></div></div>
@@ -1189,10 +1205,19 @@ html[data-theme="dark"] .tb-folder-pop{background:#0d0d12;border-color:var(--rul
     <div class="row" style="margin-bottom:16px">
       <div class="ri"><div class="rl">Profile start</div><input id="ts" maxlength="4" placeholder="0808" oninput="milCheck(this)" style="font-family:var(--mono);letter-spacing:.05em"><div class="hint">HHMM</div></div>
       <div class="ri"><div class="rl">Profile end</div><input id="te" maxlength="4" placeholder="0828" oninput="milCheck(this)" style="font-family:var(--mono);letter-spacing:.05em"><div class="hint">HHMM</div></div>
-      <div class="ri" style="flex:2"></div>
+      <div class="ri"><div class="rl">Auto-fill depths</div>
+        <div style="display:flex;gap:6px;align-items:center;padding:6px 12px">
+          <select id="t-interval" style="flex:0 0 auto;width:auto;padding:4px 8px;border:1px solid var(--rule);border-radius:3px">
+            <option value="10">every 10 cm</option>
+            <option value="5">every 5 cm</option>
+          </select>
+          <button class="add" style="width:auto;border:1px solid var(--rule);border-radius:3px;padding:4px 12px" onclick="autofillTemp()">↧ generate from total depth</button>
+        </div>
+        <div class="hint">starts at snow height, snaps to nearest interval, steps to 0</div>
+      </div>
     </div>
     <div class="pw"><table class="pt">
-      <thead><tr><th>Height above ground (cm)</th><th>Temperature (°C)</th><th>Time (HHMM)</th><th style="width:36px"></th></tr></thead>
+      <thead><tr><th>Height above ground (cm)</th><th>Temperature (°C)</th><th style="width:36px"></th></tr></thead>
       <tbody id="tb"></tbody>
     </table><button class="add" onclick="addRow('t')">+ add measurement</button></div>
   </div>
@@ -1203,6 +1228,13 @@ html[data-theme="dark"] .tb-folder-pop{background:#0d0d12;border-color:var(--rul
   <div class="sec-hd"><span class="sec-num">05</span><span class="sec-title">Density</span><span class="sec-meta" id="dc-cnt">0 intervals</span></div>
   <div class="sec-body">
     <p style="font-family:var(--mono);font-size:11px;color:var(--ink3);margin-bottom:14px;letter-spacing:.02em">Height above ground · A B C = three cutter samples · average auto-computed</p>
+    <div style="display:flex;gap:6px;align-items:center;margin-bottom:10px">
+      <select id="d-interval" style="width:auto;padding:4px 8px;border:1px solid var(--rule);border-radius:3px">
+        <option value="10">10 cm intervals</option>
+        <option value="5">5 cm intervals</option>
+      </select>
+      <button class="add" style="width:auto;border:1px solid var(--rule);border-radius:3px;padding:4px 12px" onclick="autofillDensity()">↧ generate intervals from total depth</button>
+    </div>
     <div class="pw"><table class="pt">
       <thead><tr><th>Top (cm)</th><th>Bottom (cm)</th><th>A (kg/m³)</th><th>B (kg/m³)</th><th>C (kg/m³)</th><th>Avg</th><th style="width:36px"></th></tr></thead>
       <tbody id="db"></tbody>
@@ -1215,6 +1247,10 @@ html[data-theme="dark"] .tb-folder-pop{background:#0d0d12;border-color:var(--rul
   <div class="sec-hd"><span class="sec-num">06</span><span class="sec-title">LWC / permittivity</span><span class="sec-meta" id="lc-cnt">0 intervals</span></div>
   <div class="sec-body">
     <p style="font-family:var(--mono);font-size:11px;color:var(--ink3);margin-bottom:14px;letter-spacing:.02em">Permittivity profiles A and B (unitless) · height above ground</p>
+    <div style="margin-bottom:10px">
+      <button class="add" style="width:auto;border:1px solid var(--rule);border-radius:3px;padding:4px 12px" onclick="copyDensityIntervals()">⎘ copy intervals from density</button>
+      <span class="hint" style="display:inline-block;margin-left:8px">pulls the same top/bottom pairs; you enter permittivity</span>
+    </div>
     <div class="pw"><table class="pt">
       <thead><tr><th>Top (cm)</th><th>Bottom (cm)</th><th>Permittivity A</th><th>Permittivity B</th><th style="width:36px"></th></tr></thead>
       <tbody id="lb"></tbody>
@@ -1286,7 +1322,7 @@ html[data-theme="dark"] .tb-folder-pop{background:#0d0d12;border-color:var(--rul
 <!-- 11 PROFILE -->
 <section class="sec" id="s11">
   <div class="sec-hd"><span class="sec-num">11</span><span class="sec-title">Profile</span>
-    <span class="sec-meta">depth ↓ from surface · SnowPilot convention</span></div>
+    <span class="sec-meta">height above ground · 0 at bottom</span></div>
   <div class="sec-body">
     <p style="font-family:var(--mono);font-size:11px;color:var(--ink3);margin-bottom:14px;letter-spacing:.02em">
       Live plot from stratigraphy + density + temperature. Needs Total depth (§1) and stratigraphy layers (§7).
@@ -1353,7 +1389,6 @@ function addRow(t){
   if(t==='t'){
     tr.innerHTML=`<td><input type="number" placeholder="100"></td>
       <td><input type="number" step="0.1" placeholder="-2.0"></td>
-      <td><input maxlength="4" placeholder="0808" oninput="milCheck(this)" style="font-family:var(--mono)"></td>
       <td><button class="del" onclick="this.closest('tr').remove();cnt('t')">×</button></td>`;
   } else if(t==='d'){
     tr.innerHTML=`<td><input type="number" placeholder="120"></td>
@@ -1392,6 +1427,70 @@ function addRow(t){
   document.getElementById(map[t]).appendChild(tr);
   cnt(t); tick();
   tr.querySelector('input,select').focus();
+}
+
+// ── Auto-fill helpers ────────────────────────────────────────────
+function _hs(){ return parseFloat(gv('depth'))||0; }   // total snow height (HS)
+
+// Temperature: start at HS, snap to nearest interval boundary below, step to 0.
+// e.g. HS=83, step=10 -> 83,80,70,...,0 ; step=5 -> 83,80,75,...,0
+function autofillTemp(){
+  const hs=_hs(), step=parseInt(gv('t-interval'))||10;
+  if(!hs){setst('set Total depth (§1) first','err');return;}
+  const depths=[hs];
+  let d=Math.floor(hs/step)*step;          // snap down to interval boundary
+  if(d===hs) d-=step;                       // if HS already on boundary, next one down
+  for(; d>0; d-=step) depths.push(d);
+  depths.push(0);
+  document.getElementById('tb').innerHTML='';
+  depths.forEach(h=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><input type="number" value="${h}"></td>
+      <td><input type="number" step="0.1" placeholder="-2.0"></td>
+      <td><button class="del" onclick="this.closest('tr').remove();cnt('t')">×</button></td>`;
+    document.getElementById('tb').appendChild(tr);
+  });
+  cnt('t'); tick();
+}
+
+// Density: fixed intervals from HS downward. e.g. HS=87,step=10 -> 87-77,77-67,...
+function autofillDensity(){
+  const hs=_hs(), step=parseInt(gv('d-interval'))||10;
+  if(!hs){setst('set Total depth (§1) first','err');return;}
+  const rows=[];
+  for(let top=hs; top>0; top-=step) rows.push([top, Math.max(top-step,0)]);
+  document.getElementById('db').innerHTML='';
+  rows.forEach(([top,bot])=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><input type="number" value="${top}"></td>
+      <td><input type="number" value="${bot}"></td>
+      <td><input type="number" oninput="calcAvg(this.closest('tr'))"></td>
+      <td><input type="number" oninput="calcAvg(this.closest('tr'))"></td>
+      <td><input type="number" oninput="calcAvg(this.closest('tr'))"></td>
+      <td class="avg"><input readonly placeholder="—" tabindex="-1"></td>
+      <td><button class="del" onclick="this.closest('tr').remove();cnt('d')">×</button></td>`;
+    document.getElementById('db').appendChild(tr);
+  });
+  cnt('d'); tick();
+}
+
+// LWC: copy the top/bottom interval pairs from density, leaving permittivity blank.
+function copyDensityIntervals(){
+  const drows=document.querySelectorAll('#db tr');
+  if(!drows.length){setst('add density intervals first','err');return;}
+  document.getElementById('lb').innerHTML='';
+  drows.forEach(dtr=>{
+    const di=dtr.querySelectorAll('input');
+    const top=di[0].value, bot=di[1].value;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><input type="number" value="${top}"></td>
+      <td><input type="number" value="${bot}"></td>
+      <td><input type="number" step="0.001" placeholder="1.173"></td>
+      <td><input type="number" step="0.001" placeholder="—"></td>
+      <td><button class="del" onclick="this.closest('tr').remove();cnt('l')">×</button></td>`;
+    document.getElementById('lb').appendChild(tr);
+  });
+  cnt('l'); tick();
 }
 
 function calcAvg(tr){
@@ -1579,7 +1678,7 @@ function collect(){
   const temperature=[];
   document.querySelectorAll('#tb tr').forEach(tr=>{
     const ins=tr.querySelectorAll('input');
-    temperature.push({height:parseFloat(ins[0].value)||0,temp:parseFloat(ins[1].value)||0,time:ins[2].value||''});
+    temperature.push({height:parseFloat(ins[0].value)||0,temp:parseFloat(ins[1].value)||0});
   });
   const density=[];
   document.querySelectorAll('#db tr').forEach(tr=>{
@@ -1822,16 +1921,15 @@ function drawProfile(){
   const red=css.getPropertyValue('--red').trim()||'#d0021b';
 
   let s=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:${W}px;font-family:var(--mono)">`;
-  // depth axis ticks (every ~5th of HS, labelled as depth from surface)
+  // depth axis ticks, labelled as height above ground: HS at top, 0 at bottom
   const ticks=5;
   for(let i=0;i<=ticks;i++){
     const h=HS*(1-i/ticks);            // height above ground at this tick
-    const depth=Math.round(HS-h);      // depth from surface
     const y=d2y(h);
     s+=`<line x1="${padL}" y1="${y}" x2="${xDens+densW}" y2="${y}" stroke="${rule}" stroke-width="1"/>`;
-    s+=`<text x="${padL-6}" y="${y+3}" text-anchor="end" font-size="9" fill="${ink3}">${depth}</text>`;
+    s+=`<text x="${padL-6}" y="${y+3}" text-anchor="end" font-size="9" fill="${ink3}">${Math.round(h)}</text>`;
   }
-  s+=`<text x="14" y="${padT+plotH/2}" font-size="9" fill="${ink3}" transform="rotate(-90 14 ${padT+plotH/2})" text-anchor="middle">DEPTH (cm) ↓</text>`;
+  s+=`<text x="14" y="${padT+plotH/2}" font-size="9" fill="${ink3}" transform="rotate(-90 14 ${padT+plotH/2})" text-anchor="middle">HEIGHT ABOVE GROUND (cm)</text>`;
 
   // hand-hardness bars (width = hardness) + grain colour column
   strat.forEach(l=>{
