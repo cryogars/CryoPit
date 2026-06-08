@@ -62,6 +62,8 @@ For example, `SNEX26_GM1_20260210_density_v01_0.csv`. The six files are:
 | `…_stratigraphy_…` | Layers: grain type, grain size, hand hardness, wetness |
 | `…_SSA_…` | Specific surface area, with calibration metadata |
 
+All six files are always produced. For a measurement that wasn't collected, its file contains the header block and column titles but no data rows. Missing values within a file are written as `-9999` (the SnowEx no-data convention). The ZIP download bundles all six into one file: `{CAMPAIGN}_{PitID}.zip`.
+
 ## Entity-Relationship Diagram
 
 The proposed ER diagram for CryoPit is below. This schema is the same as the [SnowEx DB's schema](https://snowexsql.readthedocs.io/en/latest/database_structure.html) with some modifications/extensions. The core tables — `campaigns`, `sites`, `layers`, `measurement_types`, `instruments`, `observers`, and `site_observers` — map directly to their SnowEx equivalents. CryoPit extends the schema in two ways:
