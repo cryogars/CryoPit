@@ -32,7 +32,7 @@ API_PORT    = int(os.getenv("CRYOPIT_API_PORT","8502"))
 # PYTHON process — i.e. on whatever machine runs the app. Locally that's your
 # laptop; once deployed it's the server. An institution can point this at a
 # mounted Drive, an S3-backed mount, or a synced repo directory.
-EXPORT_DIR  = os.getenv("CRYOPIT_EXPORT_DIR", "cryopit_exports")
+EXPORT_DIR  = os.getenv("CRYOPIT_EXPORT_DIR", "exports")
 NO_DATA     = -9999
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -983,7 +983,7 @@ html[data-theme="dark"] .tb-folder-pop{background:#0d0d12;border-color:var(--rul
         <option value="download">↓ Download (.zip)</option>
         <option value="folder">▢ Folder</option>
       </select>
-      <button class="tb-csv" onclick="doCSV()">Export CSVs</button>
+      <button class="tb-csv" onclick="doCSV()" title="Saves the pit to the database, then exports the CSVs">Export CSVs</button>
       <!-- folder path drops below, only when Folder is selected — kept out of
            the bar flow so it can't crowd the Pit ID -->
       <div class="tb-folder-pop" id="tb-folder-pop" style="display:none">
