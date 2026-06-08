@@ -24,7 +24,7 @@ from pyproj import Transformer
 # ─────────────────────────────────────────────────────────────────────────────
 # CONFIG
 # ─────────────────────────────────────────────────────────────────────────────
-DB_PATH     = os.getenv("CRYOPIT_DB_PATH",   "CryoPit.db")
+DB_PATH     = os.getenv("CRYOPIT_DB_PATH",   "cryopit.db")
 INSTITUTION = os.getenv("CRYOPIT_INSTITUTION","CryoGARS · Boise State University")
 CAMPAIGN    = os.getenv("CRYOPIT_CAMPAIGN",   "SNEX25")
 APP_TITLE   = os.getenv("CRYOPIT_APP_TITLE",  "CryoPit")
@@ -427,8 +427,8 @@ def _csv(rows):
     csvlib.writer(buf).writerows(rows)
     return buf.getvalue()
 
-def _fname(pit_id, date_str, param):
-    return f"{CAMPAIGN}_{pit_id}_{date_str}_{param}_v01_0.csv"
+def _fname(pit_id, date_str, param, campaign=None):
+    return f"{campaign or CAMPAIGN}_{pit_id}_{date_str}_{param}_v01_0.csv"
 
 def export_all(pit_id):
     conn = get_conn()
@@ -439,6 +439,10 @@ def export_all(pit_id):
     cols = [d[0] for d in conn.execute("SELECT * FROM sites WHERE pit_id=?", (pit_id,)).description]
     p    = dict(zip(cols, p_row))
     date_str = (p.get("date") or "00000000").replace("-","")
+    # Campaign name as the user entered it (stored on the campaigns table),
+    # falling back to the configured default if somehow unset.
+    crow = conn.execute("SELECT name FROM campaigns WHERE id=?", (p.get("campaign_id"),)).fetchone()
+    campaign = (crow[0] if crow and crow[0] else CAMPAIGN)
 
     def mt(name):
         r = conn.execute("SELECT id FROM measurement_types WHERE name=?", (name,)).fetchone()
@@ -561,12 +565,12 @@ def export_all(pit_id):
 
     conn.close()
     return {
-        _fname(pit_id,date_str,"siteDetails"):  _csv(sd),
-        _fname(pit_id,date_str,"density"):      _csv(dens),
-        _fname(pit_id,date_str,"temperature"):  _csv(temp),
-        _fname(pit_id,date_str,"LWC"):          _csv(lwc),
-        _fname(pit_id,date_str,"stratigraphy"): _csv(strat),
-        _fname(pit_id,date_str,"SSA"):          _csv(ssa),
+        _fname(pit_id,date_str,"siteDetails",campaign):  _csv(sd),
+        _fname(pit_id,date_str,"density",campaign):      _csv(dens),
+        _fname(pit_id,date_str,"temperature",campaign):  _csv(temp),
+        _fname(pit_id,date_str,"LWC",campaign):          _csv(lwc),
+        _fname(pit_id,date_str,"stratigraphy",campaign): _csv(strat),
+        _fname(pit_id,date_str,"SSA",campaign):          _csv(ssa),
     }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -578,7 +582,7 @@ def export_all(pit_id):
 # sink, never touching the export logic above. Browser-download is the third
 # sink and lives in the form's JS (it can't run server-side).
 # ─────────────────────────────────────────────────────────────────────────────
-def zip_csvs(files, pit_id):
+def zip_csvs(files, pit_id, campaign=None):
     """Bundle {filename: content} into a single ZIP, returned as (zipname, b64).
 
     Built entirely in memory so it can be delivered without writing to disk —
@@ -591,7 +595,7 @@ def zip_csvs(files, pit_id):
                 zf.writestr(fname, content)
     b64 = base64.b64encode(buf.getvalue()).decode("ascii")
     safe = (pit_id or "pit").replace("/", "_").replace("\\", "_")
-    return f"{CAMPAIGN}_{safe}.zip", b64
+    return f"{campaign or CAMPAIGN}_{safe}.zip", b64
 
 
     """Write {filename: content} into `folder` on the machine running Python.
@@ -679,7 +683,8 @@ class APIHandler(BaseHTTPRequestHandler):
             csvs   = export_all(pit_id)
             # Bundle all CSVs into ONE zip so the browser saves a single file
             # (one prompt, not six). Built in memory, sent as base64.
-            zipname, zipb64 = zip_csvs(csvs, pit_id)
+            campaign = payload["meta"].get("campaign") or CAMPAIGN
+            zipname, zipb64 = zip_csvs(csvs, pit_id, campaign)
             self._respond(200, {"ok": True, "pit_id": pit_id,
                                  "zipname": zipname, "zip": zipb64})
 
