@@ -5,6 +5,7 @@ cryopit.db
 *.sqlite
 *.sqlite3
 exports/
+cryopit_exports/
 .env
 
 # ── Python ──
