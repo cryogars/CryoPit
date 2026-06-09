@@ -99,6 +99,7 @@ ORDER BY s.date DESC;
 2. **Density profile for one pit** (layers join `measurement_types` by name):
 
 ```sql
+-- GM1 is the PIT ID
 SELECT l.depth_from_surface, l.top_cm, l.bottom_cm,
        l.value AS density_a, l.value_b AS density_b, l.value_avg
 FROM layers l
