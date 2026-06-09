@@ -1,6 +1,6 @@
 # ❄ CryoPit
 
-A snow-pit data logger for field snow science built by the [CryoGARS research](https://www.cryogars.com/) group at the Department of Geosciences, Boise State University. CryoPit is a browser-based OS-agnostic [streamlit app](https://streamlit.io/). This means that the app should run fine on Mac, Linux, and Windows. CryoPit is designed so any institution or research group can deploy and adapt it.
+A snow-pit data logger for field snow science built by the [CryoGARS research group](https://www.cryogars.com/) at the Department of Geosciences, Boise State University. CryoPit is a browser-based OS-agnostic [streamlit app](https://streamlit.io/). This means that the app should run fine on Mac, Linux, and Windows. CryoPit is designed so any institution or research group can deploy and adapt it.
 
 ---
 
