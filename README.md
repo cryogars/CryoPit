@@ -46,9 +46,11 @@ This opens CryoPit in your browser. On first run it creates the database automat
    - **Temperature** and **Density** can auto-generate their depth intervals
      (5 cm or 10 cm) from the total snow depth, so you only enter the readings.
    - **LWC** can copy its intervals directly from the density section.
-3. **Save to DB** writes the pit to the database.
-4. **Export CSVs** either downloads a single `.zip` of all CSVs, or — switch the
-   dropdown to **Folder** — writes them to a folder path you specify.
+3. **Save to DB** writes the pit to the database without downloading anything.
+4. **Export CSVs** saves the pit to the database (so a download always has a
+    matching saved record), then either downloads a single .zip of all CSVs,
+    or — switch the dropdown to Folder — writes them to a folder path you
+    specify.
 5. Open the **Profile** section to see the plotted snow profile.
 
 ---
