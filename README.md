@@ -64,6 +64,24 @@ For example, `SNEX26_GM1_20260210_density_v01_0.csv`. The six files are:
 
 All six files are always produced. For a measurement that wasn't collected, its file contains the header block and column titles but no data rows. Missing values within a file are written as `-9999` (the SnowEx no-data convention). The ZIP download bundles all six into one file: `{CAMPAIGN}_{PitID}.zip`.
 
+---
+
+## Configuration
+
+CryoPit reads these environment variables (all optional, sensible defaults shown):
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `CRYOPIT_DB_PATH` | `cryopit.db` | SQLite database file (created if absent; must be a CryoPit DB if it exists) |
+| `CRYOPIT_INSTITUTION` | `CryoGARS · Boise State University` | Institution name |
+| `CRYOPIT_CAMPAIGN` | `SNEX25` | Default campaign code |
+| `CRYOPIT_API_PORT` | `8502` | Local helper service port |
+| `CRYOPIT_EXPORT_DIR` | `exports` | Default folder for folder-export |
+
+You can set these in a `.env` file in the project directory.
+
+---
+
 ## Entity-Relationship Diagram
 
 The proposed ER diagram for CryoPit is below. This schema is the same as the [SnowEx DB's schema](https://snowexsql.readthedocs.io/en/latest/database_structure.html) with some modifications/extensions. The core tables — `campaigns`, `sites`, `layers`, `measurement_types`, `instruments`, `observers`, and `site_observers` — map directly to their SnowEx equivalents. CryoPit extends the schema in two ways:
