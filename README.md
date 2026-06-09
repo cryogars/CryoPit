@@ -2,12 +2,16 @@
 
 A snow-pit data logger for field snow science built by the CryoGARS research group at the Department of Geosciences, Boise State University. CryoPit is a browser-based OS-agnostic [streamlit app](https://streamlit.io/). This means that the app should run fine on Mac, Linux, and Windows. CryoPit is designed so any institution or research group can deploy and adapt it.
 
+---
+
 ## What it Does
 
 * **Structured Field Entry**: guided sections for identity, weather, ground, temperature, density, LWC, stratigraphy, SSA, and an instrument/task checklist.
 * **Live Snow Profile Plot**: hand-hardness, grain type, density, and temperature on a shared depth axis.
 * **SQLite Database**: every pit is optionally saved to a relational schema (see Entity-Relationship Diagram below).
 * **Exports**: SnowEx-style (https://nsidc.org/data/snex23_mar23_sp/versions/1), delivered either as a single ZIP download or written to a folder on the machine running the app.
+
+---
 
 ## Requirements
 * Python 3.10+
@@ -19,6 +23,8 @@ Install them with
 pip install -r requirements.txt
 ```
 
+---
+
 ## Running the App
 
 ```{bash}
@@ -28,6 +34,8 @@ streamlit run CryoPit_V1.py
 This opens CryoPit in your browser. On first run it creates the database automatically (default: `cryopit.db` in the working directory). You can point `CRYOPIT_DB_PATH` at a different location to reuse a database across sessions or machines — it must be a CryoPit-created database or at least have a compatible schema (see below), and the app needs read/write access to the path.
 
 > Note: CryoPit currently runs a small local helper service on port 8502 for saving and exporting. It is designed for local use, i.e., running the app on the same machine as the browser. (Deployment to a shared server is on the roadmap; see below.)
+
+---
 
 ## Using the App
 
@@ -42,6 +50,8 @@ This opens CryoPit in your browser. On first run it creates the database automat
 4. **Export CSVs** either downloads a single `.zip` of all CSVs, or — switch the
    dropdown to **Folder** — writes them to a folder path you specify.
 5. Open the **Profile** section to see the plotted snow profile.
+
+---
 
 ## Exports
 
@@ -99,6 +109,8 @@ This version (V1) is compatible with SQLite. However, the schema is designed for
   </a>
 </div>
 
+---
+
 ## Querying the DB
 
 The database is plain SQLite, so any SQLite client works. A few examples:
@@ -129,6 +141,8 @@ ORDER BY l.depth_from_surface;
 
 Measurement types available for the `mt.name` filter include `temperature`, `density`, `permittivity` (LWC), `grain_size` (stratigraphy), and `ssa`.
 
+---
+
 ## Modularity is on the Horizon
 
 CryoPit is being built toward a modular architecture so different groups can easily adapt it to their workflows. Planned and in-progress directions:
@@ -136,6 +150,8 @@ CryoPit is being built toward a modular architecture so different groups can eas
 1. **More Export Formats** CryoPit currently exports CSVs. We plan to add more formats, such as CAAML, to improve interoperability with community tools like niViz. If you have suggestions on useful formats for the community, please raise an issue or contact the author (see contact below).
 2. **Server Deployment**: The current local helper service is the part most tied to single-machine use. A deployment-ready version will move save/export to native server-side actions so CryoPit can run behind a shared server with several users at once. By deployment-ready, we mean hosting CryoPit behind a URL where several users can connect and work concurrently. For higher write concurrency, the SQLite database can migrate to PostgreSQL (the schema is already designed for this); small teams can continue on SQLite.
 3. **Downloadable Snow Pit Profile Visualization**: Currently, CryoPit does not allow its users to download the snow pit visualization because more enhancements are planned for a future realease. Once those enhancements are finalized, we will provide a download button.
+
+---
 
 ## Contact
 
