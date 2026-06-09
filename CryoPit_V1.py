@@ -1,7 +1,8 @@
 """
-CryoPit Snow Pit Logger v1.0
+CryoPit Snow Pit Logger v2.0
+Design B — Clinical white · Braun/laboratory aesthetic
 Streamlit shell · injected HTML form · local HTTP save endpoint
-SnowEx-style (https://nsidc.org/data/snex23_mar23_sp/versions/1) CSV exports · UTM ↔ lat/lon · SQLite backend
+SnowEx-compatible CSV export · UTM ↔ lat/lon · SQLite backend
 """
 
 import streamlit as st
@@ -1840,25 +1841,25 @@ function doCSV(){
   const folder=document.getElementById('tb-folder').value;
 
   if(dest==='folder'){
-    setst('writing to folder…','');
+    setst('saving to database, then writing files…','');
     post('/csv_folder',{...p,dest:'folder',folder})
       .then(r=>r.json())
       .then(r=>{
         if(!r.ok){setst('folder error: '+r.msg,'err');return;}
-        setst('● saved '+r.folder_count+' files → '+shortPath(r.folder),'ok');
+        setst('● saved to DB + '+r.folder_count+' files → '+shortPath(r.folder),'ok');
       })
       .catch(err=>setst(fetchErr(err),'err'));
     return;
   }
 
   // default: one-click zip download
-  setst('exporting…','');
+  setst('saving to database, then exporting…','');
   post('/csv',{...p,dest:'download'})
     .then(r=>r.json())
     .then(r=>{
       if(!r.ok){setst('error: '+r.msg,'err');return;}
       downloadZip(r.zipname,r.zip);
-      setst('● downloaded · '+r.zipname,'ok');
+      setst('● saved + downloaded · '+r.zipname,'ok');
     })
     .catch(err=>setst(fetchErr(err),'err'));
 }
