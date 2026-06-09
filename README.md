@@ -50,7 +50,7 @@ This opens CryoPit in your browser. On first run it creates the database automat
 4. **Export CSVs** saves the pit to the database (so a download always has a
     matching saved record), then either downloads a single .zip of all CSVs,
     or — switch the dropdown to Folder — writes them to a folder path you
-    specify. In other words, Exporting  CSVs also write to an SQLite database. This is a safety feature, not a bug, incase your browswer crashes.
+    specify. In other words, Exporting  CSVs also write to an SQLite database. This is a safety feature, not a bug, incase your browser crashes.
 5. Open the **Profile** section to see the plotted snow profile.
 
 ---
