@@ -85,7 +85,7 @@ This version (V1) is compatible with SQLite. However, the schema is designed for
 
 The database is plain SQLite, so any SQLite client works. A few examples:
 
-1. **List all pits with campaign, observer, and depth:**
+1. **List all pits with campaign, observer, and total depth:**
 
 ```sql
 SELECT s.pit_id, s.date, c.name AS campaign, o.name AS recorded_by,
@@ -107,3 +107,10 @@ JOIN measurement_types mt ON mt.id = l.measurement_type_id
 WHERE s.pit_id = 'GM1' AND mt.name = 'density'
 ORDER BY l.depth_from_surface;
 ```
+
+## Modularity is on the Horizon
+
+CryoPit is being built toward a modular architecture so different groups can easily adapt it to their workflows. Planned and in-progress directions:
+
+1. **More Export Formats** CryoPit currently exports CSVs. We plan to add more formats, such as CAAML, to improve interoperability with community tools like niViz. If you have suggestions on useful formats for the community, please raise an issue or contact the author (see contact below).
+2. **Server Deployment**: the current local helper service is the part most tied to single-machine use. A deployment-ready version will move save/export to native server-side actions so CryoPit can run behind a shared server.
