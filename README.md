@@ -109,6 +109,8 @@ WHERE s.pit_id = 'GM1' AND mt.name = 'density'
 ORDER BY l.depth_from_surface;
 ```
 
+Measurement types available for the `mt.name` filter include `temperature`, `density`, `permittivity` (LWC), `grain_size` (stratigraphy), and `ssa`.
+
 ## Modularity is on the Horizon
 
 CryoPit is being built toward a modular architecture so different groups can easily adapt it to their workflows. Planned and in-progress directions:
