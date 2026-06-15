@@ -434,6 +434,12 @@ def _c(v):
     if v is None: return NO_DATA
     if isinstance(v, float) and math.isnan(v): return NO_DATA
     if isinstance(v, str) and v.strip() == "": return NO_DATA
+    # Render whole-number floats without a trailing ".0" so that a value read
+    # back from the DB as REAL (e.g. 759039.0) matches the same value taken
+    # straight from the form payload as int (759039). Keeps Download (payload
+    # export) and Archive (DB export) byte-identical.
+    if isinstance(v, float) and v.is_integer():
+        return int(v)
     return v
 
 def _hdr(p, extra=None):
@@ -463,38 +469,36 @@ def _csv(rows):
 def _fname(pit_id, date_str, param, campaign=None):
     return f"{campaign or CAMPAIGN}_{pit_id}_{date_str}_{param}_v01_0.csv"
 
-def export_all(pit_id):
-    conn = get_conn()
-    p_row = conn.execute("SELECT * FROM sites WHERE pit_id=?", (pit_id,)).fetchone()
-    if not p_row:
-        conn.close()
-        return {}
-    cols = [d[0] for d in conn.execute("SELECT * FROM sites WHERE pit_id=?", (pit_id,)).description]
-    p    = dict(zip(cols, p_row))
+def _build_csvs(p, layers, obs_str, ssa_cal, inst_list, campaign):
+    """Build the six CSV strings from already-normalized plain data.
+
+    Single source of truth for CSV formatting. Both paths feed it:
+      export_all(pit_id)        — reads the DB, then calls this
+      export_from_payload(...)  — transforms a collect() payload, then calls this
+
+    Args:
+      p         : dict of site fields (top_cm/value naming already applied to layers)
+      layers    : dict {measurement_type_name: [layer_dict, ...]} where each layer
+                  has keys top_cm, bottom_cm, value, value_b, value_c, value_avg,
+                  grain_size_min/max, grain_type, hand_hardness, snow_wetness,
+                  time_recorded, comments (missing keys default to None)
+      obs_str   : observers as a display string
+      ssa_cal   : dict with instrument, operator, spectralon[], calib_values[], measured_at
+      inst_list : [(name, serial, used_int), ...]
+      campaign  : campaign name for filenames
+    """
+    pit_id   = p.get("pit_id")
     date_str = (p.get("date") or "00000000").replace("-","")
-    crow = conn.execute("SELECT name FROM campaigns WHERE id=?", (p.get("campaign_id"),)).fetchone()
-    campaign = (crow[0] if crow and crow[0] else CAMPAIGN)
-
-    def mt(name):
-        r = conn.execute("SELECT id FROM measurement_types WHERE name=?", (name,)).fetchone()
-        return r[0] if r else None
-
-    def lrows(mt_id):
-        rows = conn.execute(
-            "SELECT * FROM layers WHERE site_id=? AND measurement_type_id=? ORDER BY depth_from_surface",
-            (p["id"], mt_id)).fetchall()
-        lc = [d[0] for d in conn.execute("SELECT * FROM layers LIMIT 0").description]
-        return [dict(zip(lc,r)) for r in rows]
+    def L(name): return layers.get(name, [])
+    def g(d, k): return d.get(k)
 
     # -- siteDetails -----------------------------------------------
-    obs = conn.execute("""SELECT o.name FROM observers o
-        JOIN site_observers so ON so.observer_id=o.id WHERE so.site_id=?""",
-        (p["id"],)).fetchall()
-    obs_str = ", ".join([r[0] for r in obs]) or NO_DATA
-    veg = json.loads(p.get("vegetation") or "[]")
+    veg = p.get("vegetation") or []
+    if isinstance(veg, str):
+        veg = json.loads(veg or "[]")
     sd = _hdr(p) + [
         ["# HS (cm)",                   _c(p.get("total_depth"))],
-        ["# Observers",                 obs_str],
+        ["# Observers",                 obs_str or NO_DATA],
         ["# WISe Serial No",            _c(p.get("wise_serial"))],
         ["# GPS",                       _c(p.get("gps_device"))],
         ["# GPS Uncertainty",           (str(_c(p.get("gps_uncertainty")))+" "+(p.get("gps_uncertainty_unit") or "")).strip() if p.get("gps_uncertainty") is not None else NO_DATA],
@@ -513,39 +517,34 @@ def export_all(pit_id):
     ]
 
     # -- density ---------------------------------------------------
-    dens_data = lrows(mt("density"))
+    dens_data = L("density")
     dens = _hdr(p) + [["# Top (cm)","Bottom (cm)","Density A (kg/m3)","Density B (kg/m3)","Density C (kg/m3)"]]
     for d in dens_data:
-        dens.append([_c(d["top_cm"]),_c(d["bottom_cm"]),
-                     _c(d["value"]),_c(d["value_b"]),_c(d["value_c"])])
+        dens.append([_c(g(d,"top_cm")),_c(g(d,"bottom_cm")),
+                     _c(g(d,"value")),_c(g(d,"value_b")),_c(g(d,"value_c"))])
 
     # -- temperature -----------------------------------------------
-    temp_data = lrows(mt("temperature"))
-    # Surface-first: highest point at top, 0 (ground) at bottom. Time start/end
-    # only on first/last rows; -9999 between.
     temp_data = sorted(
-        temp_data,
+        L("temperature"),
         key=lambda d: -(d["top_cm"] if d.get("top_cm") is not None else -1e9))
     temp = _hdr(p) + [["# Depth (cm)","Temperature (deg C)","Time start/end"]]
     for i,d in enumerate(temp_data):
-        t_val = _c(d.get("time_recorded"))
+        t_val = _c(g(d,"time_recorded"))
         if 0 < i < len(temp_data)-1: t_val = NO_DATA
-        temp.append([_c(d["top_cm"]),_c(d["value"]),t_val])
+        temp.append([_c(g(d,"top_cm")),_c(g(d,"value")),t_val])
 
     # -- LWC -------------------------------------------------------
-    # Density lookup joins on rounded top_cm so float representation noise
-    # can't break the match.
-    lwc_data  = lrows(mt("permittivity"))
+    lwc_data = L("permittivity")
     def _k(v): return None if v is None else round(float(v), 1)
-    dens_map  = {_k(d["top_cm"]): d["value_avg"] for d in dens_data}
+    dens_map = {_k(g(d,"top_cm")): g(d,"value_avg") for d in dens_data}
     lwc = _hdr(p) + [["# Top (cm)","Bottom (cm)","Avg Density (kg/m3)","Permittivity A","Permittivity B","LWC-vol A (%)","LWC-vol B (%)"]]
     for d in lwc_data:
-        lwc.append([_c(d["top_cm"]),_c(d["bottom_cm"]),
-                    _c(dens_map.get(_k(d["top_cm"]))),
-                    _c(d["value"]),_c(d["value_b"]),NO_DATA,NO_DATA])
+        lwc.append([_c(g(d,"top_cm")),_c(g(d,"bottom_cm")),
+                    _c(dens_map.get(_k(g(d,"top_cm")))),
+                    _c(g(d,"value")),_c(g(d,"value_b")),NO_DATA,NO_DATA])
 
     # -- stratigraphy ----------------------------------------------
-    strat_data = lrows(mt("grain_size"))
+    strat_data = L("grain_size")
     grain_codes = ("Grain Type (IACS): PP=Precipitation Particles, "
                    "PPsd=Stellars/Dendrites, PPgp=Graupel, PPrm=Rimed Particles, "
                    "MM=Machine Made, DF=Decomposing/Fragmented, "
@@ -560,49 +559,35 @@ def export_all(pit_id):
     strat = _hdr(p,[["# Parameter Codes",grain_codes]]) + \
         [["# Top (cm)","Bottom (cm)","Grain Size (mm)","Grain Type","Hand Hardness","Manual Wetness","Comments"]]
     for d in strat_data:
-        mn,mx = _c(d["grain_size_min"]),_c(d["grain_size_max"])
+        mn,mx = _c(g(d,"grain_size_min")),_c(g(d,"grain_size_max"))
         gs = f"{mn}-{mx} mm" if mn!=NO_DATA and mx!=NO_DATA else NO_DATA
-        strat.append([_c(d["top_cm"]),_c(d["bottom_cm"]),
-                      gs,_c(d["grain_type"]),_c(d["hand_hardness"]),
-                      _c(d["snow_wetness"]),_c(d["comments"])])
+        strat.append([_c(g(d,"top_cm")),_c(g(d,"bottom_cm")),
+                      gs,_c(g(d,"grain_type")),_c(g(d,"hand_hardness")),
+                      _c(g(d,"snow_wetness")),_c(g(d,"comments"))])
 
     # -- SSA -------------------------------------------------------
-    ssa_data = lrows(mt("ssa"))
-    cal_row  = conn.execute(
-        "SELECT spectralon,calib_values,measured_at,operator FROM ssa_calibration WHERE site_id=? LIMIT 1",
-        (p["id"],)).fetchone()
-    inst_row = conn.execute(
-        "SELECT i.name FROM instruments i JOIN ssa_calibration sc ON sc.instrument_id=i.id WHERE sc.site_id=? LIMIT 1",
-        (p["id"],)).fetchone()
-    ssa_extra = [["# Instrument", inst_row[0] if inst_row else "IceCube"]]
-    if cal_row:
-        spec = json.loads(cal_row[0] or "[]")
-        cval = json.loads(cal_row[1] or "[]")
-        if cal_row[3]: ssa_extra.append(["# SSA Operator", cal_row[3]])
-        if spec: ssa_extra.append(["# Spectralon"] + spec)
-        if cval: ssa_extra.append(["# Calibration Values (V)"] + cval)
-        if cal_row[2]: ssa_extra.append(["# Timing", cal_row[2]])
+    ssa_data = L("ssa")
+    ssa_cal = ssa_cal or {}
+    ssa_extra = [["# Instrument", ssa_cal.get("instrument") or "IceCube"]]
+    if ssa_cal.get("operator"):     ssa_extra.append(["# SSA Operator", ssa_cal["operator"]])
+    if ssa_cal.get("spectralon"):   ssa_extra.append(["# Spectralon"] + list(ssa_cal["spectralon"]))
+    if ssa_cal.get("calib_values"): ssa_extra.append(["# Calibration Values (V)"] + list(ssa_cal["calib_values"]))
+    if ssa_cal.get("measured_at"):  ssa_extra.append(["# Timing", ssa_cal["measured_at"]])
     ssa = _hdr(p, ssa_extra) + \
         [["# Sample_signal(V)","Reflectance(%)","SSA(m2 kg-1)","Sample_top_height(cm)","Grain type","Comments"]]
     for d in ssa_data:
-        ssa.append([_c(d["value_c"]),_c(d["value_b"]),
-                    _c(d["value"]),_c(d["top_cm"]),
-                    _c(d["grain_type"]),_c(d["comments"])])
+        ssa.append([_c(g(d,"value_c")),_c(g(d,"value_b")),
+                    _c(g(d,"value")),_c(g(d,"top_cm")),
+                    _c(g(d,"grain_type")),_c(g(d,"comments"))])
 
     # Add instruments to siteDetails
-    inst_rows = conn.execute("""
-        SELECT i.name, si.notes, si.used
-        FROM site_instruments si
-        JOIN instruments i ON i.id=si.instrument_id
-        WHERE si.site_id=?""", (p["id"],)).fetchall()
-    if inst_rows:
+    if inst_list:
         sd.append([])
         sd.append(["# INSTRUMENTS"])
         sd.append(["# Instrument","Serial No.","Used"])
-        for ir in inst_rows:
-            sd.append([ir[0], ir[1] or "—", "Y" if ir[2]==1 else "N"])
+        for name, serial, used in inst_list:
+            sd.append([name, serial or "—", "Y" if used==1 else "N"])
 
-    conn.close()
     return {
         _fname(pit_id,date_str,"siteDetails",campaign):  _csv(sd),
         _fname(pit_id,date_str,"density",campaign):      _csv(dens),
@@ -611,6 +596,142 @@ def export_all(pit_id):
         _fname(pit_id,date_str,"stratigraphy",campaign): _csv(strat),
         _fname(pit_id,date_str,"SSA",campaign):          _csv(ssa),
     }
+
+def export_all(pit_id):
+    """Build CSVs by reading a saved pit from the database (used by Archive)."""
+    conn = get_conn()
+    p_row = conn.execute("SELECT * FROM sites WHERE pit_id=?", (pit_id,)).fetchone()
+    if not p_row:
+        conn.close()
+        return {}
+    cols = [d[0] for d in conn.execute("SELECT * FROM sites WHERE pit_id=?", (pit_id,)).description]
+    p    = dict(zip(cols, p_row))
+    crow = conn.execute("SELECT name FROM campaigns WHERE id=?", (p.get("campaign_id"),)).fetchone()
+    campaign = (crow[0] if crow and crow[0] else CAMPAIGN)
+
+    def mt(name):
+        r = conn.execute("SELECT id FROM measurement_types WHERE name=?", (name,)).fetchone()
+        return r[0] if r else None
+
+    def lrows(mt_id):
+        rows = conn.execute(
+            "SELECT * FROM layers WHERE site_id=? AND measurement_type_id=? ORDER BY depth_from_surface",
+            (p["id"], mt_id)).fetchall()
+        lc = [d[0] for d in conn.execute("SELECT * FROM layers LIMIT 0").description]
+        return [dict(zip(lc,r)) for r in rows]
+
+    layers = {
+        "density":      lrows(mt("density")),
+        "temperature":  lrows(mt("temperature")),
+        "permittivity": lrows(mt("permittivity")),
+        "grain_size":   lrows(mt("grain_size")),
+        "ssa":          lrows(mt("ssa")),
+    }
+
+    obs = conn.execute("""SELECT o.name FROM observers o
+        JOIN site_observers so ON so.observer_id=o.id WHERE so.site_id=?""",
+        (p["id"],)).fetchall()
+    obs_str = ", ".join([r[0] for r in obs])
+
+    cal_row = conn.execute(
+        "SELECT spectralon,calib_values,measured_at,operator FROM ssa_calibration WHERE site_id=? LIMIT 1",
+        (p["id"],)).fetchone()
+    inst_row = conn.execute(
+        "SELECT i.name FROM instruments i JOIN ssa_calibration sc ON sc.instrument_id=i.id WHERE sc.site_id=? LIMIT 1",
+        (p["id"],)).fetchone()
+    ssa_cal = {"instrument": inst_row[0] if inst_row else None}
+    if cal_row:
+        ssa_cal["spectralon"]   = json.loads(cal_row[0] or "[]")
+        ssa_cal["calib_values"] = json.loads(cal_row[1] or "[]")
+        ssa_cal["measured_at"]  = cal_row[2]
+        ssa_cal["operator"]     = cal_row[3]
+
+    inst_rows = conn.execute("""
+        SELECT i.name, si.notes, si.used
+        FROM site_instruments si
+        JOIN instruments i ON i.id=si.instrument_id
+        WHERE si.site_id=?""", (p["id"],)).fetchall()
+    inst_list = [(r[0], r[1], r[2]) for r in inst_rows]
+
+    conn.close()
+    return _build_csvs(p, layers, obs_str, ssa_cal, inst_list, campaign)
+
+def export_from_payload(payload):
+    """Build CSVs directly from a collect() payload — NO database read or write.
+
+    Used by Download, so a user can get CSVs without persisting the pit. Mirrors
+    the same normalization save_pit() applies (height->top_cm, A/B/C->value/
+    value_b/value_c, temperature start/end on first/last rows) so the output is
+    identical to exporting the same pit after archiving it.
+    """
+    m   = payload.get("meta", {}) or {}
+    wx  = payload.get("weather", {}) or {}
+    gnd = payload.get("ground", {}) or {}
+    campaign = m.get("campaign") or CAMPAIGN
+
+    # site-field dict in the same shape _build_csvs expects (DB column names)
+    p = {
+        "pit_id": m.get("pit_id"), "name": m.get("site"), "location": m.get("location"),
+        "date": m.get("date"), "pit_open_time": m.get("pit_open_time"),
+        "utm_zone_number": m.get("utm_zone_number"), "utm_zone_letter": m.get("utm_zone_letter"),
+        "utm_easting": m.get("utm_easting"), "utm_northing": m.get("utm_northing"),
+        "latitude": m.get("latitude"), "longitude": m.get("longitude"),
+        "total_depth": m.get("total_depth"), "wise_serial": m.get("wise_serial"),
+        "gps_device": m.get("gps_device"), "gps_uncertainty": m.get("gps_uncertainty"),
+        "gps_uncertainty_unit": m.get("gps_uncertainty_unit"),
+        "density_cutter": m.get("density_cutter"),
+        "snow_cover_condition": gnd.get("snow_cover"), "standing_water": gnd.get("standing_water"),
+        "precip_type": wx.get("precip_type"), "precip_rate": wx.get("precip_rate"),
+        "sky_condition": wx.get("sky"), "wind": wx.get("wind"),
+        "ground_condition": gnd.get("condition"), "ground_roughness": gnd.get("roughness"),
+        "vegetation": gnd.get("vegetation", []), "vegetation_height": gnd.get("veg_height"),
+        "tree_canopy": gnd.get("canopy"),
+        "flags": m.get("flags", "None"), "comments": m.get("comments"),
+    }
+
+    # temperature: same surface-first + start/end-on-first/last as save_pit
+    trows = payload.get("temperature", []) or []
+    t_start, t_end = m.get("temp_time_start",""), m.get("temp_time_end","")
+    trows_sorted = sorted(trows, key=lambda r: -(r["height"] if r.get("height") is not None else -1e9))
+    n_t = len(trows_sorted)
+    temp_layers = []
+    for idx, r in enumerate(trows_sorted):
+        tr_time = t_start if idx==0 else (t_end if idx==n_t-1 else "")
+        temp_layers.append({"top_cm": r.get("height"), "value": r.get("temp"), "time_recorded": tr_time})
+
+    # density: A/B/C -> value/value_b/value_c, with value_avg for LWC lookup
+    dens_layers = []
+    for r in payload.get("density", []) or []:
+        vals = [v for v in [r.get("a"), r.get("b"), r.get("c")] if v is not None]
+        avg  = round(sum(vals)/len(vals)) if vals else None
+        dens_layers.append({"top_cm": r.get("top"), "bottom_cm": r.get("bottom"),
+                            "value": r.get("a"), "value_b": r.get("b"), "value_c": r.get("c"),
+                            "value_avg": avg})
+
+    lwc_layers = [{"top_cm": r.get("top"), "bottom_cm": r.get("bottom"),
+                   "value": r.get("a"), "value_b": r.get("b")}
+                  for r in (payload.get("lwc", []) or [])]
+
+    strat_layers = [{"top_cm": r.get("top"), "bottom_cm": r.get("bottom"),
+                     "grain_size_min": r.get("gmin"), "grain_size_max": r.get("gmax"),
+                     "grain_type": r.get("gtype"), "hand_hardness": r.get("hardness"),
+                     "snow_wetness": r.get("wetness"), "comments": r.get("comments")}
+                    for r in (payload.get("stratigraphy", []) or [])]
+
+    ssa_layers = [{"top_cm": r.get("height"), "value": r.get("ssa"),
+                   "value_b": r.get("reflectance"), "value_c": r.get("signal"),
+                   "grain_type": r.get("grain_type"), "comments": r.get("comments")}
+                  for r in (payload.get("ssa", []) or [])]
+
+    layers = {"density": dens_layers, "temperature": temp_layers,
+              "permittivity": lwc_layers, "grain_size": strat_layers, "ssa": ssa_layers}
+
+    obs_str = m.get("surveyors") or m.get("recorded_by") or ""
+    ssa_cal = payload.get("ssa_calibration", {}) or {}
+    inst_list = [(it.get("name"), it.get("sn"), 1 if it.get("used")=="Y" else 0)
+                 for it in (payload.get("instruments", []) or [])]
+
+    return _build_csvs(p, layers, obs_str, ssa_cal, inst_list, campaign)
 
 # -----------------------------------------------------------------------------
 # EXPORT DESTINATIONS
@@ -736,6 +857,7 @@ html,body{height:100%;background:var(--w);font-family:var(--sans);color:var(--in
 .tb-folder:focus{border-color:var(--acc2)}
 .tb-status{font-family:var(--mono);font-size:10px;color:#fff;opacity:.35;margin-left:4px;min-width:84px;letter-spacing:.02em}
 .tb-status.ok{color:#3ad29a;opacity:.95}
+.tb-status.ok-dl{color:#5b95ff;opacity:.95}
 .tb-status.unsaved{color:#f0b35a;opacity:.85}
 .tb-status.err{color:#ff7077;opacity:.95}
 .tb-theme{background:transparent;border:1px solid rgba(255,255,255,.18);border-radius:999px;color:#fff;opacity:.55;cursor:pointer;font-size:13px;padding:4px 9px;transition:all .12s;margin-left:4px}
@@ -883,22 +1005,10 @@ html,body{height:100%;background:var(--w);font-family:var(--sans);color:var(--in
   <div class="tb-right">
     <span class="tb-pct" id="tb-pct">0%</span>
     <div class="tb-prog" id="tb-prog" title="Completion"><div class="tb-fill" id="tb-fill"></div></div>
-    <button class="tb-csv" onclick="newPit()" title="Clear the form (and the autosaved draft) to start a new pit">New</button>
-    <div class="tb-export">
-      <select class="tb-dest" id="tb-dest" onchange="onDest()" title="Where exported CSVs go">
-        <option value="download">↓ Download (.zip)</option>
-        <option value="folder">▢ Folder</option>
-      </select>
-      <button class="tb-csv" onclick="doCSV()" title="Saves the pit to the database, then exports the CSVs">Export CSVs</button>
-      <!-- folder path drops below, only when Folder is selected -->
-      <div class="tb-folder-pop" id="tb-folder-pop" style="display:none">
-        <span class="tb-folder-lbl">Save to folder (on the machine running the app)</span>
-        <input class="tb-folder" id="tb-folder" placeholder="exports/" spellcheck="false"
-               oninput="rememberFolder()">
-      </div>
-    </div>
-    <button class="tb-save" onclick="doSave()">Save to DB</button>
-    <span class="tb-status unsaved" id="tb-st">● not saved</span>
+    <button class="tb-csv" onclick="newPit()" title="Clear the form to start a new pit">New</button>
+    <button class="tb-csv" onclick="doDownload()" title="Download the CSVs to your computer (does not save to the database)">↓ Download</button>
+    <button class="tb-save" onclick="doArchive()" title="Save the pit to the database and write the CSVs to the server's export folder">Archive</button>
+    <span class="tb-status unsaved" id="tb-st">● not archived</span>
     <button class="tb-theme" onclick="toggleTheme()" id="theme-btn" title="Toggle theme">◑</button>
   </div>
 </div>
@@ -1239,7 +1349,7 @@ html,body{height:100%;background:var(--w);font-family:var(--sans);color:var(--in
 
 </main>
 
-<aside class="rail" title="Live core; click for the full profile" onclick="document.querySelector('[data-t=s11]').click();drawProfile()">
+<aside class="rail" title="Live core — click for the full profile" onclick="document.querySelector('[data-t=s11]').click();drawProfile()">
   <div class="rail-lbl">Live core</div>
   <div id="mini-core"></div>
   <div class="rail-stat"><span>HS</span><b id="mc-hs">—</b></div>
@@ -1875,54 +1985,63 @@ function restoreDraft(){
   }catch(e){}
 }
 function newPit(){
-  if(!confirm('Clear the form and the autosaved draft to start a new pit?'))return;
+  // State-aware warning: name the actual risk if the pit isn't archived.
+  const archived = (_loaded_pid!==null && _loaded_pid===document.getElementById('pitid').textContent.trim());
+  const msg = archived
+    ? 'Start a new pit? (The current pit is archived.)'
+    : 'Start a new pit?\n\nThis pit is NOT archived — it is not in the database. '
+      + 'Anything you have not downloaded or archived will be lost.';
+  if(!confirm(msg))return;
   try{localStorage.removeItem('cp-draft');}catch(e){}
   location.reload();
 }
 
-// Save / export -------------------------------------------------------
-function doSave(){
+// Download: pure file delivery. Exports the CSVs to the user's browser and
+// touches nothing server-side — no database write. A team that only wants CSVs
+// is never forced into the database.
+function doDownload(){
   const{p,e}=validate();
-  if(e.length){setst('missing: '+e.join(', '),'err');return;}
-  // If this form was loaded from this pit_id, overwriting it is the point.
-  _save(p,_loaded_pid!==null&&_loaded_pid===p.meta.pit_id);
-}
-function _save(p,overwrite){
-  setst('saving…','');
-  post('/api/save',{...p,overwrite:!!overwrite})
+  if(e.length){setst('fill required fields first: '+e.join(', '),'err');return;}
+  setst('exporting…','');
+  post('/api/download',p)
     .then(r=>r.json())
     .then(r=>{
-      if(r.ok){
-        setst('● saved · '+r.pit_id,'ok');
-        _loaded_pid=r.pit_id;
-        loadSavedPits();
-      } else if(r.exists){
-        if(confirm('Pit "'+p.meta.pit_id+'" already exists in the database.\nOverwrite it? The previous version will be replaced.')){
-          _save(p,true);
-        } else setst('● not saved — pit exists','unsaved');
-      } else setst('● error: '+r.msg,'err');
+      if(!r.ok){setst('error: '+r.msg,'err');return;}
+      downloadZip(r.zipname,r.zip);
+      // NOTE: downloading does NOT change archived state — files ≠ recorded.
+      setst('● downloaded (not archived) · '+r.zipname,'ok-dl');
     })
     .catch(err=>setst(fetchErr(err),'err'));
 }
 
-function onDest(){
-  const folder=document.getElementById('tb-dest').value==='folder';
-  document.getElementById('tb-folder-pop').style.display=folder?'flex':'none';
-  try{localStorage.setItem('cp-dest',document.getElementById('tb-dest').value);}catch(e){}
-  if(folder){const f=document.getElementById('tb-folder');setTimeout(()=>f.focus(),0);}
+// Archive: the deliberate "record this pit" action. Saves to the database AND
+// writes the CSVs to the server's configured export folder (CRYOPIT_EXPORT_DIR).
+function doArchive(){
+  const{p,e}=validate();
+  if(e.length){setst('missing: '+e.join(', '),'err');return;}
+  _archive(p,_loaded_pid!==null&&_loaded_pid===p.meta.pit_id);
 }
-function rememberFolder(){
-  try{localStorage.setItem('cp-folder',document.getElementById('tb-folder').value);}catch(e){}
+function _archive(p,overwrite){
+  setst('archiving…','');
+  post('/api/archive',{...p,overwrite:!!overwrite})
+    .then(r=>r.json())
+    .then(r=>{
+      if(r.exists){
+        if(confirm('Pit "'+p.meta.pit_id+'" already exists in the database.\nOverwrite it? The previous version will be replaced.')){
+          _archive(p,true);
+        } else setst('● not archived — pit exists','unsaved');
+        return;
+      }
+      if(!r.ok){setst('● error: '+r.msg,'err');return;}
+      _loaded_pid=r.pit_id;          // archived → overwrite implied on re-archive
+      loadSavedPits();
+      const where = r.folder_count!=null
+        ? ' · '+r.folder_count+' files → '+shortPath(r.folder)
+        : '';
+      setst('● archived · '+r.pit_id+where,'ok');
+    })
+    .catch(err=>setst(fetchErr(err),'err'));
 }
-(function(){
-  try{
-    const d=localStorage.getItem('cp-dest');
-    if(d){document.getElementById('tb-dest').value=d;}
-    const f=localStorage.getItem('cp-folder');
-    if(f){document.getElementById('tb-folder').value=f;}
-    onDest();
-  }catch(e){}
-})();
 
 function downloadZip(zipname,zipb64){
   // base64 -> bytes -> one Blob -> one download
@@ -1937,38 +2056,6 @@ function downloadZip(zipname,zipb64){
   document.body.appendChild(a);a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-}
-
-function doCSV(){
-  const{p,e}=validate();
-  if(e.length){setst('fill required fields first: '+e.join(', '),'err');return;}
-  _csv(p,_loaded_pid!==null&&_loaded_pid===p.meta.pit_id);
-}
-function _csv(p,overwrite){
-  const dest=document.getElementById('tb-dest').value;
-  const folder=document.getElementById('tb-folder').value;
-  setst('saving, then exporting…','');
-  const body={...p,overwrite:!!overwrite,dest,folder};
-  post(dest==='folder'?'/api/csv_folder':'/api/csv',body)
-    .then(r=>r.json())
-    .then(r=>{
-      if(r.exists){
-        if(confirm('Pit "'+p.meta.pit_id+'" already exists in the database.\nOverwrite it and export?')){
-          _csv(p,true);
-        } else setst('● not saved — pit exists','unsaved');
-        return;
-      }
-      if(!r.ok){setst('error: '+r.msg,'err');return;}
-      _loaded_pid=p.meta.pit_id;
-      loadSavedPits();
-      if(dest==='folder'){
-        setst('● saved + '+r.folder_count+' files → '+shortPath(r.folder),'ok');
-      } else {
-        downloadZip(r.zipname,r.zip);
-        setst('● saved + downloaded · '+r.zipname,'ok');
-      }
-    })
-    .catch(err=>setst(fetchErr(err),'err'));
 }
 
 function shortPath(pth){
@@ -2250,34 +2337,21 @@ def api_load(pit_id):
         return jsonify(ok=False, msg=err)
     return jsonify(ok=True, pit=pit)
 
-@app.post("/api/save")
-def api_save():
+@app.post("/api/download")
+def api_download():
+    """Build the six CSVs directly from the submitted form payload and return
+    them as one base64 ZIP. Does NOT touch the database — pure file delivery."""
     payload = _json_or_400()
-    status, info = save_pit(payload)
-    if status == "ok":     return jsonify(ok=True,  pit_id=info)
-    if status == "exists": return jsonify(ok=False, exists=True, pit_id=info)
-    return jsonify(ok=False, msg=info), 500
-
-@app.post("/api/csv")
-def api_csv():
-    """Save the pit, then return all six SnowEx CSVs bundled as one base64 ZIP
-    so the browser saves a single file (one prompt, not six)."""
-    payload = _json_or_400()
-    status, info = save_pit(payload)
-    if status == "exists":
-        return jsonify(ok=False, exists=True, pit_id=info)
-    if status == "error":
-        return jsonify(ok=False, msg=info), 500
-    pit_id   = payload["meta"]["pit_id"]
-    csvs     = export_all(pit_id)
-    campaign = payload["meta"].get("campaign") or CAMPAIGN
+    pit_id   = (payload.get("meta") or {}).get("pit_id") or "pit"
+    campaign = (payload.get("meta") or {}).get("campaign") or CAMPAIGN
+    csvs = export_from_payload(payload)
     zipname, zipb64 = zip_csvs(csvs, pit_id, campaign)
     return jsonify(ok=True, pit_id=pit_id, zipname=zipname, zip=zipb64)
 
-@app.post("/api/csv_folder")
-def api_csv_folder():
-    """Save the pit, then write the CSVs into a folder on the machine running
-    this process. Nothing is sent back for download."""
+@app.post("/api/archive")
+def api_archive():
+    """The 'record this pit' action: save to the database AND write the CSVs to
+    the server's configured export folder (CRYOPIT_EXPORT_DIR)."""
     payload = _json_or_400()
     status, info = save_pit(payload)
     if status == "exists":
@@ -2286,11 +2360,14 @@ def api_csv_folder():
         return jsonify(ok=False, msg=info), 500
     pit_id = payload["meta"]["pit_id"]
     csvs   = export_all(pit_id)
-    fok, finfo = save_csvs_to_folder(csvs, payload.get("folder", ""))
+    # Always write to the server-configured export dir (not a user-typed path).
+    fok, finfo = save_csvs_to_folder(csvs, EXPORT_DIR)
     if fok:
         return jsonify(ok=True, pit_id=pit_id,
                        folder=finfo["folder"], folder_count=finfo["count"])
-    return jsonify(ok=False, msg=finfo)
+    # DB save succeeded but folder write failed — report saved, flag the folder.
+    return jsonify(ok=True, pit_id=pit_id, folder=None, folder_count=None,
+                   folder_error=finfo)
 
 # -----------------------------------------------------------------------------
 # MAIN
