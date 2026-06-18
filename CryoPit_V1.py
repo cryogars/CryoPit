@@ -4,7 +4,7 @@ Design: Clinical white · Braun/laboratory aesthetic
 Flask single-origin app · SnowEx-compatible CSV export · UTM <-> lat/lon · SQLite
 
 Run:    pip install flask
-        python cryopit.py
+        python CryoPit_V1.py
         open http://127.0.0.1:8502
 """
 
