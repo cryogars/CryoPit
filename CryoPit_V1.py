@@ -1,11 +1,43 @@
 """
-CryoPit Snow Pit Logger
-Design: Clinical white · Braun/laboratory aesthetic
+CryoPit Snow Pit Logger v3.0
+Design B — Clinical white · Braun/laboratory aesthetic
 Flask single-origin app · SnowEx-compatible CSV export · UTM <-> lat/lon · SQLite
 
 Run:    pip install flask
-        python CryoPit_V1.py
+        python cryopit.py
         open http://127.0.0.1:8502
+
+Changes from v2.0 (Streamlit shell):
+  * Streamlit removed entirely. Flask serves the form AND the JSON API from one
+    process on one port — no iframe, no second server thread, no CORS, no
+    port-collision dance, no 100vh clamp war.
+  * FIXED: save_csvs_to_folder existed only as an orphaned docstring/body after
+    zip_csvs's return (the `def` line was missing) — the Folder export raised
+    NameError. Restored as a real function.
+  * FIXED: parseFloat(x)||0 data corruption. Blank cells no longer become real
+    measurements (blank temp -> 0.0 degC, blank height -> 0 cm). New num()
+    helper returns null for blanks AND preserves legitimate zeros (the old
+    ||null pattern destroyed elevation 0 m / slope 0 deg). Empty rows are
+    skipped; null -> -9999 happens only at export.
+  * NEW: saved pits load. The exact save payload is stored in sites.raw_json
+    and round-tripped back through populate() — click a pit in the sidebar to
+    reopen and edit it. (Pits saved by v2.0 have no raw_json and can't load.)
+  * NEW: overwrite protection. Saving a pit_id that already exists returns
+    exists:true and the form asks before replacing. If you LOADED that pit to
+    edit it, overwrite is implied and no prompt appears.
+  * NEW: draft autosave. The form state persists to localStorage on every edit
+    (debounced) and is restored on reload — a refresh no longer destroys an
+    hour of transcription. "New" clears the draft and starts fresh.
+  * SQLite: WAL + busy_timeout=5000. WAL lets readers and the writer coexist;
+    the timeout queues a second writer instead of failing with
+    "database is locked". (Writes still serialize — that's SQLite.)
+  * Time fields (HHMM) are validated at save, not just tinted red.
+  * CSRF hardening: API routes require Content-Type: application/json, which
+    forces a CORS preflight for any cross-origin caller — and we send no CORS
+    headers, so other websites can't drive the API.
+  * Removed unused pandas + pyproj dependencies (the JS does all coordinate
+    conversion); removed the dead Python UTM functions and the doSave
+    monkey-patch; density map in LWC export now joins on rounded keys.
 """
 
 from flask import Flask, request, jsonify, abort
@@ -26,11 +58,46 @@ INSTITUTION = os.getenv("CRYOPIT_INSTITUTION","CryoGARS · Boise State Universit
 CAMPAIGN    = os.getenv("CRYOPIT_CAMPAIGN",   "SNEX25")
 APP_TITLE   = os.getenv("CRYOPIT_APP_TITLE",  "CryoPit")
 PORT        = int(os.getenv("CRYOPIT_PORT",   os.getenv("CRYOPIT_API_PORT", "8502")))
+# Bind address. Default 127.0.0.1 = local only (safe). Set 0.0.0.0 to accept
+# connections from other machines (shared deployment) — a deliberate choice,
+# not the default, since opening to the network should be intentional.
+HOST        = os.getenv("CRYOPIT_HOST", "127.0.0.1")
 # Default destination for server-side CSV writes. Resolved by the Python
 # process — locally that's your laptop; deployed it's the server. Point it at
 # a mounted Drive, an S3-backed mount, or a synced repo directory.
 EXPORT_DIR  = os.getenv("CRYOPIT_EXPORT_DIR", "exports")
+# Saved-pits / edit workflow. When disabled, the sidebar list and load route are
+# off and CryoPit is capture-and-archive only (safe default for multi-user
+# deployments without auth). A deployer can set this true to allow editing.
+ENABLE_EDIT = os.getenv("CRYOPIT_ENABLE_EDIT", "true").strip().lower() in ("1","true","yes","on")
+# How many recent pits the sidebar shows (per user). Short by default since the
+# list is scoped to the current user's own recent pits.
+SAVED_PITS_LIMIT = int(os.getenv("CRYOPIT_SAVED_PITS_LIMIT", "10"))
+# Identity. Real deployments put CryoPit behind an SSO reverse proxy that injects
+# an authenticated-username header; CryoPit only READS it, never handles
+# credentials. With no such header (local use), every pit is owned by DEV_USER,
+# so a single local user sees all their own pits exactly as before.
+DEV_USER    = os.getenv("CRYOPIT_DEV_USER", "local")
+AUTH_HEADER = os.getenv("CRYOPIT_AUTH_HEADER", "X-Remote-User")
 NO_DATA     = -9999
+
+def current_user():
+    """The authenticated username for the active request, or DEV_USER.
+
+    A reverse proxy doing SSO injects AUTH_HEADER (e.g. 'X-Remote-User').
+    CryoPit only reads it — it never handles passwords. Outside a request
+    context (tests, direct calls) or with no header present, returns DEV_USER,
+    so local single-user use behaves exactly as before (everyone is 'local').
+    """
+    try:
+        from flask import request, has_request_context
+        if has_request_context():
+            u = request.headers.get(AUTH_HEADER)
+            if u and u.strip():
+                return u.strip()
+    except Exception:
+        pass
+    return DEV_USER
 
 # -----------------------------------------------------------------------------
 # DATABASE
@@ -75,6 +142,7 @@ CREATE TABLE IF NOT EXISTS sites(
     recorded_by INTEGER REFERENCES observers(id),
     comments TEXT, flags TEXT,
     raw_json TEXT,
+    owner TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
 
 CREATE TABLE IF NOT EXISTS site_observers(
@@ -165,6 +233,7 @@ def _migrate(conn):
         ("sites", "gps_uncertainty REAL"),
         ("sites", "gps_uncertainty_unit TEXT"),
         ("sites", "raw_json TEXT"),
+        ("sites", "owner TEXT"),
         ("ssa_calibration", "operator TEXT"),
     ]
     for table, coldef in adds:
@@ -172,6 +241,11 @@ def _migrate(conn):
             conn.execute(f"ALTER TABLE {table} ADD COLUMN {coldef}")
         except sqlite3.OperationalError:
             pass  # column already exists
+    # Index supporting the sidebar query: this user's most-recent pits.
+    try:
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_sites_owner_created ON sites(owner, created_at)")
+    except sqlite3.OperationalError:
+        pass
 
 def get_conn():
     """One connection per request.
@@ -206,10 +280,18 @@ def save_pit(payload):
         if not pid or pid == "—":
             return "error", "Missing pit_id"
 
-        exists = conn.execute(
-            "SELECT 1 FROM sites WHERE pit_id=?", (pid,)).fetchone()
-        if exists and not payload.get("overwrite"):
-            return "exists", pid
+        owner = current_user()
+        existing = conn.execute(
+            "SELECT owner FROM sites WHERE pit_id=?", (pid,)).fetchone()
+        if existing:
+            prev_owner = existing[0]
+            # Don't let one user silently overwrite another user's pit. A NULL
+            # owner (legacy pit from before ownership) is adoptable by anyone.
+            if prev_owner is not None and prev_owner != owner:
+                return "error", (f"Pit '{pid}' belongs to another user "
+                                 f"and can't be overwritten.")
+            if not payload.get("overwrite"):
+                return "exists", pid
 
         # Round-trip payload: exactly what the form sent, minus transport-only
         # keys. This is what /api/load returns, so loading is lossless.
@@ -223,22 +305,22 @@ def save_pit(payload):
             def get_or_create_observer(name):
                 name = (name or "").strip()
                 if not name: return None
-                row = conn.execute("SELECT id FROM observers WHERE name=?", (name,)).fetchone()
-                if row: return row[0]
-                conn.execute("INSERT INTO observers(name) VALUES(?)", (name,))
-                return conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+                # INSERT OR IGNORE then SELECT: concurrency-safe. A check-then-
+                # insert races under concurrent writers (two requests both see
+                # "absent", both INSERT, the second hits UNIQUE). OR IGNORE makes
+                # the insert a no-op if another writer won, and the SELECT then
+                # returns whichever row exists.
+                conn.execute("INSERT OR IGNORE INTO observers(name) VALUES(?)", (name,))
+                return conn.execute("SELECT id FROM observers WHERE name=?", (name,)).fetchone()[0]
 
             recorded_by_id = get_or_create_observer(m.get("recorded_by",""))
             surveyor_ids   = [get_or_create_observer(s.strip())
                               for s in (m.get("surveyors","") or "").split(",") if s.strip()]
 
             camp_name = m.get("campaign") or CAMPAIGN
-            camp_row  = conn.execute("SELECT id FROM campaigns WHERE name=?", (camp_name,)).fetchone()
-            if camp_row:
-                camp_id = camp_row[0]
-            else:
-                conn.execute("INSERT INTO campaigns(name) VALUES(?)", (camp_name,))
-                camp_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+            # Same race-safe pattern as observers (concurrent writers, shared name).
+            conn.execute("INSERT OR IGNORE INTO campaigns(name) VALUES(?)", (camp_name,))
+            camp_id = conn.execute("SELECT id FROM campaigns WHERE name=?", (camp_name,)).fetchone()[0]
 
             conn.execute("DELETE FROM layers WHERE site_id=(SELECT id FROM sites WHERE pit_id=?)", (pid,))
             conn.execute("DELETE FROM site_observers WHERE site_id=(SELECT id FROM sites WHERE pit_id=?)", (pid,))
@@ -265,8 +347,8 @@ def save_pit(payload):
                 tree_canopy,snow_cover_condition,standing_water,
                 wise_serial,gps_device,gps_uncertainty,gps_uncertainty_unit,density_cutter,
                 new_snow_depth,new_snow_swe,new_snow_density,
-                recorded_by,comments,flags,raw_json)
-                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                recorded_by,comments,flags,raw_json,owner)
+                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (camp_id, pid, m.get("site",""), m.get("location",""), m.get("date",""),
                  m.get("pit_open_time",""), m.get("temp_time_start",""), m.get("temp_time_end",""),
                  m.get("utm_easting"), m.get("utm_northing"),
@@ -283,7 +365,7 @@ def save_pit(payload):
                  m.get("density_cutter",""),
                  gnd.get("new_depth"), gnd.get("new_swe"), gnd.get("new_density"),
                  recorded_by_id, m.get("comments",""), m.get("flags") or "None",
-                 json.dumps(raw)))
+                 json.dumps(raw), owner))
 
             site_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
 
@@ -399,13 +481,20 @@ def save_pit(payload):
         conn.close()
 
 def load_pit(pit_id):
-    """Return (payload, None) for a pit, or (None, reason)."""
+    """Return (payload, None) for a pit owned by the current user, or (None, reason).
+
+    Scoped by owner so a user can't load another user's pit. A NULL-owner legacy
+    pit is loadable by anyone (no ownership was recorded when it was saved).
+    """
     conn = get_conn()
     try:
         row = conn.execute(
-            "SELECT raw_json FROM sites WHERE pit_id=?", (pit_id,)).fetchone()
+            "SELECT raw_json, owner FROM sites WHERE pit_id=?", (pit_id,)).fetchone()
         if not row:
             return None, "Pit not found"
+        owner = row[1]
+        if owner is not None and owner != current_user():
+            return None, "This pit belongs to another user."
         if not row[0]:
             return None, ("This pit was saved by an older CryoPit version and "
                           "has no stored payload — it can't be loaded for editing.")
@@ -415,12 +504,19 @@ def load_pit(pit_id):
     finally:
         conn.close()
 
-def list_pits(limit=50):
+def list_pits(limit=None):
+    """The current user's most-recent pits (NULL-owner legacy pits included, so
+    a single local user still sees pre-ownership pits they saved)."""
+    if limit is None:
+        limit = SAVED_PITS_LIMIT
     conn = get_conn()
     try:
+        u = current_user()
         rows = conn.execute(
-            "SELECT pit_id, date FROM sites ORDER BY created_at DESC LIMIT ?",
-            (limit,)).fetchall()
+            """SELECT pit_id, date FROM sites
+               WHERE owner = ? OR owner IS NULL
+               ORDER BY created_at DESC LIMIT ?""",
+            (u, limit)).fetchall()
         return [{"pit_id": r[0], "date": r[1]} for r in rows]
     except Exception:
         return []
@@ -447,7 +543,7 @@ def _hdr(p, extra=None):
         ["# Location",                  _c(p.get("location"))],
         ["# Site",                      _c(p.get("name"))],
         ["# PitID",                     _c(p.get("pit_id"))],
-        ["# Date/Local Standard Time",  str(p.get("date",""))+"T"+str(p.get("pit_open_time",""))],
+        ["# Date/Local Standard Time",  str(p.get("date") or "")+"T"+str(p.get("pit_open_time") or "")],
         ["# UTM Zone",                  str(p.get("utm_zone_number") or "")+str(p.get("utm_zone_letter") or "")],
         ["# Easting",                   _c(p.get("utm_easting"))],
         ["# Northing",                  _c(p.get("utm_northing"))],
@@ -756,18 +852,24 @@ def zip_csvs(files, pit_id, campaign=None):
     safe = (pit_id or "pit").replace("/", "_").replace("\\", "_")
     return f"{campaign or CAMPAIGN}_{safe}.zip", b64
 
-def save_csvs_to_folder(files, folder):
+def save_csvs_to_folder(files, folder, subfolder=None):
     """Write {filename: content} into `folder` on the machine running Python.
 
-    NOTE: `folder` is resolved by THIS process. Locally that's the user's own
-    machine; deployed, it's the server. Returns (ok, info) where info is
-    {"folder": abs_path, "count": n} on success or an error message on failure.
-    (Restored in v3.0 — the v2.0 file was missing this function's `def` line,
-    so the Folder export crashed with NameError.)
+    Each pit goes in its OWN subfolder (subfolder=e.g. 'SNEX26_GM1_20260210') so
+    that many pits archived to the same EXPORT_DIR stay separable: instead of
+    18 files from 3 pits jumbled flat, you get three tidy per-pit folders. Files
+    are already uniquely named by pit_id, but grouping makes the archive legible.
+
+    `folder` is resolved by THIS process — locally the user's machine, deployed
+    the server. Returns (ok, info) with info={"folder": abs_path, "count": n}.
     """
     if not folder or not str(folder).strip():
         folder = EXPORT_DIR
     folder = os.path.abspath(os.path.expanduser(str(folder).strip()))
+    if subfolder:
+        # Defensive: keep the subfolder a single safe path segment.
+        safe = str(subfolder).strip().replace("/", "_").replace("\\", "_")
+        folder = os.path.join(folder, safe)
     try:
         os.makedirs(folder, exist_ok=True)
         if not os.path.isdir(folder):
@@ -1027,10 +1129,7 @@ html,body{height:100%;background:var(--w);font-family:var(--sans);color:var(--in
   <div class="idx-item" data-t="s9" onclick="nav(this)"><span class="idx-num">09</span><span class="idx-lbl">Instruments</span><span class="idx-pip" id="p9"></span></div>
   <div class="idx-item" data-t="s10" onclick="nav(this)"><span class="idx-num">10</span><span class="idx-lbl">Checklist</span><span class="idx-pip" id="p10"></span></div>
   <div class="idx-item" data-t="s11" onclick="nav(this);drawProfile()"><span class="idx-num">11</span><span class="idx-lbl">Profile</span><span class="idx-pip" id="p11"></span></div>
-  <div class="nav-foot">
-    <div class="nav-foot-label">Saved pits · click to load</div>
-    <div id="saved-pits-list"><span class="nav-foot-empty">none yet</span></div>
-  </div>
+  __SAVED_PITS_SECTION__
 </nav>
 
 <main class="main">
@@ -1366,6 +1465,10 @@ html,body{height:100%;background:var(--w);font-family:var(--sans);color:var(--in
 /* Same-origin API: the page and the JSON routes come from one Flask process,
    so paths are relative — no host, no port, no CORS. */
 const API = '';
+/* Whether the saved-pits/load workflow is enabled (injected from config).
+   Draft autosave/restore is INDEPENDENT of this — it uses localStorage, not the
+   DB, so it stays active even when edit is off. */
+const ENABLE_EDIT = __ENABLE_EDIT__;
 const G=['PP','RG','FC','SH','MM','DF','DH','MF','IF',
   'PPsd','PPgp','PPrm','RGwp','RGxf','RGlr',
   'FCsf','FCxr','FCso',
@@ -2066,10 +2169,15 @@ function shortPath(pth){
 
 // Saved pits list + loading -------------------------------------------
 function loadSavedPits(){
+  // No-op when the workflow is disabled or the sidebar isn't rendered.
+  if(!ENABLE_EDIT)return;
+  const list=document.getElementById('saved-pits-list');
+  if(!list)return;
   fetch(API+'/api/pits')
     .then(r=>r.json())
     .then(r=>{
       const el=document.getElementById('saved-pits-list');
+      if(!el)return;
       el.innerHTML='';
       if(!r.pits||r.pits.length===0){
         el.innerHTML='<span class="nav-foot-empty">none yet</span>';return;
@@ -2220,33 +2328,75 @@ function drawMini(){
   const strat=(p.stratigraphy||[]).filter(l=>l.top!=null&&l.bottom!=null);
   document.getElementById('mc-hs').textContent=HS?HS+' cm':'—';
   document.getElementById('mc-lay').textContent=strat.length;
-  // Thickness-weighted bulk density and SWE, computed ONLY over intervals that
-  // actually have a density value. ρ bulk = Σ(ρ_i·t_i)/Σ(t_i) (a simple mean of
-  // interval densities would mis-weight unequal layers). SWE = Σ(ρ_i·t_i)/ρ_water,
-  // with ρ_water=1000 kg/m³, thickness in m → SWE in mm. Coverage reports the
-  // measured span vs HS, since density often stops short of the ground
-  // (vegetation, basal ice) — SWE is always for the verified column.
-  let sumRT=0, sumT=0;   // Σ(ρ·t) and Σ(t), t in cm
-  (p.density||[]).forEach(d=>{
-    if(d.top==null||d.bottom==null)return;
-    const v=[d.a,d.b,d.c].filter(x=>x!=null);
-    if(!v.length)return;
-    const rho=v.reduce((a,b)=>a+b)/v.length;
-    const t=Math.abs(d.top-d.bottom);
-    if(t<=0)return;
-    sumRT+=rho*t; sumT+=t;
-  });
-  const bulk = sumT>0 ? sumRT/sumT : null;                 // kg/m³ (thickness-weighted)
-  // SWE(mm) = Σ(ρ_i[kg/m³]·t_i[m]) / ρ_water[1000] × 1000[mm/m].  t in cm → t_m=t/100,
-  // so SWE_mm = Σ(ρ·t_cm/100)/1000×1000 = Σ(ρ·t_cm)/100 = sumRT/100.
-  const swe_mm = sumT>0 ? sumRT/100 : null;
+  // Thickness-weighted bulk density and SWE.
+  //   ρ bulk = Σ(ρ_i·t_i)/Σ(t_i)  — thickness-weighted (a simple mean of interval
+  //   densities mis-weights unequal layers).
+  //   SWE(mm) = Σ(ρ·t_cm)/100      — derived from the same weighted sum.
+  // GAP FILLING: density is often missing for part of the column (vegetation or
+  // ice near the ground, or a skipped interval). Rather than treat ungauged
+  // snow as zero water (which understates SWE), we fill each ungauged centimetre
+  // with the nearest MEASURED density above it (carry-forward), falling back to
+  // the overall measured mean when nothing lies above. The DEPTH is always real
+  // and measured — only the DENSITY of the gap is inferred. SWE is then computed
+  // over the full HS, and we report how many cm of DENSITY were interpolated.
+  const measured = (p.density||[])
+    .filter(d=>d.top!=null && d.bottom!=null && [d.a,d.b,d.c].some(x=>x!=null))
+    .map(d=>{
+      const v=[d.a,d.b,d.c].filter(x=>x!=null);
+      return {top:Math.max(d.top,d.bottom), bottom:Math.min(d.top,d.bottom),
+              rho:v.reduce((a,b)=>a+b)/v.length};
+    })
+    .sort((a,b)=>b.top-a.top);   // surface-first
+
+  let sumRT_meas=0, sumT_meas=0;     // measured-only (for honest ρ bulk)
+  measured.forEach(m=>{const t=m.top-m.bottom; if(t>0){sumRT_meas+=m.rho*t; sumT_meas+=t;}});
+  const measMean = sumT_meas>0 ? sumRT_meas/sumT_meas : null;
+
+  let swe_mm=null, bulk=null, filledCm=0;
+  if(measured.length && HS){
+    // Walk the column from HS down to 0 in measured + gap segments.
+    let sumRT_full=0;
+    let cursor=HS;                 // current height above ground, walking down
+    const carry=()=>{              // nearest measured density at/above cursor
+      for(const m of measured){ if(m.top>=cursor-0.001) return m.rho; }
+      return null;
+    };
+    // Build a height-ordered set of boundaries to step through.
+    measured.forEach(m=>{
+      // gap above this interval (between cursor and interval top)
+      if(cursor > m.top+0.001){
+        const t=cursor-m.top;
+        const rho = carry() ?? measMean;    // above-fill, else mean
+        sumRT_full += rho*t; filledCm += t;
+      }
+      // the measured interval itself (clamp within [0,HS])
+      const top=Math.min(m.top,cursor), bot=Math.max(m.bottom,0);
+      if(top>bot){ sumRT_full += m.rho*(top-bot); }
+      cursor=Math.min(cursor,m.bottom);
+    });
+    // gap below the lowest measured interval down to ground
+    if(cursor>0.001){
+      const rho = measMean;                 // nothing below; use measured mean
+      sumRT_full += rho*cursor; filledCm += cursor;
+    }
+    swe_mm = sumRT_full/100;
+    bulk   = sumRT_full/HS;                  // bulk over the FULL depth
+  } else if(measured.length){
+    // No HS yet — fall back to measured-only (can't define gaps without HS).
+    bulk = measMean; swe_mm = sumRT_meas/100;
+  }
+
   document.getElementById('mc-den').textContent = bulk!=null ? Math.round(bulk)+' kg/m³' : '—';
   document.getElementById('mc-swe').textContent = swe_mm!=null ? Math.round(swe_mm)+' mm' : '—';
-  // coverage
-  if(sumT>0 && HS){
-    const full = sumT>=HS-0.5;
-    document.getElementById('mc-cov-lbl').textContent = full ? 'full depth' : 'density covers';
-    document.getElementById('mc-cov').textContent = full ? '' : Math.round(sumT)+'/'+HS+' cm';
+  // Coverage / honesty line: say explicitly that DENSITY (not depth) was filled.
+  if(swe_mm!=null && HS){
+    if(filledCm>=0.5){
+      document.getElementById('mc-cov-lbl').textContent='est · density interp';
+      document.getElementById('mc-cov').textContent=Math.round(filledCm)+' cm';
+    } else {
+      document.getElementById('mc-cov-lbl').textContent='measured';
+      document.getElementById('mc-cov').textContent='full depth';
+    }
   } else {
     document.getElementById('mc-cov-lbl').textContent='';
     document.getElementById('mc-cov').textContent='';
@@ -2287,6 +2437,19 @@ document.querySelectorAll('.toggles input').forEach(inp=>{
   });
 });
 
+// Live redraw on ANY edit to a measurement table — including the last/only row.
+// Without this, the live core/profile only refreshed when rows were added or
+// removed (those fire cnt()->tick()), so typing into an existing layer's cells
+// didn't update the picture until you added then deleted a throwaway row.
+// Event delegation on the <tbody> elements catches input/change from every
+// current and future cell with one listener each.
+['tb','db','lb','sb','ssab'].forEach(id=>{
+  const body=document.getElementById(id);
+  if(!body)return;
+  body.addEventListener('input', scheduleMini);
+  body.addEventListener('change', scheduleMini);   // for <select> grain-type etc.
+});
+
 buildInst(); tick(); loadSavedPits(); restoreDraft(); drawMini();
 </script>
 </body></html>"""
@@ -2307,6 +2470,20 @@ def _render_form():
     short = INSTITUTION.split("·")[0].split("-")[0].strip()[:18] or "CryoGARS"
     html = FORM.replace("__PAGE_TITLE__", f"{APP_TITLE} · {INSTITUTION}")
     html = html.replace(">CryoGARS</span>", f">{short}</span>")
+    # Saved-pits sidebar: present only when the edit/history workflow is enabled.
+    if ENABLE_EDIT:
+        saved_section = (
+            '<div class="nav-foot">'
+            '<div class="nav-foot-label">Saved pits · click to load</div>'
+            '<div id="saved-pits-list"><span class="nav-foot-empty">none yet</span></div>'
+            '</div>'
+        )
+    else:
+        saved_section = ""
+    html = html.replace("__SAVED_PITS_SECTION__", saved_section)
+    # Expose the flag to the page so JS can no-op load/list when disabled while
+    # leaving draft-restore (which is independent of the DB) fully alive.
+    html = html.replace("__ENABLE_EDIT__", "true" if ENABLE_EDIT else "false")
     return html
 
 def _json_or_400():
@@ -2328,10 +2505,15 @@ def index():
 
 @app.get("/api/pits")
 def api_pits():
-    return jsonify(ok=True, pits=list_pits())
+    # When the edit/history workflow is disabled, return an empty, disabled list.
+    if not ENABLE_EDIT:
+        return jsonify(ok=True, enabled=False, pits=[])
+    return jsonify(ok=True, enabled=True, pits=list_pits())
 
 @app.get("/api/load/<path:pit_id>")
 def api_load(pit_id):
+    if not ENABLE_EDIT:
+        return jsonify(ok=False, msg="Loading saved pits is disabled on this instance.")
     pit, err = load_pit(pit_id)
     if pit is None:
         return jsonify(ok=False, msg=err)
@@ -2360,8 +2542,16 @@ def api_archive():
         return jsonify(ok=False, msg=info), 500
     pit_id = payload["meta"]["pit_id"]
     csvs   = export_all(pit_id)
+    # Each pit gets its own subfolder so multiple pits in EXPORT_DIR stay tidy.
+    # Build the name from known components ({campaign}_{pit}_{date}) rather than
+    # splitting filenames — pit_ids can contain underscores, which would break a
+    # naive split. save_csvs_to_folder sanitizes the segment defensively too.
+    m = payload.get("meta", {}) or {}
+    campaign = m.get("campaign") or CAMPAIGN
+    date_str = (m.get("date") or "00000000").replace("-", "")
+    subfolder = f"{campaign}_{pit_id}_{date_str}"
     # Always write to the server-configured export dir (not a user-typed path).
-    fok, finfo = save_csvs_to_folder(csvs, EXPORT_DIR)
+    fok, finfo = save_csvs_to_folder(csvs, EXPORT_DIR, subfolder=subfolder)
     if fok:
         return jsonify(ok=True, pit_id=pit_id,
                        folder=finfo["folder"], folder_count=finfo["count"])
@@ -2378,15 +2568,29 @@ def main():
     _FORM_HTML = _render_form()
     print(f"{APP_TITLE} · {INSTITUTION}")
     print(f"  database : {os.path.abspath(DB_PATH)}")
-    print(f"  exports  : {os.path.abspath(EXPORT_DIR)} (default folder sink)")
-    print(f"  open     : http://127.0.0.1:{PORT}")
-    # Flask's dev server is threaded by default; fine for a lab tool. For a
-    # shared deployment, run behind waitress/gunicorn instead:
-    #   waitress-serve --port=8502 cryopit:make_app
-    app.run(host="127.0.0.1", port=PORT, debug=False)
+    print(f"  exports  : {os.path.abspath(EXPORT_DIR)} (archive folder)")
+    print(f"  edit     : {'on' if ENABLE_EDIT else 'off'}")
+    shown_host = "127.0.0.1" if HOST in ("127.0.0.1", "localhost") else HOST
+    print(f"  open     : http://{shown_host}:{PORT}")
+    # Serve with waitress (a real, cross-platform WSGI server) when available;
+    # fall back to Flask's dev server only if waitress isn't installed, so a
+    # bare `python cryopit.py` still works for quick local use.
+    try:
+        from waitress import serve
+        print(f"  server   : waitress (production)")
+        serve(app, host=HOST, port=PORT, threads=int(os.getenv("CRYOPIT_THREADS", "8")))
+    except ImportError:
+        print(f"  server   : Flask dev server (install 'waitress' for production)")
+        app.run(host=HOST, port=PORT, debug=False)
 
 def make_app():
-    """WSGI entry point for production servers (waitress, gunicorn)."""
+    """WSGI entry point for production servers (waitress, gunicorn, PythonAnywhere).
+
+    Usage examples:
+      waitress-serve --host=0.0.0.0 --port=8502 cryopit:make_app
+      gunicorn -b 0.0.0.0:8502 'cryopit:make_app()'   # Linux/Mac only
+    PythonAnywhere: point the WSGI config's `application` at make_app().
+    """
     global _FORM_HTML
     init_db()
     _FORM_HTML = _render_form()
