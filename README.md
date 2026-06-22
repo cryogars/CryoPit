@@ -35,7 +35,7 @@ python cryopit.py
 
 Open <http://127.0.0.1:8502>. On first run CryoPit creates the database automatically (default: `cryopit.db` in the working directory). You can point `CRYOPIT_DB_PATH` at a different location to reuse a database across sessions or machines. The existing database must be a CryoPit-created database or at least have a compatible schema (see below), and the app needs read/write access to the path.
 
-> ### Deployment & multi-user status (please read)
+<!-- > ### Deployment & multi-user status (please read)
 >
 > **What works today:** CryoPit runs as a **single-user application**. That
 > means one person using it at a time; whether on their own computer, or in a
@@ -56,7 +56,7 @@ Open <http://127.0.0.1:8502>. On first run CryoPit creates the database automati
 > people writing at the same time, SQLite's single-writer model becomes a
 > limit; the schema is already designed to migrate to PostgreSQL when that day
 > comes. For now, SQLite is the right, simple choice. This is flagged only so
-> future deployers know where the ceiling is.
+> future deployers know where the ceiling is. -->
 
 
 ---
