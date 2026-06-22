@@ -46,6 +46,7 @@ SAVED_PITS_LIMIT = int(os.getenv("CRYOPIT_SAVED_PITS_LIMIT", "10"))
 # so a single local user sees all their own pits exactly as before.
 DEV_USER    = os.getenv("CRYOPIT_DEV_USER", "local")
 AUTH_HEADER = os.getenv("CRYOPIT_AUTH_HEADER", "X-Remote-User")
+THREADS     = int(os.getenv("CRYOPIT_THREADS", "8"))
 NO_DATA     = -9999
 
 def current_user():
@@ -2545,7 +2546,7 @@ def main():
     try:
         from waitress import serve
         print(f"  server   : waitress (production)")
-        serve(app, host=HOST, port=PORT, threads=int(os.getenv("CRYOPIT_THREADS", "8")))
+        serve(app, host=HOST, port=PORT, threads=THREADS)
     except ImportError:
         print(f"  server   : Flask dev server (install 'waitress' for production)")
         app.run(host=HOST, port=PORT, debug=False)
