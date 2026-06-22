@@ -8,7 +8,7 @@ A snow-pit data logger for field snow science built by the [CryoGARS research gr
 
 * **Structured Field Entry**: Guided sections for identity, weather, ground, temperature, density, LWC, stratigraphy, SSA, and an instrument/task checklist.
 * **Coordinates**: Enter UTM or lat/lon (WGS84); the other is computed automatically, in the browser.
-* **Live Snow Profile Plot**: a miniature of the snowpack updates as you type, and a full profile (hand-hardness, grain type, density, temperature on a shared height axis) is available on demand. Height above ground: surface at top, ground at the bottom..
+* **Live Snow Profile Plot**: a miniature of the snowpack updates as you type, and a full profile (hand-hardness, grain type, density, temperature on a shared height axis) is available on demand. Height above ground: surface at top, ground at the bottom.
 * **SQLite Database**: Every pit is saved to a relational schema (see Entity-Relationship Diagram below).
 * **Exports**: SnowEx-style (https://nsidc.org/data/snex23_mar23_sp/versions/1) CSVs, delivered either as a single ZIP download or written to a folder on the machine running the app.
 
