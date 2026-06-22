@@ -29,7 +29,7 @@ pip install -r requirements.txt
 ## Running the App
 
 ```{bash}
-python CryoPit_V1.py
+python cryopit.py
 ```
 
 This opens CryoPit in your browser. On first run it creates the database automatically (default: `cryopit.db` in the working directory). You can point `CRYOPIT_DB_PATH` at a different location to reuse a database across sessions or machines. The existing database must be a CryoPit-created database or at least have a compatible schema (see below), and the app needs read/write access to the path.
