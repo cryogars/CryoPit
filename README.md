@@ -1,6 +1,6 @@
 # ❄ CryoPit
 
-A snow-pit data logger for field snow science built by the [CryoGARS research group](https://www.cryogars.com/) at the Department of Geosciences, Boise State University. CryoPit is a browser-based, OS-agnostic [FLask](https://flask.palletsprojects.com/en/stable/) app. This means that the app should run fine on any modern browser Mac, Linux, and Windows. CryoPit is designed so any institution or research group can deploy and adapt it.
+A snow-pit data logger for field snow science built by the [CryoGARS research group](https://www.cryogars.com/) at the Department of Geosciences, Boise State University. CryoPit is a browser-based, OS-agnostic web app. [FLask](https://flask.palletsprojects.com/en/stable/) app. This means that the app should run fine on any modern browser Mac, Linux, and Windows. CryoPit is designed so any institution or research group can deploy and adapt it.
 
 ---
 
