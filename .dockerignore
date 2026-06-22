@@ -1,0 +1,15 @@
+# Keep the Docker build context small and free of local cruft.
+__pycache__/
+*.pyc
+*.pyo
+*.db
+*.db-wal
+*.db-shm
+exports/
+.env
+.venv/
+venv/
+.git/
+.gitignore
+*.md
+.DS_Store
