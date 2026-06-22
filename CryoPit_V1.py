@@ -1,43 +1,10 @@
 """
-CryoPit Snow Pit Logger v3.0
-Design B — Clinical white · Braun/laboratory aesthetic
+CryoPit Snow Pit Logger
 Flask single-origin app · SnowEx-compatible CSV export · UTM <-> lat/lon · SQLite
 
 Run:    pip install flask
         python cryopit.py
         open http://127.0.0.1:8502
-
-Changes from v2.0 (Streamlit shell):
-  * Streamlit removed entirely. Flask serves the form AND the JSON API from one
-    process on one port — no iframe, no second server thread, no CORS, no
-    port-collision dance, no 100vh clamp war.
-  * FIXED: save_csvs_to_folder existed only as an orphaned docstring/body after
-    zip_csvs's return (the `def` line was missing) — the Folder export raised
-    NameError. Restored as a real function.
-  * FIXED: parseFloat(x)||0 data corruption. Blank cells no longer become real
-    measurements (blank temp -> 0.0 degC, blank height -> 0 cm). New num()
-    helper returns null for blanks AND preserves legitimate zeros (the old
-    ||null pattern destroyed elevation 0 m / slope 0 deg). Empty rows are
-    skipped; null -> -9999 happens only at export.
-  * NEW: saved pits load. The exact save payload is stored in sites.raw_json
-    and round-tripped back through populate() — click a pit in the sidebar to
-    reopen and edit it. (Pits saved by v2.0 have no raw_json and can't load.)
-  * NEW: overwrite protection. Saving a pit_id that already exists returns
-    exists:true and the form asks before replacing. If you LOADED that pit to
-    edit it, overwrite is implied and no prompt appears.
-  * NEW: draft autosave. The form state persists to localStorage on every edit
-    (debounced) and is restored on reload — a refresh no longer destroys an
-    hour of transcription. "New" clears the draft and starts fresh.
-  * SQLite: WAL + busy_timeout=5000. WAL lets readers and the writer coexist;
-    the timeout queues a second writer instead of failing with
-    "database is locked". (Writes still serialize — that's SQLite.)
-  * Time fields (HHMM) are validated at save, not just tinted red.
-  * CSRF hardening: API routes require Content-Type: application/json, which
-    forces a CORS preflight for any cross-origin caller — and we send no CORS
-    headers, so other websites can't drive the API.
-  * Removed unused pandas + pyproj dependencies (the JS does all coordinate
-    conversion); removed the dead Python UTM functions and the doSave
-    monkey-patch; density map in LWC export now joins on rounded keys.
 """
 
 from flask import Flask, request, jsonify, abort
