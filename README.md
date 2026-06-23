@@ -39,6 +39,13 @@ CryoPit serves with [waitress](https://docs.pylonsproject.org/projects/waitress/
 
 ### What if Port 8502 is Already in Use?
 
+If port 8502 is occupied — almost always a previous CryoPit instance that wasn't fully closed — the app won't start and will say so clearly (no silent failure). Either:
+
+* Stop the old instance with **Ctrl-C** in its terminal, or
+* Launch on a different port. For example, `CRYOPIT_PORT=8503 python cryopit.py`.
+
+Stopping CryoPit with **Ctrl-C** (rather than closing the terminal window or browser tab) releases the port cleanly, so you'll rarely hit this.
+
 <!-- > ### Deployment & multi-user status (please read)
 >
 > **What works today:** CryoPit runs as a **single-user application**. That
