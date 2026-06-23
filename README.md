@@ -50,7 +50,7 @@ Stopping CryoPit with **Ctrl-C** (rather than closing the terminal window or bro
 
 ## Deploying for Multiple Users
 
-CryoPit can be hosted so several people reach it over a URL.
+CryoPit can be hosted so several people reach it over a URL. See **[DEPLOYMENT.md](DEPLOYMENT.md)** on how to do that.
 
 ## Using the App
 
