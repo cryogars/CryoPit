@@ -37,6 +37,8 @@ Open <http://127.0.0.1:8502>; CryoPit serves on port 8502 by default. On first r
 
 CryoPit serves with [waitress](https://docs.pylonsproject.org/projects/waitress/) (a production WSGI server) when it's installed, falling back to Flask's development server otherwise. This fallback mechanism is fine for a single local user.
 
+### What if Port 8502 is Already in Use?
+
 <!-- > ### Deployment & multi-user status (please read)
 >
 > **What works today:** CryoPit runs as a **single-user application**. That
