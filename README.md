@@ -27,7 +27,7 @@ pip install -r requirements.txt
 
 ---
 
-## Running CryoPit Locally
+## Running CryoPit on your Local Machine
 
 ```{bash}
 python cryopit.py
