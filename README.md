@@ -48,7 +48,7 @@ Stopping CryoPit with **Ctrl-C** (rather than closing the terminal window or bro
 
 ---
 
-## Deploying for multiple users
+## Deploying for Multiple Users
 
 CryoPit can be hosted so several people reach it over a URL.
 
