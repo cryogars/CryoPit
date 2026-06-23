@@ -46,31 +46,11 @@ If port 8502 is occupied — almost always a previous CryoPit instance that wasn
 
 Stopping CryoPit with **Ctrl-C** (rather than closing the terminal window or browser tab) releases the port cleanly, so you'll rarely hit this.
 
-<!-- > ### Deployment & multi-user status (please read)
->
-> **What works today:** CryoPit runs as a **single-user application**. That
-> means one person using it at a time; whether on their own computer, or in a
-> Python environment on a server they access themselves. Saving and exporting
-> rely on a small local helper service (port `8502`) that assumes the app and
-> the browser are effectively on the same machine / one session.
->
-> **What does *not* work yet:** hosting one shared instance behind a **URL that
-> several people use at the same time**. Under that setup, the save/export
-> helper service breaks (it is tied to single-machine use), so concurrent
-> multi-user access over a shared link is **not supported in this version**.
-> Making this work is the main item on the roadmap below — it requires moving
-> save/export to native server-side actions.
->
-> **Database concurrency (future):** CryoPit stores data in a single SQLite
-> file. SQLite is intentionally simple and is well-suited to a small team
-> (a handful of users saving occasionally). For larger deployments with many
-> people writing at the same time, SQLite's single-writer model becomes a
-> limit; the schema is already designed to migrate to PostgreSQL when that day
-> comes. For now, SQLite is the right, simple choice. This is flagged only so
-> future deployers know where the ceiling is. -->
-
-
 ---
+
+## Deploying for multiple users
+
+CryoPit can be hosted so several people reach it over a URL.
 
 ## Using the App
 
