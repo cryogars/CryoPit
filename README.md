@@ -77,6 +77,14 @@ The status indicator shows the pit's state: not archived by default, archived (g
 
 ---
 
+## Bulk Densit and SWE
+
+CryoPit reports bulk density and SWE (snow water equivalent) live in the Live Core rail. Here is how the numbers are calculated:
+
+### Bulk Density is Thickness-weighted
+
+---
+
 ## Exports
 
 Exporting a pit produces a set of **SnowEx-style CSV files** (https://nsidc.org/data/snex23_mar23_sp/versions/1) — one per measurement category — delivered either as a single ZIP download or written to a folder. Files are named:
