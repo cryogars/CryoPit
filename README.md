@@ -94,10 +94,16 @@ where $n$ is the number of intervals for which density was measured, $t_i\ (m)$ 
 * 0.1 $cm$ of light snow at 100 $kg/m^3$
 * 0.9 $cm$ of dense snow at 400 $kg/m^3$
 
-A simple average give:
+A simple average gives:
 
 $$
 \rho_s = \frac{100 + 400}{2} = 250\ kg/m^3
+$$
+
+The thickness-weighted bulk density is:
+
+$$
+\rho_s = \frac{100 \times 0.1 + 400 \time 0.9 }{0.9 + 0.1} = 370\ kg/m^3
 $$
 
 ---
