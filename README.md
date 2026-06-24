@@ -77,7 +77,7 @@ The status indicator shows the pit's state: not archived by default, archived (g
 
 ---
 
-## Bulk Densit and SWE
+## Bulk Density and SWE
 
 CryoPit reports bulk density and SWE (snow water equivalent) live in the Live Profile rail. Here is how the numbers are calculated:
 
