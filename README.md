@@ -17,7 +17,7 @@ A snow-pit data logger for field snow science built by the [CryoGARS research gr
 
 ## Requirements
 * Python 3.10+
-* Dependencies are listed in [requirements.txt](requiremets.txt): `flask`, `waitress`, and `python-dotenv` (optional).
+* Dependencies are listed in **[requirements.txt](requiremets.txt)**: `flask`, `waitress`, and `python-dotenv` (optional).
 
 Install them with 
 
