@@ -55,6 +55,7 @@ CryoPit can be hosted so several people reach it over a URL. See **[DEPLOYMENT.m
 Two things worth knowing up front:
 
 * **Concurrency**: SQLite runs in [Write-Ahead Logging (WAL) mode](https://sqlite.org/wal.html) with a 10 seconds busy timeout. This is enough for a small team saving occasionally. The schema is already designed to migrate to [PostgreSQL](https://www.postgresql.org/) if much higher write concurrency is ever needed. 
+* **Editing on Shared Instances**: the saved-pits/edit workflow is gated by `CRYOPIT_ENABLE_EDIT` and scoped per user (i.e., each person sees and edits only their own pits). On a shared instance without authentication, leave editing off. Otherwise, all users would be able to edit any pit data. With institutional SSO in front, `CRYOPIT_ENABLE_EDIT` can be turned on safely.
 
 ---
 
