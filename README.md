@@ -33,7 +33,7 @@ pip install -r requirements.txt
 python cryopit.py
 ```
 
-Open <http://127.0.0.1:8502>; CryoPit serves on **port 8502** by default. On first run CryoPit creates the database automatically (default: `cryopit.db` in the working directory). You can point `CRYOPIT_DB_PATH` at a different location to reuse a database across sessions or machines. The existing database must be a CryoPit-created database or at least have a compatible schema (see below), and the app needs read/write access to the path.
+Open <http://127.0.0.1:8502>; CryoPit serves on **port 8502** by default. On first run CryoPit creates the database automatically (default: `cryopit.db` in the current working directory). You can point `CRYOPIT_DB_PATH` at a different location to reuse a database across sessions or machines. The existing database must be a CryoPit-created database or at least have a compatible schema (see below), and the app needs read/write access to the path.
 
 CryoPit serves with [waitress](https://docs.pylonsproject.org/projects/waitress/) (a production WSGI server) when it's installed, falling back to Flask's development server otherwise. This fallback mechanism is fine for a single local user.
 
