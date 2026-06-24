@@ -83,8 +83,11 @@ CryoPit reports bulk density and SWE (snow water equivalent) live in the Live Co
 
 ### Bulk Density is Thickness-weighted
 
-CryoPit calculates bulk density ($\rho_b$) as follows:
+CryoPit calculates bulk density ($\rho_s$) as follows:
 
+$$
+\rho_s = \frac{\sum_{i=1}^n \rho_{s,i} \times t_i}{\sum_{i=1}^n t_i}
+$$
 
 
 ---
