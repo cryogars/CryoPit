@@ -103,7 +103,7 @@ $$
 The thickness-weighted bulk density is:
 
 $$
-\rho_s = \frac{100 \times 0.1 + 400 \time 0.9 }{0.9 + 0.1} = 370\ kg/m^3
+\rho_s = \frac{100 \times 0.1 + 400 \times 0.9 }{0.9 + 0.1} = 370\ kg/m^3
 $$
 
 ---
