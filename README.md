@@ -1,6 +1,6 @@
 # ❄ CryoPit
 
-A snow-pit data logger for field snow science built by the [CryoGARS research group](https://www.cryogars.com/) at the Department of Geosciences, Boise State University. CryoPit is a browser-based, OS-agnostic web app. This means that the app should run fine on any modern browser Mac, Linux, and Windows. A [Flask](https://flask.palletsprojects.com/) (Python) backend handles storage and CSV export, while HTML/CSS/JavaScript frontend runs the form, live profile plots, and coordinate conversion entirely in the browser. CryoPit is designed so any institution or research group can deploy and adapt it.
+A snow-pit data logger for field snow science built by the [CryoGARS research group](https://www.cryogars.com/) at the Department of Geosciences, Boise State University. CryoPit is a browser-based, OS-agnostic web app. This means that the app should run fine on any modern browser on Mac, Linux, and Windows. A [Flask](https://flask.palletsprojects.com/) (Python) backend handles storage and CSV export, while HTML/CSS/JavaScript frontend runs the form, live profile plots, and coordinate conversion entirely in the browser. CryoPit is designed so any institution or research group can deploy and adapt it.
 
 ---
 
@@ -51,6 +51,12 @@ Stopping CryoPit with **Ctrl-C** (rather than closing the terminal window or bro
 ## Deploying for Multiple Users
 
 CryoPit can be hosted so several people reach it over a URL. See **[DEPLOYMENT.md](DEPLOYMENT.md)** on how to do that.
+
+Two things worth knowing up front:
+
+* **Concurrency**: SQLite runs in Write-Ahead Logging (WAL) mode
+
+---
 
 ## Using the App
 
