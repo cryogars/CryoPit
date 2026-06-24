@@ -89,7 +89,7 @@ $$
 \rho_s = \frac{\sum_{i=1}^n \rho_{s,i} \times t_i}{\sum_{i=1}^n t_i}
 $$
 
-where $n$ is the number of intervals where density is measured, $t_i$ is the thickness of the layer
+where $n$ is the number of intervals where density was measured, $t_i$ is the thickness of the $i$th layer, and $\rho_{s,i}$ is the density of $i$th layer.
 
 ---
 
