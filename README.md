@@ -69,12 +69,11 @@ Two things worth knowing up front:
      (5 cm or 10 cm) from the total snow depth, so you only enter the readings.
    - **LWC** can copy its intervals directly from the density section.
    - The **Live Profile** rail updates as you type. The full Profile redraws when you open it or click its redraw button.
-3. **Save to DB** writes the pit to the database without downloading anything.
-4. **Export CSVs** saves the pit to the database (so a download always has a
-    matching saved record), then either downloads a single .zip of all CSVs,
-    or — switch the dropdown to **Folder** — writes them to a folder path you
-    specify. In other words, Exporting  CSVs also write to an SQLite database. This is a safety feature, not a bug, incase your browser crashes.
+3. **Download** delivers six CSVs to your computer as ZIP. It does *_not_* write to the database, so you should _Download_ only when you want CSVs.
+4. **Archive** saves the pit to the database and writes the CSVs to the server's export folder.
 5. Open the **Profile** section to see the plotted snow profile.
+
+The status indicator shows the pit's state: not archived by default, archived (green) after Archive, and downloaded (not archived; blue) after a Download. This makes it clear that downloading is not the same as recording. Starting a New pit warns you if the current one hasn't been archived.
 
 ---
 
