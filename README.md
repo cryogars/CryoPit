@@ -62,12 +62,13 @@ Two things worth knowing up front:
 ## Using the App
 
 1. Fill in **Identity** (location, date, and the required fields marked `*`).
-   The Pit ID is generated automatically but can be edited.
+   The Pit ID is generated automatically from site + date but can be edited.
 2. Work through the sections. Add temperature, density, LWC, stratigraphy,
    and SSA rows as needed. The progress bar and checklist track completeness.
    - **Temperature** and **Density** can auto-generate their depth intervals
      (5 cm or 10 cm) from the total snow depth, so you only enter the readings.
    - **LWC** can copy its intervals directly from the density section.
+   - The **Live Profile** rail updates as you type. The full Profile redraws when you open it or click its redraw button.
 3. **Save to DB** writes the pit to the database without downloading anything.
 4. **Export CSVs** saves the pit to the database (so a download always has a
     matching saved record), then either downloads a single .zip of all CSVs,
