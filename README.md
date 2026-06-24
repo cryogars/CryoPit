@@ -79,16 +79,17 @@ The status indicator shows the pit's state: not archived by default, archived (g
 
 ## Bulk Densit and SWE
 
-CryoPit reports bulk density and SWE (snow water equivalent) live in the Live Core rail. Here is how the numbers are calculated:
+CryoPit reports bulk density and SWE (snow water equivalent) live in the Live Profile rail. Here is how the numbers are calculated:
 
 ### Bulk Density is Thickness-weighted
 
-CryoPit calculates bulk density ($\rho_s$) as follows:
+CryoPit weights each layer by its thickness to calculate bulk density ($\rho_s$).
 
 $$
 \rho_s = \frac{\sum_{i=1}^n \rho_{s,i} \times t_i}{\sum_{i=1}^n t_i}
 $$
 
+where $n$ is the number of intervals where density is measured, $t_i$ is the thickness of the layer
 
 ---
 
