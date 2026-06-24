@@ -89,7 +89,7 @@ $$
 \rho_s = \frac{\sum_{i=1}^n \rho_{s,i} \times t_i}{\sum_{i=1}^n t_i}
 $$
 
-where $n$ is the number of intervals for which density was measured, $t_i (m)$ is the thickness of the $i$th layer, and $\rho_{s,i} (kg/m^3)$ is the density of $i$th layer. The thickness-weighted density only matters whenever layers have different thicknesses, which rarely occurs. Otherwise, the bulk density simply collapses to the average density across all layers. As an example, consider a snowpack with the following density layering:
+where $n$ is the number of intervals for which density was measured, $t_i\ (m)$ is the thickness of the $i$th layer, and $\rho_{s,i}\ (kg/m^3)$ is the density of $i$th layer. The thickness-weighted density only matters whenever layers have different thicknesses, which rarely occurs. Otherwise, the bulk density simply collapses to the average density across all layers. As an example, consider a snowpack with the following density layering:
 
 * 0.1 $cm$ of light snow at 100 $kg/m^3$
 * 0.9 $cm$ of dense snow at 400 $kg/m^3$
@@ -97,7 +97,7 @@ where $n$ is the number of intervals for which density was measured, $t_i (m)$ i
 A simple average give:
 
 $$
-\rho_s = \frac{100 + 400}{2} = 250 kg/m^3
+\rho_s = \frac{100 + 400}{2} = 250\ kg/m^3
 $$
 
 ---
