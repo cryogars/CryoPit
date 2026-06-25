@@ -162,6 +162,7 @@ CryoPit reads these environment variables (all optional, defaults shown). You ca
 
 | Variable | Default | Purpose |
 |---|---|---|
+| `CRYOPIT_HOST` | `127.0.0.1` | Bind address; set `0.0.0.0` to accept network connections |
 | `CRYOPIT_DB_PATH` | `cryopit.db` | SQLite database file (created if absent; must be a CryoPit DB if it exists) |
 | `CRYOPIT_INSTITUTION` | `CryoGARS · Boise State University` | Institution name |
 | `CRYOPIT_CAMPAIGN` | `SNEX25` | Default campaign code |
