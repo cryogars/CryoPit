@@ -129,6 +129,8 @@ Oftentimes, density is missing for a part of the column. This mostly occurs in t
 * **The Inteval Closest to the Ground**: Density is estimated using the mean of thickness-weighted measured desnities.
 * **Gap Between Measured Intervals**: this is an extremely rare case. However, in case it occurs, CryoPit estimates density using carry-forward approach; i.e., the density directly above the missing interval is used.
 
+**Note**: The estimated density is used only to compute the live SWE and bulk-density readout. Only measured data goes into the DB and CSVs. When any gap is filled, the Live Profile labels the result _estimated_ and shows how many centimetres of density were interpolated.
+
 ---
 
 ## Exports
