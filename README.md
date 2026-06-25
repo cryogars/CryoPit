@@ -106,7 +106,7 @@ $$
 \rho_s = \frac{100 \times 0.1 + 400 \times 0.9 }{0.9 + 0.1} = 370\ kg/m^3
 $$
 
-### SWE and Layers with Unmeasured Density
+### SWE and Intervals with Unmeasured Density
 
 $$
 \begin{aligned}
@@ -121,6 +121,13 @@ $$
 where $\sum_{i=1}^n t_i$ = $HS$ = snow depth and $\rho_w = 1000\ kg/m^3$ = density of water.
 
 **Note on units**: CryoPit works in $cm$ and $kg/m^3$ throughout. Therefore, all depths and thicknesses should be  entered in $cm$. The formulas above are shown in metres only to keep the SWE derivation clean; you never enter or see metres in the app. The displayed SWE ($mm$) is computed from your $cm$ inputs automatically.
+
+### Intervals with Unmeasured Density
+
+Oftentimes, density is missing for a part of the column. This mostly occurs in the near-ground interval, where vegetation prevents sampling. In cases where there is a gap, CryoPit estimates the missing density, depending on where the gap is:
+
+* **The Inteval Closest to the Ground**: Density is estimated using the mean of thickness-weighted measured desnities.
+* **Gap Between Measured Intervals**: this is an extremely rare case. However, in case it occurs, CryoPit estimates density using carry-forward approach; i.e., the density directly above the missing interval is used.
 
 ---
 
