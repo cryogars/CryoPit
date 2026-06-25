@@ -120,7 +120,7 @@ $$
 
 where $\sum_{i=1}^n t_i$ = $HS$ = snow depth and $\rho_w = 1000\ kg/m^3$ = density of water.
 
-**Note on units**: CryoPit works in centimeters and $kg/m^3$ throughout. Therefore, all depths and thicknesses should be  entered in $cm$. The formulas above are shown in metres only to keep the SWE derivation clean; you never enter or see metres in the app. The displayed bulk density ($kg/m^3$) and SWE ($mm$) are computed from your $cm$ inputs automatically.
+**Note on units**: CryoPit works in $cm$ and $kg/m^3$ throughout. Therefore, all depths and thicknesses should be  entered in $cm$. The formulas above are shown in metres only to keep the SWE derivation clean; you never enter or see metres in the app. The displayed bulk density ($kg/m^3$) and SWE ($mm$) are computed from your $cm$ inputs automatically.
 
 ---
 
