@@ -1409,15 +1409,15 @@ html,body{height:100%;background:var(--w);font-family:var(--sans);color:var(--in
 
 </main>
 
-<aside class="rail" title="Live core — click for the full profile" onclick="document.querySelector('[data-t=s11]').click();drawProfile()">
-  <div class="rail-lbl">Live core</div>
+<aside class="rail" title="Live profile — click for the full profile" onclick="document.querySelector('[data-t=s11]').click();drawProfile()">
+  <div class="rail-lbl">Live profile</div>
   <div id="mini-core"></div>
   <div class="rail-stat"><span>HS</span><b id="mc-hs">—</b></div>
   <div class="rail-stat"><span>layers</span><b id="mc-lay">0</b></div>
+  <div class="rail-stat"><span>T min</span><b id="mc-tmin">—</b></div>
   <div class="rail-stat"><span>ρ bulk</span><b id="mc-den">—</b></div>
   <div class="rail-stat"><span>SWE</span><b id="mc-swe">—</b></div>
   <div class="rail-stat" style="border-bottom:none"><span id="mc-cov-lbl" style="font-size:8px;color:var(--ink3)"></span><b id="mc-cov" style="font-size:9px;color:var(--ink3);font-weight:400"></b></div>
-  <div class="rail-stat"><span>T min</span><b id="mc-tmin">—</b></div>
   <div class="rail-hint">click for full profile →</div>
 </aside>
 </div>
