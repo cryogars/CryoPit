@@ -86,13 +86,13 @@ CryoPit reports bulk density and SWE (snow water equivalent) live in the Live Pr
 CryoPit weights each layer by its thickness to calculate bulk density ($\rho_s$).
 
 $$
-\rho_s = \frac{\sum_{i=1}^n \rho_{s,i} \times t_i}{\sum_{i=1}^n t_i}
+\rho_s\ (kg/m^3) = \frac{\sum_{i=1}^n \rho_{s,i} \times t_i}{\sum_{i=1}^n t_i}
 $$
 
-where $n$ is the number of intervals for which density was measured, $t_i\ (m)$ is the thickness of the $i$th layer, and $\rho_{s,i}\ (kg/m^3)$ is the density of $i$th layer. The thickness-weighted density only matters whenever layers have different thicknesses, which rarely occurs. Otherwise, the bulk density simply collapses to the average density across all layers. As an example, consider a snowpack with the following density layering:
+where $n$ is the number of intervals for which density was measured, $t_i\ (m)$ is the thickness of the $i$th layer, and $\rho_{s,i}\ (kg/m^3)$ is the density of $i$th layer. The thickness-weighted density only matters whenever layers have different thicknesses, which is not uncommon. Otherwise, the bulk density simply collapses to the average density across all layers. As an example, consider a snowpack with the following density layering:
 
-* 0.1 $cm$ of light snow at 100 $kg/m^3$
-* 0.9 $cm$ of dense snow at 400 $kg/m^3$
+* 0.1 $m$ of light snow at 100 $kg/m^3$
+* 0.9 $m$ of dense snow at 400 $kg/m^3$
 
 A simple average gives:
 
@@ -105,6 +105,22 @@ The thickness-weighted bulk density is:
 $$
 \rho_s = \frac{100 \times 0.1 + 400 \times 0.9 }{0.9 + 0.1} = 370\ kg/m^3
 $$
+
+### SWE and Layers with Unmeasured Density
+
+$$
+\begin{aligned}
+SWE\ (m) & = \sum_{i=1}^n t_i \times \frac{\rho_s}{\rho_w} \\
+ & = \sum_{i=1}^n t_i \times \frac{\rho_s}{1000} \\
+ & = \frac{\sum_{i=1}^n t_i}{1000} \times \frac{\sum_{i=1}^n \rho_{s,i} \times t_i}{\sum_{i=1}^n t_i} \\
+ & = \frac{\sum_{i=1}^n \rho_{s,i} \times t_i}{1000} \\
+ SWE\ (mm) & = \sum_{i=1}^n \rho_{s,i} \times t_i
+\end{aligned}
+$$
+
+where $\sum_{i=1}^n t_i$ = $HS$ = snow depth and $\rho_w = 1000\ kg/m^3$ = density of water.
+
+**Note on units**:
 
 ---
 
