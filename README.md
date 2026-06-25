@@ -158,7 +158,7 @@ All six files are always produced. For a measurement that wasn't collected, its 
 
 ## Configuration
 
-CryoPit reads these environment variables (all optional, sensible defaults shown):
+CryoPit reads these environment variables (all optional, defaults shown). You can set them in a `.env` file in the project directory.
 
 | Variable | Default | Purpose |
 |---|---|---|
@@ -168,7 +168,6 @@ CryoPit reads these environment variables (all optional, sensible defaults shown
 | `CRYOPIT_API_PORT` | `8502` | Local helper service port |
 | `CRYOPIT_EXPORT_DIR` | `exports` | Default folder for folder-export |
 
-You can set these in a `.env` file in the project directory.
 
 ---
 
