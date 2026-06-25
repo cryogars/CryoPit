@@ -10,6 +10,7 @@ Run:    pip install flask
 from flask import Flask, request, jsonify, abort
 import sqlite3
 import json, io, csv as csvlib, math, os, zipfile, base64
+from datetime import date
 
 try:
     from dotenv import load_dotenv
@@ -20,33 +21,25 @@ except ImportError:
 # -----------------------------------------------------------------------------
 # CONFIG
 # -----------------------------------------------------------------------------
-DB_PATH     = os.getenv("CRYOPIT_DB_PATH",   "cryopit.db")
-INSTITUTION = os.getenv("CRYOPIT_INSTITUTION","CryoGARS · Boise State University")
-CAMPAIGN    = os.getenv("CRYOPIT_CAMPAIGN",   "SNEX25")
-APP_TITLE   = os.getenv("CRYOPIT_APP_TITLE",  "CryoPit")
+def current_water_year(today=None):
+    """US hydrologic water year (USGS convention): Oct 1 – Sep 30, named for the
+    calendar year in which it ENDS. Oct/Nov/Dec belong to the next year's WY.
+    e.g. 2025-11-15 -> 2026; 2026-06-25 -> 2026."""
+    d = today or date.today()
+    return d.year + 1 if d.month >= 10 else d.year
+
+DB_PATH        = os.getenv("CRYOPIT_DB_PATH",   "cryopit.db")
+RESEARCH_GROUP = os.getenv("CRYOPIT_RESEARCH_GROUP", "CryoGARS")
+INSTITUTION    = os.getenv("CRYOPIT_INSTITUTION",    "Boise State University")
+CAMPAIGN       = os.getenv("CRYOPIT_CAMPAIGN") or f"WY{current_water_year()}"
+APP_TITLE      = os.getenv("CRYOPIT_APP_TITLE",  "CryoPit")
 PORT        = int(os.getenv("CRYOPIT_PORT",   os.getenv("CRYOPIT_API_PORT", "8502")))
-# Bind address. Default 127.0.0.1 = local only (safe). Set 0.0.0.0 to accept
-# connections from other machines (shared deployment) — a deliberate choice,
-# not the default, since opening to the network should be intentional.
 HOST        = os.getenv("CRYOPIT_HOST", "127.0.0.1")
-# Default destination for server-side CSV writes. Resolved by the Python
-# process — locally that's your laptop; deployed it's the server. Point it at
-# a mounted Drive, an S3-backed mount, or a synced repo directory.
 EXPORT_DIR  = os.getenv("CRYOPIT_EXPORT_DIR", "exports")
-# Saved-pits / edit workflow. When disabled, the sidebar list and load route are
-# off and CryoPit is capture-and-archive only (safe default for multi-user
-# deployments without auth). A deployer can set this true to allow editing.
 ENABLE_EDIT = os.getenv("CRYOPIT_ENABLE_EDIT", "true").strip().lower() in ("1","true","yes","on")
-# How many recent pits the sidebar shows (per user). Short by default since the
-# list is scoped to the current user's own recent pits.
 SAVED_PITS_LIMIT = int(os.getenv("CRYOPIT_SAVED_PITS_LIMIT", "10"))
-# Identity. Real deployments put CryoPit behind an SSO reverse proxy that injects
-# an authenticated-username header; CryoPit only READS it, never handles
-# credentials. With no such header (local use), every pit is owned by DEV_USER,
-# so a single local user sees all their own pits exactly as before.
 DEV_USER    = os.getenv("CRYOPIT_DEV_USER", "local")
 AUTH_HEADER = os.getenv("CRYOPIT_AUTH_HEADER", "X-Remote-User")
-THREADS     = int(os.getenv("CRYOPIT_THREADS", "8"))
 NO_DATA     = -9999
 
 def current_user():
@@ -222,14 +215,14 @@ def get_conn():
     most "database is locked" errors in default journal mode come from that
     interaction. WAL does NOT parallelize writes; SQLite always serializes
     writers. busy_timeout is what handles two writers colliding: the second
-    one waits up to 10 s for the lock instead of raising immediately. Our
+    one waits up to 5 s for the lock instead of raising immediately. Our
     writes are millisecond-scale, so collisions resolve invisibly.
     journal_mode persists in the DB file but is cheap to (re)issue per
     connection; busy_timeout is per-connection and must be set every time.
     """
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=10)
     conn.execute("PRAGMA journal_mode=WAL")
-    conn.execute("PRAGMA busy_timeout=10000")
+    conn.execute("PRAGMA busy_timeout=5000")
     conn.execute("PRAGMA foreign_keys=ON")
     return conn
 
@@ -823,7 +816,7 @@ def zip_csvs(files, pit_id, campaign=None):
 def save_csvs_to_folder(files, folder, subfolder=None):
     """Write {filename: content} into `folder` on the machine running Python.
 
-    Each pit goes in its OWN subfolder (subfolder=e.g. 'SNEX26_GM1_20260210') so
+    Each pit goes in its OWN subfolder (subfolder=e.g. 'WY2026_GM1_20260210') so
     that many pits archived to the same EXPORT_DIR stay separable: instead of
     18 files from 3 pits jumbled flat, you get three tidy per-pit folders. Files
     are already uniquely named by pit_id, but grouping makes the archive legible.
@@ -1121,7 +1114,7 @@ html,body{height:100%;background:var(--w);font-family:var(--sans);color:var(--in
       </div>
       <div class="ri"><div class="rl">Site / transect</div><input id="site" placeholder="LSOS, Transect A…" oninput="updateId()"></div>
       <div class="ri"><div class="rl">Date <span class="req">*</span></div><input type="date" id="date" oninput="updateId();tick()"></div>
-      <div class="ri"><div class="rl">Campaign</div><input id="campaign" placeholder="SNEX25" value="SNEX25"></div>
+      <div class="ri"><div class="rl">Campaign</div><input id="campaign" placeholder="__CAMPAIGN__" value="__CAMPAIGN__"></div>
     </div>
     <div class="row">
       <div class="ri" style="flex:1.3">
@@ -1918,7 +1911,7 @@ function populate(p){
       locSel.value='';
       document.getElementById('loc-c').style.display='none';
     }
-    sv('site',m.site);sv('date',m.date);sv('campaign',m.campaign||'SNEX25');
+    sv('site',m.site);sv('date',m.date);sv('campaign',m.campaign||'__CAMPAIGN__');
     if(m.pit_id&&m.pit_id!=='—')_pe=true;   // keep the stored ID, don't regenerate
     document.getElementById('pitid').textContent=m.pit_id||'—';
     document.getElementById('tb-pid').textContent=m.pit_id||'—';
@@ -2431,13 +2424,13 @@ _FORM_HTML = None  # rendered once at startup
 def _render_form():
     """Inject startup-time values into the form.
 
-    Brand badge gets a short label only — the full institution string is wide,
-    uppercase, letter-spaced and would overflow the bar; the full name lives in
-    the page <title> instead.
+    The topbar badge shows the research group (a short label that fits the narrow,
+    uppercase, letter-spaced bar). The browser <title> has room for the full
+    attribution, so it composes app title + research group + institution.
     """
-    short = INSTITUTION.split("·")[0].split("-")[0].strip()[:18] or "CryoGARS"
-    html = FORM.replace("__PAGE_TITLE__", f"{APP_TITLE} · {INSTITUTION}")
-    html = html.replace(">CryoGARS</span>", f">{short}</span>")
+    html = FORM.replace("__PAGE_TITLE__", f"{APP_TITLE} · {RESEARCH_GROUP} · {INSTITUTION}")
+    html = html.replace(">CryoGARS</span>", f">{RESEARCH_GROUP}</span>")
+    html = html.replace("__CAMPAIGN__", CAMPAIGN)
     # Saved-pits sidebar: present only when the edit/history workflow is enabled.
     if ENABLE_EDIT:
         saved_section = (
@@ -2534,7 +2527,7 @@ def main():
     global _FORM_HTML
     init_db()
     _FORM_HTML = _render_form()
-    print(f"{APP_TITLE} · {INSTITUTION}")
+    print(f"{APP_TITLE} · {RESEARCH_GROUP} · {INSTITUTION}")
     print(f"  database : {os.path.abspath(DB_PATH)}")
     print(f"  exports  : {os.path.abspath(EXPORT_DIR)} (archive folder)")
     print(f"  edit     : {'on' if ENABLE_EDIT else 'off'}")
@@ -2546,7 +2539,7 @@ def main():
     try:
         from waitress import serve
         print(f"  server   : waitress (production)")
-        serve(app, host=HOST, port=PORT, threads=THREADS)
+        serve(app, host=HOST, port=PORT, threads=int(os.getenv("CRYOPIT_THREADS", "8")))
     except ImportError:
         print(f"  server   : Flask dev server (install 'waitress' for production)")
         app.run(host=HOST, port=PORT, debug=False)
