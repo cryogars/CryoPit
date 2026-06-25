@@ -168,6 +168,7 @@ CryoPit reads these environment variables (all optional, defaults shown). You ca
 | `CRYOPIT_EXPORT_DIR` | `exports` | Folder that **Archive** writes CSVs to |
 | `CRYOPIT_ENABLE_EDIT` | `true` | Saved-pits sidebar + load-for-edit on/off |
 | `CRYOPIT_SAVED_PITS_LIMIT` | `10` | How many recent pits the sidebar shows (per user) |
+| `CRYOPIT_AUTH_HEADER` | `X-Remote-User` | Header a reverse proxy injects with the authenticated username |
 | `CRYOPIT_INSTITUTION` | `CryoGARS · Boise State University` | Institution name |
 | `CRYOPIT_CAMPAIGN` | `SNEX25` | Default campaign code |
 | `CRYOPIT_API_PORT` | `8502` | Local helper service port |
