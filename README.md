@@ -181,7 +181,7 @@ The proposed ER diagram for CryoPit is below. This schema is the same as the [Sn
 
 Fields not present in the SnowEx schema, such as `pit_open_time`, `temp_time_start`, `temp_time_end`, `wise_serial`, `gps_device`, `density_cutter`, `snow_cover_condition`, `standing_water`, etc, are retained for field workflow completeness and based on the lateest pit sheet, and are exported to the siteDetails CSV header. You can find the latest (i.e., digitized) field sheet [here](docs/reference/digitized_pit_sheet.pdf).
 
-This version (V1) is compatible with SQLite. However, the schema is designed for PostgreSQL/PostGIS migration (V2).
+This version is compatible with SQLite. However, the schema is designed for PostgreSQL/PostGIS migration.
 
 <div align="center">
   <a href="images/erd.png">
