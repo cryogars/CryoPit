@@ -31,12 +31,28 @@ def current_water_year(today=None):
 DB_PATH        = os.getenv("CRYOPIT_DB_PATH",   "cryopit.db")
 RESEARCH_GROUP = os.getenv("CRYOPIT_RESEARCH_GROUP", "CryoGARS")
 INSTITUTION    = os.getenv("CRYOPIT_INSTITUTION",    "Boise State University")
+# Campaign code defaults to the current water year (e.g. WY2026), recomputed at
+# startup so it rolls over automatically each October 1. os.getenv has NO static
+# default here on purpose: an unset/commented env var returns None, so the `or`
+# falls through to the computed default. Set CRYOPIT_CAMPAIGN to override.
 CAMPAIGN       = os.getenv("CRYOPIT_CAMPAIGN") or f"WY{current_water_year()}"
 PORT        = int(os.getenv("CRYOPIT_PORT",   os.getenv("CRYOPIT_API_PORT", "8502")))
+# Bind address. Default 127.0.0.1 = local only (safe). Set 0.0.0.0 to accept
+# connections from other machines (shared deployment).
 HOST        = os.getenv("CRYOPIT_HOST", "127.0.0.1")
+# Number of concurrent requests waitress will serve. 
+# Raise for more simultaneous users, lower on a memory-constrained host.
+THREADS     = int(os.getenv("CRYOPIT_THREADS", "8"))
 EXPORT_DIR  = os.getenv("CRYOPIT_EXPORT_DIR", "exports")
+# Saved-pits / edit workflow. When disabled, the sidebar list and load route are
+# off and CryoPit is capture-and-archive only (safe default for multi-user
+# deployments without auth). A deployer can set this true to allow editing.
 ENABLE_EDIT = os.getenv("CRYOPIT_ENABLE_EDIT", "true").strip().lower() in ("1","true","yes","on")
+# How many recent pits the sidebar shows (per user).
 SAVED_PITS_LIMIT = int(os.getenv("CRYOPIT_SAVED_PITS_LIMIT", "10"))
+# Identity. Real deployments put CryoPit behind an SSO reverse proxy that injects
+# an authenticated-username header; CryoPit only READS it, never handles
+# credentials. With no such header (local use), every pit is owned by DEV_USER.
 DEV_USER    = os.getenv("CRYOPIT_DEV_USER", "local")
 AUTH_HEADER = os.getenv("CRYOPIT_AUTH_HEADER", "X-Remote-User")
 NO_DATA     = -9999
@@ -2538,7 +2554,7 @@ def main():
     try:
         from waitress import serve
         print(f"  server   : waitress (production)")
-        serve(app, host=HOST, port=PORT, threads=int(os.getenv("CRYOPIT_THREADS", "8")))
+        serve(app, host=HOST, port=PORT, threads=THREADS)
     except ImportError:
         print(f"  server   : Flask dev server (install 'waitress' for production)")
         app.run(host=HOST, port=PORT, debug=False)
