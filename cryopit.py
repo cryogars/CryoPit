@@ -225,7 +225,7 @@ def _migrate(conn):
 
 def get_conn():
     """One connection per request.
-
+ 
     WAL mode: readers and the (single) writer no longer block each other —
     most "database is locked" errors in default journal mode come from that
     interaction. WAL does NOT parallelize writes; SQLite always serializes
@@ -234,10 +234,13 @@ def get_conn():
     writes are millisecond-scale, so collisions resolve invisibly.
     journal_mode persists in the DB file but is cheap to (re)issue per
     connection; busy_timeout is per-connection and must be set every time.
+    We set the wait via the busy_timeout PRAGMA only — Python's connect(timeout=)
+    is just another way to set the same SQLite busy-handler, so passing both is
+    redundant (the PRAGMA wins). One mechanism, one number (5 s).
     """
-    conn = sqlite3.connect(DB_PATH, timeout=10)
+    conn = sqlite3.connect(DB_PATH)
     conn.execute("PRAGMA journal_mode=WAL")
-    conn.execute("PRAGMA busy_timeout=5000")
+    conn.execute("PRAGMA busy_timeout=10000")
     conn.execute("PRAGMA foreign_keys=ON")
     return conn
 
