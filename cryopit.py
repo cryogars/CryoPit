@@ -230,13 +230,13 @@ def get_conn():
     most "database is locked" errors in default journal mode come from that
     interaction. WAL does NOT parallelize writes; SQLite always serializes
     writers. busy_timeout is what handles two writers colliding: the second
-    one waits up to 5 s for the lock instead of raising immediately. Our
+    one waits up to 10 s for the lock instead of raising immediately. Our
     writes are millisecond-scale, so collisions resolve invisibly.
     journal_mode persists in the DB file but is cheap to (re)issue per
     connection; busy_timeout is per-connection and must be set every time.
     We set the wait via the busy_timeout PRAGMA only — Python's connect(timeout=)
     is just another way to set the same SQLite busy-handler, so passing both is
-    redundant (the PRAGMA wins). One mechanism, one number (5 s).
+    redundant (the PRAGMA wins). One mechanism, one number (10 s).
     """
     conn = sqlite3.connect(DB_PATH)
     conn.execute("PRAGMA journal_mode=WAL")
