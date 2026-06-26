@@ -175,6 +175,8 @@ CryoPit reads these environment variables (all optional, defaults shown). You ca
 | `CRYOPIT_INSTITUTION` | `Boise State University` | Institution / university (shown in the browser tab title) |
 | `CRYOPIT_CAMPAIGN` | Current water year; e.g.,`WY2026` | Default campaign code. Set this to pin a fixed value |
 
+In any server or Docker deployment, set `CRYOPIT_DB_PATH` and `CRYOPIT_EXPORT_DIR` to explicit absolute paths (or a mounted volume), so data doesn't land in an unexpected working directory.
+
 ---
 
 ## Entity-Relationship Diagram
