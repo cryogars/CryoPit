@@ -173,10 +173,7 @@ CryoPit reads these environment variables (all optional, defaults shown). You ca
 | `CRYOPIT_THREADS` | `8` | waitress worker threads |
 | `CRYOPIT_RESEARCH_GROUP` | `CryoGARS` | Research group (shown in the in-app topbar) |
 | `CRYOPIT_INSTITUTION` | `Boise State University` | Institution / university (shown in the browser tab title) |
-| `CRYOPIT_CAMPAIGN` | `SNEX25` | Default campaign code |
-| `CRYOPIT_API_PORT` | `8502` | Local helper service port |
-| `CRYOPIT_EXPORT_DIR` | `exports` | Default folder for folder-export |
-
+| `CRYOPIT_CAMPAIGN` | Current water year; e.g.,`WY2026` | Default campaign code. Set this to pin a fixed value |
 
 ---
 
