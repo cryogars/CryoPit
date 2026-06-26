@@ -169,7 +169,10 @@ CryoPit reads these environment variables (all optional, defaults shown). You ca
 | `CRYOPIT_ENABLE_EDIT` | `true` | Saved-pits sidebar + load-for-edit on/off |
 | `CRYOPIT_SAVED_PITS_LIMIT` | `10` | How many recent pits the sidebar shows (per user) |
 | `CRYOPIT_AUTH_HEADER` | `X-Remote-User` | Header a reverse proxy injects with the authenticated username |
-| `CRYOPIT_INSTITUTION` | `CryoGARS · Boise State University` | Institution name |
+| `CRYOPIT_DEV_USER` | `local` | Owner used when no auth header is present |
+| `CRYOPIT_THREADS` | `8` | waitress worker threads |
+| `CRYOPIT_RESEARCH_GROUP` | `CryoGARS` | Research group (shown in the in-app topbar) |
+| `CRYOPIT_INSTITUTION` | `Boise State University` | Institution / university (shown in the browser tab title) |
 | `CRYOPIT_CAMPAIGN` | `SNEX25` | Default campaign code |
 | `CRYOPIT_API_PORT` | `8502` | Local helper service port |
 | `CRYOPIT_EXPORT_DIR` | `exports` | Default folder for folder-export |
