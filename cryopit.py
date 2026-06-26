@@ -32,7 +32,6 @@ DB_PATH        = os.getenv("CRYOPIT_DB_PATH",   "cryopit.db")
 RESEARCH_GROUP = os.getenv("CRYOPIT_RESEARCH_GROUP", "CryoGARS")
 INSTITUTION    = os.getenv("CRYOPIT_INSTITUTION",    "Boise State University")
 CAMPAIGN       = os.getenv("CRYOPIT_CAMPAIGN") or f"WY{current_water_year()}"
-APP_TITLE      = os.getenv("CRYOPIT_APP_TITLE",  "CryoPit")
 PORT        = int(os.getenv("CRYOPIT_PORT",   os.getenv("CRYOPIT_API_PORT", "8502")))
 HOST        = os.getenv("CRYOPIT_HOST", "127.0.0.1")
 EXPORT_DIR  = os.getenv("CRYOPIT_EXPORT_DIR", "exports")
@@ -2428,7 +2427,7 @@ def _render_form():
     uppercase, letter-spaced bar). The browser <title> has room for the full
     attribution, so it composes app title + research group + institution.
     """
-    html = FORM.replace("__PAGE_TITLE__", f"{APP_TITLE} · {RESEARCH_GROUP} · {INSTITUTION}")
+    html = FORM.replace("__PAGE_TITLE__", f"CryoPit · {RESEARCH_GROUP} · {INSTITUTION}")
     html = html.replace(">CryoGARS</span>", f">{RESEARCH_GROUP}</span>")
     html = html.replace("__CAMPAIGN__", CAMPAIGN)
     # Saved-pits sidebar: present only when the edit/history workflow is enabled.
@@ -2527,7 +2526,7 @@ def main():
     global _FORM_HTML
     init_db()
     _FORM_HTML = _render_form()
-    print(f"{APP_TITLE} · {RESEARCH_GROUP} · {INSTITUTION}")
+    print(f"CryoPit · {RESEARCH_GROUP} · {INSTITUTION}")
     print(f"  database : {os.path.abspath(DB_PATH)}")
     print(f"  exports  : {os.path.abspath(EXPORT_DIR)} (archive folder)")
     print(f"  edit     : {'on' if ENABLE_EDIT else 'off'}")
