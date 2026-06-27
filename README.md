@@ -179,7 +179,7 @@ In any server or Docker deployment, set `CRYOPIT_DB_PATH` and `CRYOPIT_EXPORT_DI
 
 > **Important**: The database must be on a real local disk. Do not point `CRYOPIT_DB_PATH` at a Google Drive / Dropbox-synced folder or a network filesystem. CryoPit uses SQLite in  [Write-Ahead Logging (WAL) mode](https://sqlite.org/wal.html), and a sync client copying the database files at the wrong moments will corrupt them. This is a know disadvantage of SQLite WAL mode ([see here](https://sqlite.org/wal.html)). We opted for WAL mode because the concurrent read and write advantage outweighs the no-network-filesystem disadvantage, and it is significantly faster in most scenarios. 
 >
-> The export folder (CRYOPIT_EXPORT_DIR) has no such restriction: CSVs are static files, so a Drive-mounted folder is fine for them.
+> The export folder (`CRYOPIT_EXPORT_DIR`) has no such restriction: CSVs are static files, so a Drive-mounted folder is fine for them.
 
 ---
 
