@@ -189,6 +189,11 @@ In any server or Docker deployment, set `CRYOPIT_DB_PATH` and `CRYOPIT_EXPORT_DI
 
 ## Backup
 
+To back the database up or share it with a technical collaborator who wants to query the whole dataset:
+
+1. Keep the active database on local disk for reasons mentioned above.
+2. Generate a backup copy of the live database. The steps below uses [VACUUM INTO](https://sqlite.org/lang_vacuum.html#vacuuminto). Other approaches such as the `SQLite Backup API` and the `sqlite3_rsync` program can also be used. You can read more [here](https://sqlite.org/backup.html).
+
 ---
 
 ## Entity-Relationship Diagram
