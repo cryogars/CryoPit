@@ -177,8 +177,7 @@ CryoPit reads these environment variables (all optional, defaults shown). You ca
 
 In any server or Docker deployment, set `CRYOPIT_DB_PATH` and `CRYOPIT_EXPORT_DIR` to explicit absolute paths (or a mounted volume), so data doesn't land in an unexpected working directory.
 
-> **Important**: The database must be on a real local disk. Do not point `CRYOPIT_DB_PATH` at a Google Drive / Dropbox-synced folder or a network filesystem. CryoPit uses SQLite in 
-> [Write-Ahead Logging (WAL) mode](https://sqlite.org/wal.html)
+> **Important**: The database must be on a real local disk. Do not point `CRYOPIT_DB_PATH` at a Google Drive / Dropbox-synced folder or a network filesystem. CryoPit uses SQLite in  [Write-Ahead Logging (WAL) mode](https://sqlite.org/wal.html), , and a sync client copying the database files at the wrong moments will corrupt them. The export folder (CRYOPIT_EXPORT_DIR) has no such restriction: CSVs are static files, so a Drive-mounted folder is fine for them.
 
 ---
 
