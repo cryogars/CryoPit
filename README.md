@@ -200,7 +200,9 @@ To back the database up or share it with a technical collaborator who wants to q
    ```
    - **Single ROlling File**: For `VACUUM INTO` to backup successfully, the target file specified in the `INTO` clause must not previously exist. So, a workaround would be to write to a temp name and rename over the final file. The old backup stays valid until the new one is complete, and survives if the backup fails. As a general rule, bacup before delete, not in the oposite direction.
    ```{bash}
-   sqlite3 /path/to/cryopit.db ".timeout 5000" "VACUUM INTO '/path/to/cryopit_backup.tmp'" && mv /path/to/cryopit_backup.tmp /path/to/cryopit_backup.db
+   sqlite3 /path/to/cryopit.db ".timeout 5000" \
+     "VACUUM INTO '/path/to/cryopit_backup.tmp'" \
+     && mv /path/to/cryopit_backup.tmp /path/to/cryopit_backup.db
    ```
 
 ---
