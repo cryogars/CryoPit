@@ -152,7 +152,7 @@ For example, `SNEX26_GM1_20260210_density_v01_0.csv`. The six files are:
 | `…_stratigraphy_…` | Layers: grain type, grain size, hand hardness, wetness |
 | `…_SSA_…` | Specific surface area, with calibration metadata |
 
-All six files are always produced. For a measurement that wasn't collected, its file contains the header block and column titles but no data rows. Missing values within a file are written as `-9999` (the SnowEx no-data convention). Download bundles all six into one file: `{CAMPAIGN}_{PitID}.zip`. Archive writes the six files into a per-pit subfolder of the export directory
+All six files are always produced. For a measurement that wasn't collected, its file contains the header block and column titles but no data rows. Missing values within a file are written as `-9999` (the SnowEx no-data convention). Download bundles all six into one file: `{CAMPAIGN}_{PitID}.zip`. **Archive** writes the six files into a per-pit subfolder of the export directory (`{CAMPAIGN}_{PitID}_{YYYYMMDD}/`).
 
 ---
 
