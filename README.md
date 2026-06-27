@@ -196,7 +196,8 @@ To back the database up or share it with a technical collaborator who wants to q
   
    - **Timestamped Backup**: This is a safer option for history, in case you need to roll back. However, it keeps multiple backups which might take up memory, depending on the size of your DB.
    ```{bash}
-   sqlite3 /path/to/cryopit.db ".timeout 5000" "VACUUM INTO '/path/to/cryopit_backup_$(date +%Y%m%d_%H%M%S).db'"
+   sqlite3 /path/to/cryopit.db ".timeout 5000" \
+     "VACUUM INTO '/path/to/cryopit_backup_$(date +%Y%m%d_%H%M%S).db'"
    ```
    - **Single ROlling File**: For `VACUUM INTO` to backup successfully, the target file specified in the `INTO` clause must not previously exist. So, a workaround would be to write to a temp name and rename over the final file. The old backup stays valid until the new one is complete, and survives if the backup fails. As a general rule, bacup before delete, not in the oposite direction.
    ```{bash}
