@@ -199,7 +199,7 @@ To back the database up or share it with a technical collaborator who wants to q
    sqlite3 /path/to/cryopit.db ".timeout 5000" \
      "VACUUM INTO '/path/to/cryopit_backup_$(date +%Y%m%d_%H%M%S).db'"
    ```
-   - **Single ROlling File**: For `VACUUM INTO` to backup successfully, the target file specified in the `INTO` clause must not previously exist. So, a workaround would be to write to a temp name and rename over the final file. The old backup stays valid until the new one is complete, and survives if the backup fails. As a general rule, bacup before delete, not in the oposite direction.
+   - **Single Rolling File**: This one only keeps the latest backup. For `VACUUM INTO` to backup successfully, the target file specified in the `INTO` clause must not previously exist. So, a workaround would be to write to a temp name and rename over the final file. The old backup stays valid until the new one is complete, and survives if the backup fails. As a general rule, bacup before delete, not in the oposite direction.
    ```{bash}
    sqlite3 /path/to/cryopit.db ".timeout 5000" \
      "VACUUM INTO '/path/to/cryopit_backup.tmp'" \
