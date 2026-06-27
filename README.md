@@ -177,9 +177,17 @@ CryoPit reads these environment variables (all optional, defaults shown). You ca
 
 In any server or Docker deployment, set `CRYOPIT_DB_PATH` and `CRYOPIT_EXPORT_DIR` to explicit absolute paths (or a mounted volume), so data doesn't land in an unexpected working directory.
 
-> **Important**: The database must be on a real local disk. Do not point `CRYOPIT_DB_PATH` at a Google Drive / Dropbox-synced folder or a network filesystem. CryoPit uses SQLite in  [Write-Ahead Logging (WAL) mode](https://sqlite.org/wal.html), and a sync client copying the database files at the wrong moments will corrupt them. This is a know disadvantage of SQLite WAL mode ([see here](https://sqlite.org/wal.html)). We opted for WAL mode because the concurrent read and write advantage outweighs the no-network-filesystem disadvantage, and it is significantly faster in most scenarios. 
+> **Important**: The database must be on a real local disk. Do not point `CRYOPIT_DB_PATH` at a Google Drive / Dropbox-synced folder or a network filesystem. CryoPit uses SQLite in  [Write-Ahead Logging (WAL) mode](https://sqlite.org/wal.html), and a sync client copying the database files at the wrong moments will corrupt them. This is a known disadvantage of SQLite WAL mode (read more [here](https://sqlite.org/wal.html)). We opted for WAL mode because the concurrent read/write advantage outweighs the no-network-filesystem limitation, and it is significantly faster in most scenarios. If you want the database backed up or shared via Google Drive, do not host the active `.db` file there directly. Instead, follow the steps in the [Backup](#backup) section below.
+<!-- >
+> 1. **Host the active database locally** on your machine or server (never on a nework filesystem!).
+> 2. **Merge the WAL into the main file** before copying.
+> 3. **Upload the closed, single-file database** to Google Drive for backup or sharing. -->
 >
 > The export folder (`CRYOPIT_EXPORT_DIR`) has no such restriction: CSVs are static files, so a Drive-mounted folder is fine for them.
+
+---
+
+## Backup
 
 ---
 
