@@ -177,6 +177,8 @@ CryoPit reads these environment variables (all optional, defaults shown). You ca
 
 In any server or Docker deployment, set `CRYOPIT_DB_PATH` and `CRYOPIT_EXPORT_DIR` to explicit absolute paths (or a mounted volume), so data doesn't land in an unexpected working directory.
 
+> **Important**: The database must be on a real local disk.
+
 ---
 
 ## Entity-Relationship Diagram
