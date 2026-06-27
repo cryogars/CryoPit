@@ -2549,7 +2549,7 @@ def main():
     print(f"  database : {os.path.abspath(DB_PATH)}")
     print(f"  exports  : {os.path.abspath(EXPORT_DIR)} (archive folder)")
     print(f"  edit     : {'on' if ENABLE_EDIT else 'off'}")
-    shown_host = "127.0.0.1" if HOST in ("127.0.0.1", "localhost") else HOST
+    shown_host = "127.0.0.1" if HOST in ("127.0.0.1", "localhost", "0.0.0.0") else HOST
     print(f"  open     : http://{shown_host}:{PORT}")
     # Serve with waitress (a real, cross-platform WSGI server) when available;
     # fall back to Flask's dev server only if waitress isn't installed, so a
