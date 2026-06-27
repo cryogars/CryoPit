@@ -194,7 +194,14 @@ To back the database up or share it with a technical collaborator who wants to q
 1. Keep the active database on local disk for reasons mentioned above.
 2. Generate a backup copy of the live database. The steps below uses [VACUUM INTO](https://sqlite.org/lang_vacuum.html#vacuuminto). Other approaches such as the `SQLite Backup API` and the `sqlite3_rsync` program can also be used. You can read more [here](https://sqlite.org/backup.html). Depending on your preference, you could use any of the following options:
   
-  a. **Timestamped Backup**:
+   - **Timestamped Backup**: This is a safer option for history, in case you need to roll back. However, it keeps multiple backups which might take up memory, depending on the size of your DB.
+   ```{bash}
+   sqlite3 /path/to/cryopit.db ".timeout 5000" "VACUUM INTO '/path/to/cryopit_backup_$(date +%Y%m%d_%H%M%S).db'"
+   ```
+   - **Single ROlling File**: For `VACUUM INTO` to backup successfully, the target file specified in the `INTO` clause must not previously exist. So, a workaround would be to write to a temp name and rename over the final file. The old backup stays valid until the new one is complete, and survives if the backup fails. As a general rule, bacup before delete, not in the oposite direction.
+   ```{bash}
+   sqlite3 /path/to/cryopit.db ".timeout 5000" "VACUUM INTO '/path/to/cryopit_backup.tmp'" && mv /path/to/cryopit_backup.tmp /path/to/cryopit_backup.db
+   ```
 
 ---
 
