@@ -130,6 +130,7 @@ CREATE TABLE IF NOT EXISTS sites(
     new_snow_depth INTEGER, new_snow_swe INTEGER, new_snow_density REAL,
     recorded_by INTEGER REFERENCES observers(id),
     comments TEXT, flags TEXT,
+    comment_weather TEXT, comment_pit TEXT, comment_hardness TEXT, comment_misc TEXT,
     raw_json TEXT,
     owner TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
@@ -232,6 +233,10 @@ def _migrate(conn):
         ("sites", "gps_uncertainty_unit TEXT"),
         ("sites", "raw_json TEXT"),
         ("sites", "owner TEXT"),
+        ("sites", "comment_weather TEXT"),
+        ("sites", "comment_pit TEXT"),
+        ("sites", "comment_hardness TEXT"),
+        ("sites", "comment_misc TEXT"),
         ("ssa_calibration", "operator TEXT"),
     ]
     for table, coldef in adds:
@@ -366,8 +371,10 @@ def save_pit(payload):
                 tree_canopy,snow_cover_condition,standing_water,
                 wise_serial,gps_device,gps_uncertainty,gps_uncertainty_unit,density_cutter,
                 new_snow_depth,new_snow_swe,new_snow_density,
-                recorded_by,comments,flags,raw_json,owner)
-                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                recorded_by,comments,flags,
+                comment_weather,comment_pit,comment_hardness,comment_misc,
+                raw_json,owner)
+                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (camp_id, pid, m.get("site",""), m.get("location",""), m.get("date",""),
                  m.get("pit_open_time",""), m.get("temp_time_start",""), m.get("temp_time_end",""),
                  m.get("utm_easting"), m.get("utm_northing"),
@@ -384,6 +391,8 @@ def save_pit(payload):
                  m.get("density_cutter",""),
                  gnd.get("new_depth"), gnd.get("new_swe"), gnd.get("new_density"),
                  recorded_by_id, m.get("comments",""), m.get("flags") or "None",
+                 m.get("comment_weather",""), m.get("comment_pit",""),
+                 m.get("comment_hardness",""), m.get("comment_misc",""),
                  json.dumps(raw), owner))
 
             site_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
@@ -580,6 +589,10 @@ def _hdr(p, extra=None):
         ["# Coordinate Datum",          "WGS84"],
         ["# Flags",                     _c(p.get("flags","None"))],
         ["# Pit Comments",              _c(p.get("comments"))],
+        ["# Additional Comments — Weather",  _c(p.get("comment_weather"))],
+        ["# Additional Comments — Pit",      _c(p.get("comment_pit"))],
+        ["# Additional Comments — Hardness", _c(p.get("comment_hardness"))],
+        ["# Additional Comments — Misc",     _c(p.get("comment_misc"))],
     ]
     if extra:
         rows.extend(extra)
@@ -818,6 +831,8 @@ def export_from_payload(payload):
         "vegetation": gnd.get("vegetation", []), "vegetation_height": gnd.get("veg_height"),
         "tree_canopy": gnd.get("canopy"),
         "flags": m.get("flags", "None"), "comments": m.get("comments"),
+        "comment_weather": m.get("comment_weather"), "comment_pit": m.get("comment_pit"),
+        "comment_hardness": m.get("comment_hardness"), "comment_misc": m.get("comment_misc"),
     }
 
     # temperature: same surface-first + start/end-on-first/last as save_pit
@@ -1078,7 +1093,12 @@ html,body{height:100%;background:var(--w);font-family:var(--sans);color:var(--in
 .it th{padding:7px 12px;text-align:left;font-family:var(--mono);font-size:9px;color:var(--ink3);letter-spacing:.1em;text-transform:uppercase;font-weight:400;border-bottom:1px solid var(--rule);background:var(--bg)}
 .it td{padding:8px 12px;border-bottom:1px solid var(--rule);font-size:12px;vertical-align:middle}
 .it tr:last-child td{border-bottom:none}
-.sn{font-family:var(--mono);font-size:12px;border:1px solid var(--rule);border-radius:6px;padding:3px 9px;background:var(--bg);color:var(--ink);width:110px;outline:none}
+.sn{font-family:var(--mono);font-size:12px;border:1px solid var(--rule);border-radius:6px;padding:3px 9px;background:var(--w);color:var(--ink);width:110px;outline:none}
+/* Editable (Used=Y): white/active. Disabled (Used=N, the default): muted grey
+   with faded text, so the user can see at a glance whether the serial field
+   accepts input. */
+.sn:disabled{background:var(--bg);color:var(--ink3);cursor:not-allowed;opacity:.6}
+.sn:enabled:focus{border-color:var(--acc)}
 .sn:focus{border-color:var(--acc)}
 .yn{display:flex;border:1px solid var(--rule);border-radius:999px;overflow:hidden;width:max-content}
 .yn button{padding:3px 11px;font-size:11px;font-family:var(--mono);background:transparent;border:none;cursor:pointer;color:var(--ink3);transition:all .12s}
@@ -1235,6 +1255,15 @@ html,body{height:100%;background:var(--w);font-family:var(--sans);color:var(--in
     </div>
     <div class="row">
       <div class="ri"><div class="rl">Comments / notes</div><textarea id="comments" placeholder="Site conditions, access, anomalies…"></textarea></div>
+    </div>
+    <div class="ig-lbl">Additional comments</div>
+    <div class="row">
+      <div class="ri"><div class="rl">Weather</div><textarea id="cmt-weather" placeholder="Weather-related notes…"></textarea></div>
+      <div class="ri"><div class="rl">Pit</div><textarea id="cmt-pit" placeholder="Pit-related notes…"></textarea></div>
+    </div>
+    <div class="row">
+      <div class="ri"><div class="rl">Hardness</div><textarea id="cmt-hardness" placeholder="Hardness-related notes…"></textarea></div>
+      <div class="ri"><div class="rl">Misc</div><textarea id="cmt-misc" placeholder="Anything else, incl. instruments not listed above…"></textarea></div>
     </div>
   </div>
 </section>
@@ -1511,11 +1540,13 @@ const G=['PP','RG','FC','SH','MM','DF','DH','MF','IF',
   'MFcl','MFsl','MFcr','IFsc','IFrc','IFbi'];
 const H=['F','4F','1F','P','K','I'];
 const W=['D','M','W','V','S'];
-// Canonical instrument/task checklist — derived from the field sheet.
+// Canonical instrument checklist — derived from the field sheet. This is now a
+// CLOSED list of 14 (no write-in): unlisted instruments go in the Misc field of
+// the Additional Comments section, mirroring the paper sheet (where "Other" is
+// an open write-in under Misc, not a structured Y/N+SN row).
 // `n` = name (MUST match the DB instruments seed exactly so lookup succeeds),
 // `sn:1` = takes a serial number (devices + rams), absent = Y/N only
-// (survey methods & documentation). `other:1` marks the write-in row, which
-// also renders a name input and is get-or-created on save.
+// (survey methods & documentation render with no SN column at all).
 // Legacy closeout tasks (pit backfilled, flag, data backed up) were removed —
 // they belonged to a campaign retired ~9 years ago and are no longer collected.
 const INST=[
@@ -1526,8 +1557,6 @@ const INST=[
   {g:'Surveys & documentation'},
   {n:'HS Transects'},{n:'Snow Scope Transects'},
   {n:'Stratigraphy pictures'},{n:'Pit pictures'},
-  {g:'Other'},
-  {n:'Other',sn:1,other:1},
 ];
 
 /* num(): the one number parser. Returns null for blank/garbage and PRESERVES
@@ -1544,24 +1573,31 @@ let _loaded_pid=null;   /* pit_id this form was loaded from (overwrite implied) 
 let _restoring=false;   /* true while populate() runs; suppresses draft churn   */
 
 function buildInst(){
-  let h='',ii=0,open=false;
-  INST.forEach(it=>{
+  let h='',ii=0,open=false,groupHasSN=false;
+  // Look ahead from a group header to see if any of its rows take a serial.
+  // Instruments do (3-column table); Surveys & documentation don't (2-column).
+  const groupTakesSN=(startIdx)=>{
+    for(let k=startIdx+1;k<INST.length && !INST[k].g;k++) if(INST[k].sn) return true;
+    return false;
+  };
+  INST.forEach((it,idx)=>{
     if(it.g){
       if(open)h+='</tbody></table>';
-      h+=`<div class="ig-lbl">${it.g}</div><table class="it"><thead><tr><th style="width:46%">Instrument</th><th>Serial no.</th><th>Used (Y/N)</th></tr></thead><tbody>`;
+      groupHasSN=groupTakesSN(idx);
+      const head = groupHasSN
+        ? `<th style="width:46%">Instrument</th><th>Serial no.</th><th>Used (Y/N)</th>`
+        : `<th style="width:70%">Survey / documentation</th><th>Used (Y/N)</th>`;
+      h+=`<div class="ig-lbl">${it.g}</div><table class="it"><thead><tr>${head}</tr></thead><tbody>`;
       open=true;
     } else {
       const i=ii++;
-      // "Other" gets a write-in name input; fixed rows show their name.
-      const nameCell = it.other
-        ? `<input class="oth" id="oth${i}" placeholder="Other instrument…">`
-        : it.n;
-      // SN field starts DISABLED because N is the default — you can only enter a
-      // serial after marking the instrument Used (Y). Rows without sn show "—".
-      const snCell = it.sn
-        ? `<input class="sn" id="sn${i}" placeholder="" disabled>`
-        : '—';
-      h+=`<tr><td>${nameCell}</td><td>${snCell}</td>
+      // SN cell only exists in SN-bearing groups. The field starts DISABLED
+      // because N is the default — you can only enter a serial after marking the
+      // instrument Used (Y). Survey/doc rows have no SN cell at all.
+      const snCell = groupHasSN
+        ? `<td>${it.sn ? `<input class="sn" id="sn${i}" placeholder="" disabled>` : '—'}</td>`
+        : '';
+      h+=`<tr><td>${it.n}</td>${snCell}
           <td><div class="yn"><button class="y" id="yy${i}" onclick="setyn(${i},'Y')">Y</button>
           <button class="n on" id="yn${i}" onclick="setyn(${i},'N')">N</button></div></td></tr>`;
     }
@@ -1935,10 +1971,10 @@ function collect(){
   });
   const specStr=gv('ssa-spec'),calvStr=gv('ssa-calv');
   // Collect instrument log. For the "Other" write-in, the name comes from its
-  // text input. Serial is only meaningful when Used=Y (the field is disabled
-  // otherwise), so we send "" for N. A blank/garbage SN stays "".
-  // NOTE: the DOM id index must track buildInst's own counter (every non-group
-  // row), independent of how many we end up pushing — we may skip the Other row.
+  // Collect instrument log. All rows are fixed checklist entries now (no
+  // write-in). Serial is only meaningful when Used=Y (the field is disabled
+  // otherwise), so we send "" for N. The DOM id index tracks buildInst's counter
+  // (every non-group row), and survey/doc rows simply have no sn input.
   const instruments=[];
   let di=0;
   INST.forEach((it)=>{
@@ -1946,11 +1982,7 @@ function collect(){
     const i=di++;
     const used=document.getElementById('yy'+i)?.classList.contains('on')?'Y':'N';
     const sn=(used==='Y' ? (document.getElementById('sn'+i)?.value||'') : '').trim();
-    const name = it.other
-      ? (document.getElementById('oth'+i)?.value||'').trim()
-      : it.n;
-    if(it.other && (used!=='Y' || !name)) return;
-    instruments.push({name, sn, used});
+    instruments.push({name:it.n, sn, used});
   });
   // Density cutter — multi-select (100/250/1000 cc), joined as a string
   const cutters=[];
@@ -1974,7 +2006,9 @@ function collect(){
       gps_uncertainty:num(gv('gps-unc')),
       gps_uncertainty_unit:gv('gps-unc-unit'),
       wise_serial:gv('wise'),density_cutter:density_cutter,
-      comments:gv('comments'),flags:gv('flags')||'None'},
+      comments:gv('comments'),flags:gv('flags')||'None',
+      comment_weather:gv('cmt-weather'),comment_pit:gv('cmt-pit'),
+      comment_hardness:gv('cmt-hardness'),comment_misc:gv('cmt-misc')},
     weather:{precip_rate:gr('pr'),precip_type:gr('pt'),sky:gr('sky'),wind:gr('wind')},
     ground:{condition:gr('gc'),roughness:gr('gr'),canopy:gr('tc'),
       snow_cover:gr('scc'),standing_water:gr('sw'),
@@ -2037,6 +2071,8 @@ function populate(p){
     sv('elev',m.elevation);sv('lat',m.latitude);sv('lon',m.longitude);
     setTimeout(()=>_cl=false,250);
     sv('flags',m.flags);sv('comments',m.comments);
+    sv('cmt-weather',m.comment_weather);sv('cmt-pit',m.comment_pit);
+    sv('cmt-hardness',m.comment_hardness);sv('cmt-misc',m.comment_misc);
     sv('ts',m.temp_time_start);sv('te',m.temp_time_end);
     const dc=m.density_cutter||'';
     document.getElementById('dc100').checked=/\b100\b/.test(dc);
