@@ -29,6 +29,9 @@ def current_water_year(today=None):
     return d.year + 1 if d.month >= 10 else d.year
 
 DB_PATH        = os.getenv("CRYOPIT_DB_PATH",   "cryopit.db")
+# The research group (shown in the in-app topbar badge) and the institution
+# (the university/organization) are separate fields. They're stored apart and
+# joined only for display — never one parsed out of the other.
 RESEARCH_GROUP = os.getenv("CRYOPIT_RESEARCH_GROUP", "CryoGARS")
 INSTITUTION    = os.getenv("CRYOPIT_INSTITUTION",    "Boise State University")
 # Campaign code defaults to the current water year (e.g. WY2026), recomputed at
@@ -36,23 +39,33 @@ INSTITUTION    = os.getenv("CRYOPIT_INSTITUTION",    "Boise State University")
 # default here on purpose: an unset/commented env var returns None, so the `or`
 # falls through to the computed default. Set CRYOPIT_CAMPAIGN to override.
 CAMPAIGN       = os.getenv("CRYOPIT_CAMPAIGN") or f"WY{current_water_year()}"
+# The app name "CryoPit" is fixed (it also appears hardcoded in the topbar
+# wordmark), so it isn't configurable — it's used as a literal in the page title
+# and console banner below.
 PORT        = int(os.getenv("CRYOPIT_PORT",   os.getenv("CRYOPIT_API_PORT", "8502")))
 # Bind address. Default 127.0.0.1 = local only (safe). Set 0.0.0.0 to accept
-# connections from other machines (shared deployment).
+# connections from other machines (shared deployment) — a deliberate choice,
+# not the default, since opening to the network should be intentional.
 HOST        = os.getenv("CRYOPIT_HOST", "127.0.0.1")
-# Number of concurrent requests waitress will serve. 
-# Raise for more simultaneous users, lower on a memory-constrained host.
+# Number of concurrent requests waitress will serve. 8 is plenty for a small
+# team; database writes still serialize via WAL regardless. Raise for more
+# simultaneous users, lower on a memory-constrained host.
 THREADS     = int(os.getenv("CRYOPIT_THREADS", "8"))
+# Default destination for server-side CSV writes. Resolved by the Python
+# process — locally that's your laptop; deployed it's the server. Point it at
+# a mounted Drive, an S3-backed mount, or a synced repo directory.
 EXPORT_DIR  = os.getenv("CRYOPIT_EXPORT_DIR", "exports")
 # Saved-pits / edit workflow. When disabled, the sidebar list and load route are
 # off and CryoPit is capture-and-archive only (safe default for multi-user
 # deployments without auth). A deployer can set this true to allow editing.
 ENABLE_EDIT = os.getenv("CRYOPIT_ENABLE_EDIT", "true").strip().lower() in ("1","true","yes","on")
-# How many recent pits the sidebar shows (per user).
+# How many recent pits the sidebar shows (per user). Short by default since the
+# list is scoped to the current user's own recent pits.
 SAVED_PITS_LIMIT = int(os.getenv("CRYOPIT_SAVED_PITS_LIMIT", "10"))
 # Identity. Real deployments put CryoPit behind an SSO reverse proxy that injects
 # an authenticated-username header; CryoPit only READS it, never handles
-# credentials. With no such header (local use), every pit is owned by DEV_USER.
+# credentials. With no such header (local use), every pit is owned by DEV_USER,
+# so a single local user sees all their own pits exactly as before.
 DEV_USER    = os.getenv("CRYOPIT_DEV_USER", "local")
 AUTH_HEADER = os.getenv("CRYOPIT_AUTH_HEADER", "X-Remote-User")
 NO_DATA     = -9999
@@ -92,7 +105,7 @@ CREATE TABLE IF NOT EXISTS observers(
 
 CREATE TABLE IF NOT EXISTS instruments(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL, model TEXT, serial_number TEXT,
+    name TEXT NOT NULL UNIQUE, model TEXT, serial_number TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
 
 CREATE TABLE IF NOT EXISTS measurement_types(
@@ -159,15 +172,24 @@ INSERT OR IGNORE INTO measurement_types(name,units,derived) VALUES
     ('wetness','unitless',0),('swe','mm',0),('depth','cm',0),
     ('ssa','m2/kg',0);
 
+-- Seed the instruments catalog. Names MUST match the form's INST list exactly,
+-- so the save-time lookup-by-name succeeds. Only the fixed checklist devices are
+-- seeded here; the "Other" write-in is get-or-created at save time as needed.
 INSERT OR IGNORE INTO instruments(name,model) VALUES
-    ('IceCube','A2 Photonic IceCube'),
-    ('IRIS2','IRIS2'),('IRIS','IRIS'),
-    ('Snow Fork','Toikka Snow Fork'),
-    ('SMP','SnowMicroPen'),
-    ('Denoth','Denoth LWC Meter'),
-    ('Federal Sampler','Standard Federal Sampler'),
+    ('Digital LWC','Digital LWC meter (Snow Fork / Denoth)'),
     ('Lyte Probe','Lyte Probe'),
-    ('Standard Ram','Standard Rammsonde');
+    ('SMP','SnowMicroPen'),
+    ('SSA / NIR Box','SSA / NIR Box (IceCube / IRIS)'),
+    ('Standard ram','Standard Rammsonde'),
+    ('Powder Ram','Powder Rammsonde'),
+    ('Force Ram','Force Rammsonde'),
+    ('Slush Ram','Slush Rammsonde'),
+    ('Snow Scope','Snow Scope'),
+    ('Force Snow Scope','Force Snow Scope'),
+    ('HS Transects','HS depth transects'),
+    ('Snow Scope Transects','Snow Scope transects'),
+    ('Stratigraphy pictures','Stratigraphy photographs'),
+    ('Pit pictures','Pit wall photographs');
 """
 
 def init_db():
@@ -222,10 +244,28 @@ def _migrate(conn):
         conn.execute("CREATE INDEX IF NOT EXISTS idx_sites_owner_created ON sites(owner, created_at)")
     except sqlite3.OperationalError:
         pass
+    # Enforce unique instrument names so get-or-create dedupes (older DBs had a
+    # non-unique name column, which let duplicates accumulate). Remove any
+    # existing duplicates first — keep the lowest id, repoint references — then
+    # add a UNIQUE index (the ALTER-safe way to add the constraint).
+    try:
+        dupes = conn.execute("""SELECT name, MIN(id) keep FROM instruments
+                                GROUP BY name HAVING COUNT(*) > 1""").fetchall()
+        for name, keep in dupes:
+            extra = [r[0] for r in conn.execute(
+                "SELECT id FROM instruments WHERE name=? AND id<>?", (name, keep))]
+            for old in extra:
+                conn.execute("UPDATE site_instruments SET instrument_id=? WHERE instrument_id=?", (keep, old))
+                conn.execute("UPDATE layers SET instrument_id=? WHERE instrument_id=?", (keep, old))
+                conn.execute("UPDATE ssa_calibration SET instrument_id=? WHERE instrument_id=?", (keep, old))
+                conn.execute("DELETE FROM instruments WHERE id=?", (old,))
+        conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_instruments_name ON instruments(name)")
+    except sqlite3.OperationalError:
+        pass
 
 def get_conn():
     """One connection per request.
- 
+
     WAL mode: readers and the (single) writer no longer block each other —
     most "database is locked" errors in default journal mode come from that
     interaction. WAL does NOT parallelize writes; SQLite always serializes
@@ -418,16 +458,25 @@ def save_pit(payload):
                      r.get("gtype",""), r.get("hardness",""),
                      r.get("wetness",""), r.get("comments","")))
 
-            # Site instruments
+            # Site instruments. get-or-create by name (same concurrency-safe
+            # pattern as observers) so write-in "Other" instruments are created
+            # rather than silently dropped. Serial is stored only when Used=Y;
+            # for N we store "" regardless of any submitted value (defensive —
+            # an unused instrument must never carry a serial).
+            def get_or_create_instrument(name):
+                name = (name or "").strip()
+                if not name: return None
+                conn.execute("INSERT OR IGNORE INTO instruments(name) VALUES(?)", (name,))
+                return conn.execute("SELECT id FROM instruments WHERE name=?", (name,)).fetchone()[0]
+
             for inst_rec in payload.get("instruments", []):
-                inst_r = conn.execute("SELECT id FROM instruments WHERE name=?",
-                                      (inst_rec["name"],)).fetchone()
-                if inst_r:
-                    conn.execute("""INSERT INTO site_instruments(site_id,instrument_id,used,notes)
-                        VALUES(?,?,?,?)""",
-                        (site_id, inst_r[0],
-                         1 if inst_rec.get("used")=="Y" else 0,
-                         inst_rec.get("sn","—")))
+                iid = get_or_create_instrument(inst_rec.get("name"))
+                if iid is None:
+                    continue
+                used = 1 if inst_rec.get("used") == "Y" else 0
+                serial = (inst_rec.get("sn") or "").strip() if used else ""
+                conn.execute("""INSERT INTO site_instruments(site_id,instrument_id,used,notes)
+                    VALUES(?,?,?,?)""", (site_id, iid, used, serial))
 
             # SSA
             ssaid = mt_id("ssa")
@@ -537,7 +586,11 @@ def _hdr(p, extra=None):
     return rows
 
 def _csv(rows):
+    # Prepend a UTF-8 BOM so Excel opens the file as UTF-8 rather than
+    # Windows-1252 (without it, accented names or any non-ASCII render as
+    # mojibake like "‚Äî"). Other tools ignore the BOM.
     buf = io.StringIO()
+    buf.write("\ufeff")
     csvlib.writer(buf).writerows(rows)
     return buf.getvalue()
 
@@ -576,7 +629,10 @@ def _build_csvs(p, layers, obs_str, ssa_cal, inst_list, campaign):
         ["# Observers",                 obs_str or NO_DATA],
         ["# WISe Serial No",            _c(p.get("wise_serial"))],
         ["# GPS",                       _c(p.get("gps_device"))],
-        ["# GPS Uncertainty",           (str(_c(p.get("gps_uncertainty")))+" "+(p.get("gps_uncertainty_unit") or "")).strip() if p.get("gps_uncertainty") is not None else NO_DATA],
+        ["# GPS Uncertainty",           _c(p.get("gps_uncertainty"))],
+        # Unit only means something paired with a value — write it only when an
+        # uncertainty value exists, never a lone unit (which would look like data).
+        ["# GPS Uncertainty Unit",      (p.get("gps_uncertainty_unit") or "") if p.get("gps_uncertainty") is not None else ""],
         ["# Density Cutter/Instrument", _c(p.get("density_cutter"))],
         ["# Snow Cover Condition",      _c(p.get("snow_cover_condition"))],
         ["# Standing Water Present",    _c(p.get("standing_water"))],
@@ -661,7 +717,7 @@ def _build_csvs(p, layers, obs_str, ssa_cal, inst_list, campaign):
         sd.append(["# INSTRUMENTS"])
         sd.append(["# Instrument","Serial No.","Used"])
         for name, serial, used in inst_list:
-            sd.append([name, serial or "—", "Y" if used==1 else "N"])
+            sd.append([name, serial or "", "Y" if used==1 else "N"])
 
     return {
         _fname(pit_id,date_str,"siteDetails",campaign):  _csv(sd),
@@ -1130,7 +1186,7 @@ html,body{height:100%;background:var(--w);font-family:var(--sans);color:var(--in
         </select>
         <input id="loc-c" placeholder="Type location" style="display:none;border-top:1px solid var(--rule)" oninput="updateId();tick()">
       </div>
-      <div class="ri"><div class="rl">Site / transect</div><input id="site" placeholder="LSOS, Transect A…" oninput="updateId()"></div>
+      <div class="ri"><div class="rl">Site / transect <span class="req">*</span></div><input id="site" placeholder="LSOS, Transect A…" oninput="updateId()"></div>
       <div class="ri"><div class="rl">Date <span class="req">*</span></div><input type="date" id="date" oninput="updateId();tick()"></div>
       <div class="ri"><div class="rl">Campaign</div><input id="campaign" placeholder="__CAMPAIGN__" value="__CAMPAIGN__"></div>
     </div>
@@ -1455,19 +1511,23 @@ const G=['PP','RG','FC','SH','MM','DF','DH','MF','IF',
   'MFcl','MFsl','MFcr','IFsc','IFrc','IFbi'];
 const H=['F','4F','1F','P','K','I'];
 const W=['D','M','W','V','S'];
+// Canonical instrument/task checklist — derived from the field sheet.
+// `n` = name (MUST match the DB instruments seed exactly so lookup succeeds),
+// `sn:1` = takes a serial number (devices + rams), absent = Y/N only
+// (survey methods & documentation). `other:1` marks the write-in row, which
+// also renders a name input and is get-or-created on save.
+// Legacy closeout tasks (pit backfilled, flag, data backed up) were removed —
+// they belonged to a campaign retired ~9 years ago and are no longer collected.
 const INST=[
-  {g:'Measurement'},
-  {n:'Digital LWC (Snow Fork / Denoth)',sn:1},{n:'Standard ram',sn:1},
-  {n:'Powder ram',sn:1},{n:'Force ram',sn:1},{n:'Snow Micro Pen (SMP)',sn:1},
-  {n:'Slush ram',sn:1},{n:'Lyte Probe',sn:1},
-  {n:'IceCube / IRIS (SSA)',sn:1},{n:'NIR / SSA Box',sn:1},
-  {g:'Spatial surveys'},
-  {n:'HS depth transects'},{n:'Snow Scope transects'},{n:'Surface roughness'},
-  {g:'Documentation'},
-  {n:'Pit wall photos — VIS'},{n:'Pit wall photos — NIR'},
-  {n:'Grain photos (all layers)'},{n:'Site overview photo'},
-  {g:'Closeout'},
-  {n:'Pit backfilled'},{n:'Red pole / flag left'},{n:'Data backed up'},
+  {g:'Instruments'},
+  {n:'Digital LWC',sn:1},{n:'Lyte Probe',sn:1},{n:'SMP',sn:1},{n:'SSA / NIR Box',sn:1},
+  {n:'Standard ram',sn:1},{n:'Powder Ram',sn:1},{n:'Force Ram',sn:1},
+  {n:'Slush Ram',sn:1},{n:'Snow Scope',sn:1},{n:'Force Snow Scope',sn:1},
+  {g:'Surveys & documentation'},
+  {n:'HS Transects'},{n:'Snow Scope Transects'},
+  {n:'Stratigraphy pictures'},{n:'Pit pictures'},
+  {g:'Other'},
+  {n:'Other',sn:1,other:1},
 ];
 
 /* num(): the one number parser. Returns null for blank/garbage and PRESERVES
@@ -1488,11 +1548,20 @@ function buildInst(){
   INST.forEach(it=>{
     if(it.g){
       if(open)h+='</tbody></table>';
-      h+=`<div class="ig-lbl">${it.g}</div><table class="it"><thead><tr><th style="width:46%">Instrument / task</th><th>Serial no.</th><th>Used</th></tr></thead><tbody>`;
+      h+=`<div class="ig-lbl">${it.g}</div><table class="it"><thead><tr><th style="width:46%">Instrument</th><th>Serial no.</th><th>Used (Y/N)</th></tr></thead><tbody>`;
       open=true;
     } else {
       const i=ii++;
-      h+=`<tr><td>${it.n}</td><td>${it.sn?`<input class="sn" id="sn${i}" placeholder="—">`:'—'}</td>
+      // "Other" gets a write-in name input; fixed rows show their name.
+      const nameCell = it.other
+        ? `<input class="oth" id="oth${i}" placeholder="Other instrument…">`
+        : it.n;
+      // SN field starts DISABLED because N is the default — you can only enter a
+      // serial after marking the instrument Used (Y). Rows without sn show "—".
+      const snCell = it.sn
+        ? `<input class="sn" id="sn${i}" placeholder="" disabled>`
+        : '—';
+      h+=`<tr><td>${nameCell}</td><td>${snCell}</td>
           <td><div class="yn"><button class="y" id="yy${i}" onclick="setyn(${i},'Y')">Y</button>
           <button class="n on" id="yn${i}" onclick="setyn(${i},'N')">N</button></div></td></tr>`;
     }
@@ -1504,6 +1573,14 @@ function buildInst(){
 function setyn(i,v){
   document.getElementById('yy'+i).classList.toggle('on',v==='Y');
   document.getElementById('yn'+i).classList.toggle('on',v==='N');
+  // The serial field is only usable when the instrument is marked Used (Y).
+  // Switching to N disables AND clears it, so an unused instrument can never
+  // carry a stale serial number (which would otherwise persist invisibly).
+  const sn=document.getElementById('sn'+i);
+  if(sn){
+    sn.disabled = (v!=='Y');
+    if(v!=='Y') sn.value='';
+  }
   tick();
 }
 function so(a){return a.map(v=>`<option value="${v}">${v}</option>`).join('')}
@@ -1753,9 +1830,17 @@ function updateId(){
   const loc=document.getElementById('loc').value;
   const site=document.getElementById('site').value.trim();
   const d=document.getElementById('date').value;
-  if(!d)return;
+  // Pit ID is site + date. BOTH are required — without a site we'd generate a
+  // malformed id like "PIT20260210" that could collide across pits. So if either
+  // is missing, leave the id as a placeholder rather than auto-generating.
+  if(!d || !site){
+    document.getElementById('pitid').textContent='—';
+    document.getElementById('tb-pid').textContent='—';
+    tick();
+    return;
+  }
   const ds=d.replace(/-/g,''),sc=site.replace(/\W+/g,'').toUpperCase().slice(0,6);
-  const id=(sc||'PIT')+ds;
+  const id=sc+ds;
   document.getElementById('pitid').textContent=id;
   document.getElementById('tb-pid').textContent=id;
   tick();
@@ -1849,14 +1934,23 @@ function collect(){
     ssa.push(r);
   });
   const specStr=gv('ssa-spec'),calvStr=gv('ssa-calv');
-  // Collect instrument log
+  // Collect instrument log. For the "Other" write-in, the name comes from its
+  // text input. Serial is only meaningful when Used=Y (the field is disabled
+  // otherwise), so we send "" for N. A blank/garbage SN stays "".
+  // NOTE: the DOM id index must track buildInst's own counter (every non-group
+  // row), independent of how many we end up pushing — we may skip the Other row.
   const instruments=[];
-  INST.forEach((it,idx)=>{
+  let di=0;
+  INST.forEach((it)=>{
     if(it.g)return;
-    const i=instruments.length;
+    const i=di++;
     const used=document.getElementById('yy'+i)?.classList.contains('on')?'Y':'N';
-    const sn=document.getElementById('sn'+i)?.value||'—';
-    instruments.push({name:it.n,sn,used});
+    const sn=(used==='Y' ? (document.getElementById('sn'+i)?.value||'') : '').trim();
+    const name = it.other
+      ? (document.getElementById('oth'+i)?.value||'').trim()
+      : it.n;
+    if(it.other && (used!=='Y' || !name)) return;
+    instruments.push({name, sn, used});
   });
   // Density cutter — multi-select (100/250/1000 cc), joined as a string
   const cutters=[];
@@ -2015,6 +2109,7 @@ function populate(p){
 function validate(){
   const p=collect();const e=[];
   if(!p.meta.location)e.push('Location');
+  if(!p.meta.site)e.push('Site');
   if(!p.meta.pit_id||p.meta.pit_id==='—')e.push('Pit ID');
   if(!p.meta.recorded_by)e.push('Recorded by');
   if(!p.meta.surveyors)e.push('Field observers');
@@ -2549,6 +2644,10 @@ def main():
     print(f"  database : {os.path.abspath(DB_PATH)}")
     print(f"  exports  : {os.path.abspath(EXPORT_DIR)} (archive folder)")
     print(f"  edit     : {'on' if ENABLE_EDIT else 'off'}")
+    # When bound to 0.0.0.0 (all interfaces), 127.0.0.1 still reaches it locally
+    # and IS browseable everywhere (0.0.0.0 itself is a bind address, not a
+    # destination — Chrome tolerates http://0.0.0.0 but Safari won't), so show
+    # the loopback address the user can actually click.
     shown_host = "127.0.0.1" if HOST in ("127.0.0.1", "localhost", "0.0.0.0") else HOST
     print(f"  open     : http://{shown_host}:{PORT}")
     # Serve with waitress (a real, cross-platform WSGI server) when available;
