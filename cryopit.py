@@ -1256,15 +1256,6 @@ html,body{height:100%;background:var(--w);font-family:var(--sans);color:var(--in
     <div class="row">
       <div class="ri"><div class="rl">Comments / notes</div><textarea id="comments" placeholder="Site conditions, access, anomalies…"></textarea></div>
     </div>
-    <div class="ig-lbl">Additional comments</div>
-    <div class="row">
-      <div class="ri"><div class="rl">Weather</div><textarea id="cmt-weather" placeholder="Weather-related notes…"></textarea></div>
-      <div class="ri"><div class="rl">Pit</div><textarea id="cmt-pit" placeholder="Pit-related notes…"></textarea></div>
-    </div>
-    <div class="row">
-      <div class="ri"><div class="rl">Hardness</div><textarea id="cmt-hardness" placeholder="Hardness-related notes…"></textarea></div>
-      <div class="ri"><div class="rl">Misc</div><textarea id="cmt-misc" placeholder="Anything else, incl. instruments not listed above…"></textarea></div>
-    </div>
   </div>
 </section>
 
@@ -1480,6 +1471,17 @@ html,body{height:100%;background:var(--w);font-family:var(--sans);color:var(--in
 <section class="sec" id="s9">
   <div class="sec-hd"><span class="sec-num">09</span><span class="sec-title">Instruments &amp; tasks</span></div>
   <div class="sec-body" id="ig"></div>
+  <div class="sec-body" style="padding-top:0">
+    <div class="ig-lbl">Additional comments</div>
+    <div class="row">
+      <div class="ri"><div class="rl">Weather</div><textarea id="cmt-weather" placeholder="Weather-related notes…"></textarea></div>
+      <div class="ri"><div class="rl">Pit</div><textarea id="cmt-pit" placeholder="Pit-related notes…"></textarea></div>
+    </div>
+    <div class="row">
+      <div class="ri"><div class="rl">Hardness</div><textarea id="cmt-hardness" placeholder="Hardness-related notes…"></textarea></div>
+      <div class="ri"><div class="rl">Misc</div><textarea id="cmt-misc" placeholder="Anything else, incl. instruments not on the checklist…"></textarea></div>
+    </div>
+  </div>
 </section>
 
 <!-- 10 CHECKLIST -->
