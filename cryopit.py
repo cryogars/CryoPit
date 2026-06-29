@@ -47,16 +47,14 @@ THREADS     = int(os.getenv("CRYOPIT_THREADS", "8"))
 # a mounted Drive, an S3-backed mount, or a synced repo directory.
 EXPORT_DIR  = os.getenv("CRYOPIT_EXPORT_DIR", "exports")
 # Saved-pits / edit workflow. When disabled, the sidebar list and load route are
-# off and CryoPit is capture-and-archive only (safe default for multi-user
-# deployments without auth). A deployer can set this true to allow editing.
-ENABLE_EDIT = os.getenv("CRYOPIT_ENABLE_EDIT", "false").strip().lower() in ("1","true","yes","on")
-# How many recent pits the sidebar shows (per user). Short by default since the
-# list is scoped to the current user's own recent pits.
+# off. A deployer can set this true to allow editing.
+ENABLE_EDIT = os.getenv("CRYOPIT_ENABLE_EDIT", "true").strip().lower() in ("1","true","yes","on")
+# How many recent pits the sidebar shows (per user).
 SAVED_PITS_LIMIT = int(os.getenv("CRYOPIT_SAVED_PITS_LIMIT", "10"))
 # Identity. Real deployments put CryoPit behind an SSO reverse proxy that injects
 # an authenticated-username header; CryoPit only READS it, never handles
 # credentials. With no such header (local use), every pit is owned by DEV_USER,
-# so a single local user sees all their own pits exactly as before.
+# so a single local user sees all their own pits.
 DEV_USER    = os.getenv("CRYOPIT_DEV_USER", "local")
 AUTH_HEADER = os.getenv("CRYOPIT_AUTH_HEADER", "X-Remote-User")
 NO_DATA     = -9999
