@@ -523,7 +523,7 @@ def load_pit(pit_id):
             return None, "This pit belongs to another user."
         if not row[0]:
             return None, ("This pit was saved by an older CryoPit version and "
-                          "has no stored payload — it can't be loaded for editing.")
+                          "has no stored payload. It can't be loaded for editing.")
         return json.loads(row[0]), None
     except Exception as e:
         return None, str(e)
