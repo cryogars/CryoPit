@@ -29,36 +29,27 @@ def current_water_year(today=None):
     return d.year + 1 if d.month >= 10 else d.year
 
 DB_PATH        = os.getenv("CRYOPIT_DB_PATH",   "cryopit.db")
-# The research group (shown in the in-app topbar badge) and the institution
-# (the university/organization) are separate fields. They're stored apart and
-# joined only for display — never one parsed out of the other.
+# The research group (shown in the in-app topbar badge)
 RESEARCH_GROUP = os.getenv("CRYOPIT_RESEARCH_GROUP", "CryoGARS")
+# Institution is shown in the browser tab
 INSTITUTION    = os.getenv("CRYOPIT_INSTITUTION",    "Boise State University")
 # Campaign code defaults to the current water year (e.g. WY2026), recomputed at
-# startup so it rolls over automatically each October 1. os.getenv has NO static
-# default here on purpose: an unset/commented env var returns None, so the `or`
-# falls through to the computed default. Set CRYOPIT_CAMPAIGN to override.
+# startup so it rolls over automatically each October 1. Set CRYOPIT_CAMPAIGN on .env to override.
 CAMPAIGN       = os.getenv("CRYOPIT_CAMPAIGN") or f"WY{current_water_year()}"
-# The app name "CryoPit" is fixed (it also appears hardcoded in the topbar
-# wordmark), so it isn't configurable — it's used as a literal in the page title
-# and console banner below.
 PORT        = int(os.getenv("CRYOPIT_PORT",   os.getenv("CRYOPIT_API_PORT", "8502")))
 # Bind address. Default 127.0.0.1 = local only (safe). Set 0.0.0.0 to accept
-# connections from other machines (shared deployment) — a deliberate choice,
-# not the default, since opening to the network should be intentional.
+# connections from other machines within network.
 HOST        = os.getenv("CRYOPIT_HOST", "127.0.0.1")
-# Number of concurrent requests waitress will serve. 8 is plenty for a small
-# team; database writes still serialize via WAL regardless. Raise for more
+# Number of concurrent requests waitress will serve. Raise for more
 # simultaneous users, lower on a memory-constrained host.
 THREADS     = int(os.getenv("CRYOPIT_THREADS", "8"))
-# Default destination for server-side CSV writes. Resolved by the Python
-# process — locally that's your laptop; deployed it's the server. Point it at
+# Default destination for server-side CSV writes. Point it at
 # a mounted Drive, an S3-backed mount, or a synced repo directory.
 EXPORT_DIR  = os.getenv("CRYOPIT_EXPORT_DIR", "exports")
 # Saved-pits / edit workflow. When disabled, the sidebar list and load route are
 # off and CryoPit is capture-and-archive only (safe default for multi-user
 # deployments without auth). A deployer can set this true to allow editing.
-ENABLE_EDIT = os.getenv("CRYOPIT_ENABLE_EDIT", "true").strip().lower() in ("1","true","yes","on")
+ENABLE_EDIT = os.getenv("CRYOPIT_ENABLE_EDIT", "false").strip().lower() in ("1","true","yes","on")
 # How many recent pits the sidebar shows (per user). Short by default since the
 # list is scoped to the current user's own recent pits.
 SAVED_PITS_LIMIT = int(os.getenv("CRYOPIT_SAVED_PITS_LIMIT", "10"))
@@ -1470,7 +1461,7 @@ html,body{height:100%;background:var(--w);font-family:var(--sans);color:var(--in
 <!-- 09 INSTRUMENTS -->
 <section class="sec" id="s9">
   <div class="sec-hd"><span class="sec-num">09</span><span class="sec-title">Instruments &amp; tasks</span></div>
-  <div class="sec-body" id="ig"></div>
+  <div class="sec-body" id="ig" style="padding-bottom:0"></div>
   <div class="sec-body" style="padding-top:0">
     <div class="ig-lbl">Additional comments</div>
     <div class="row">
