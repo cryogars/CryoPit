@@ -2193,7 +2193,7 @@ function newPit(){
   const archived = (_loaded_pid!==null && _loaded_pid===document.getElementById('pitid').textContent.trim());
   const msg = archived
     ? 'Start a new pit? (The current pit is archived.)'
-    : 'Start a new pit?\n\nThis pit is NOT archived — it is not in the database. '
+    : 'Start a new pit?\n\nThis pit is NOT archived (i.e., not in the database or export folder). '
       + 'Anything you have not downloaded or archived will be lost.';
   if(!confirm(msg))return;
   try{localStorage.removeItem('cp-draft');}catch(e){}
