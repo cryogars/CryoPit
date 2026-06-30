@@ -208,7 +208,7 @@ To back the database up or share it with a technical collaborator who wants to q
 
 ---
 
-## Entity-Relationship Diagram
+## Database Schema
 
 The proposed ER diagram for CryoPit is below. This schema is the same as the [SnowEx DB's schema](https://snowexsql.readthedocs.io/en/latest/database_structure.html) with some modifications/extensions. The core tables — `campaigns`, `sites`, `layers`, `measurement_types`, `instruments`, `observers`, and `site_observers` — map directly to their SnowEx equivalents. CryoPit extends the schema in two ways:
 
