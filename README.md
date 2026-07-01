@@ -259,7 +259,7 @@ Measurement types available for the `mt.name` filter include `temperature`, `den
 
 ---
 
-## Modularity is on the Horizon
+<!-- ## Modularity is on the Horizon
 
 CryoPit is being built toward a modular architecture so different groups can easily adapt it to their workflows. Planned and in-progress directions:
 
@@ -267,7 +267,7 @@ CryoPit is being built toward a modular architecture so different groups can eas
 2. **Server Deployment**: The current local helper service is the part most tied to single-machine use. A deployment-ready version will move save/export to native server-side actions so CryoPit can run behind a shared server with several users at once. By deployment-ready, we mean hosting CryoPit behind a URL where several users can connect and work concurrently. For higher write concurrency, the SQLite database can migrate to PostgreSQL (the schema is already designed for this); small teams can continue on SQLite (it's fast and lightweight).
 3. **Downloadable Snow Pit Profile Visualization**: Currently, CryoPit does not allow its users to download the snow pit visualization because more enhancements are planned for a future realease. Once those enhancements are finalized, we will provide a download button.
 
----
+--- -->
 
 ## Contact
 
