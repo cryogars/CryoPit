@@ -1,0 +1,7 @@
+# CryoPit runtime dependencies
+# Install with:  pip install -r requirements.txt
+#
+ 
+flask==3.1.3
+waitress==3.0.2          # production WSGI server (cross-platform: Win/Mac/Linux)
+python-dotenv>=1.0       # optional: loads a .env file if present
