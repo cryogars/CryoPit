@@ -1,0 +1,161 @@
+digraph cryopit_schema {
+  graph [rankdir=TB, bgcolor="white", pad=0.15, nodesep=0.36, ranksep=0.58, splines=spline];
+  node [shape=plain, fontname="DejaVu Sans", fontsize=12];
+  edge [color="#607d9b", arrowsize=0.7, penwidth=1.0, fontname="DejaVu Sans", fontsize=10];
+
+  campaigns [label=<
+    <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#315a78">
+      <TR><TD BGCOLOR="#587582"><FONT COLOR="white"><B>campaigns</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>campaign_id</B> INTEGER PK</TD></TR>
+      <TR><TD ALIGN="LEFT">name TEXT UNIQUE</TD></TR>
+    </TABLE>>];
+
+  sites [label=<
+    <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#1f4e70">
+      <TR><TD BGCOLOR="#234f6d"><FONT COLOR="white"><B>sites</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>site_id</B> TEXT PK (immutable UUID)</TD></TR>
+      <TR><TD ALIGN="LEFT">pit_id TEXT (human-facing)</TD></TR>
+      <TR><TD ALIGN="LEFT">owner TEXT</TD></TR>
+      <TR><TD ALIGN="LEFT">campaign_id FK</TD></TR>
+      <TR><TD ALIGN="LEFT">export_folder TEXT</TD></TR>
+      <TR><TD ALIGN="LEFT">pending_export_folder TEXT</TD></TR>
+      <TR><TD ALIGN="LEFT">current_revision_id TEXT</TD></TR>
+      <TR><TD ALIGN="LEFT">raw_json TEXT + site metadata</TD></TR>
+    </TABLE>>];
+
+  app_metadata [label=<
+    <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="5" COLOR="#5c4b7d">
+      <TR><TD BGCOLOR="#6d5a8c"><FONT COLOR="white"><B>app_metadata</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>key</B> TEXT PK</TD></TR>
+      <TR><TD ALIGN="LEFT">installation_id UUID value</TD></TR>
+    </TABLE>>];
+
+  site_revisions [label=<
+    <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="5" COLOR="#5c4b7d">
+      <TR><TD BGCOLOR="#6d5a8c"><FONT COLOR="white"><B>site_revisions</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>revision_id</B> TEXT PK (UUID)</TD></TR>
+      <TR><TD ALIGN="LEFT"><B>site_id</B> FK</TD></TR>
+      <TR><TD ALIGN="LEFT">parent_revision_id FK nullable</TD></TR>
+      <TR><TD ALIGN="LEFT">revision_number, payload_version</TD></TR>
+      <TR><TD ALIGN="LEFT">record_hash, raw_json</TD></TR>
+      <TR><TD ALIGN="LEFT">source installation + owner</TD></TR>
+    </TABLE>>];
+
+  transfer_imports [label=<
+    <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="5" COLOR="#5c4b7d">
+      <TR><TD BGCOLOR="#6d5a8c"><FONT COLOR="white"><B>transfer_imports</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>import_id</B> TEXT PK</TD></TR>
+      <TR><TD ALIGN="LEFT">bundle_id + source installation</TD></TR>
+      <TR><TD ALIGN="LEFT">destination_owner, status, summary</TD></TR>
+    </TABLE>>];
+
+  transfer_import_items [label=<
+    <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="5" COLOR="#5c4b7d">
+      <TR><TD BGCOLOR="#6d5a8c"><FONT COLOR="white"><B>transfer_import_items</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>import_id</B> FK</TD></TR>
+      <TR><TD ALIGN="LEFT"><B>site_id</B> FK</TD></TR>
+      <TR><TD ALIGN="LEFT">incoming_revision_id, result, message</TD></TR>
+    </TABLE>>];
+
+  observers [label=<
+    <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#315a78">
+      <TR><TD BGCOLOR="#587582"><FONT COLOR="white"><B>observers</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>observer_id</B> INTEGER PK</TD></TR>
+      <TR><TD ALIGN="LEFT">name TEXT UNIQUE</TD></TR>
+    </TABLE>>];
+
+  instruments [label=<
+    <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#315a78">
+      <TR><TD BGCOLOR="#587582"><FONT COLOR="white"><B>instruments</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>instrument_id</B> INTEGER PK</TD></TR>
+      <TR><TD ALIGN="LEFT">name TEXT UNIQUE</TD></TR>
+    </TABLE>>];
+
+  site_observers [label=<
+    <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="5" COLOR="#6c8796">
+      <TR><TD BGCOLOR="#78909c"><FONT COLOR="white"><B>site_observers</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>site_id</B> FK</TD></TR>
+      <TR><TD ALIGN="LEFT"><B>observer_id</B> FK</TD></TR>
+      <TR><TD ALIGN="LEFT">role</TD></TR>
+    </TABLE>>];
+
+  attachments [label=<
+    <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="5" COLOR="#1f5f91">
+      <TR><TD BGCOLOR="#2e6f9e"><FONT COLOR="white"><B>attachments</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>attachment_id</B> INTEGER PK</TD></TR>
+      <TR><TD ALIGN="LEFT"><B>site_id</B> FK</TD></TR>
+      <TR><TD ALIGN="LEFT">category, filename, sha256</TD></TR>
+      <TR><TD ALIGN="LEFT">top_cm, bottom_cm</TD></TR>
+      <TR><TD ALIGN="LEFT">storage_status, pending_delete</TD></TR>
+      <TR><TD ALIGN="LEFT">trash_relpath, storage_error</TD></TR>
+    </TABLE>>];
+
+  attachment_uploads [label=<
+    <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="5" COLOR="#7a4f24">
+      <TR><TD BGCOLOR="#9a6a35"><FONT COLOR="white"><B>attachment_uploads</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>queue_id</B> TEXT PK (client UUID)</TD></TR>
+      <TR><TD ALIGN="LEFT"><B>site_id</B> FK</TD></TR>
+      <TR><TD ALIGN="LEFT">status pending / stored / cancelled</TD></TR>
+      <TR><TD ALIGN="LEFT">filename, MIME, size, client_sha256</TD></TR>
+      <TR><TD ALIGN="LEFT">top_cm, bottom_cm</TD></TR>
+      <TR><TD ALIGN="LEFT">attachment_id FK nullable</TD></TR>
+      <TR><TD ALIGN="LEFT">publication_state, staged/target paths</TD></TR>
+      <TR><TD ALIGN="LEFT">server_sha256, last_error</TD></TR>
+    </TABLE>>];
+
+  swe_samples [label=<
+    <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="5" COLOR="#1f5f91">
+      <TR><TD BGCOLOR="#2e6f9e"><FONT COLOR="white"><B>swe_samples</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>site_id</B> FK</TD></TR>
+      <TR><TD ALIGN="LEFT"><B>sample</B> A / B / C</TD></TR>
+      <TR><TD ALIGN="LEFT">depth, SWE, density</TD></TR>
+    </TABLE>>];
+
+  layers [label=<
+    <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="5" COLOR="#1f5f91">
+      <TR><TD BGCOLOR="#2e6f9e"><FONT COLOR="white"><B>layers</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>layer_id</B> INTEGER PK</TD></TR>
+      <TR><TD ALIGN="LEFT"><B>site_id</B> FK</TD></TR>
+      <TR><TD ALIGN="LEFT">kind + measurement fields</TD></TR>
+      <TR><TD ALIGN="LEFT">instrument_id FK nullable</TD></TR>
+    </TABLE>>];
+
+  site_instruments [label=<
+    <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="5" COLOR="#6c8796">
+      <TR><TD BGCOLOR="#78909c"><FONT COLOR="white"><B>site_instruments</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>site_id</B> FK</TD></TR>
+      <TR><TD ALIGN="LEFT"><B>instrument_id</B> FK</TD></TR>
+      <TR><TD ALIGN="LEFT">used Y / N / NULL</TD></TR>
+      <TR><TD ALIGN="LEFT">serial_number</TD></TR>
+    </TABLE>>];
+
+  ssa_calibration [label=<
+    <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="5" COLOR="#1f5f91">
+      <TR><TD BGCOLOR="#2e6f9e"><FONT COLOR="white"><B>ssa_calibration</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>calib_id</B> INTEGER PK</TD></TR>
+      <TR><TD ALIGN="LEFT"><B>site_id</B> FK</TD></TR>
+      <TR><TD ALIGN="LEFT">instrument_id FK</TD></TR>
+      <TR><TD ALIGN="LEFT">calibration fields</TD></TR>
+    </TABLE>>];
+
+  campaigns -> sites [label="1 : many"];
+  sites -> site_revisions [label="1 : many revisions"];
+  site_revisions -> site_revisions [style=dashed, label="parent"];
+  transfer_imports -> transfer_import_items;
+  sites -> transfer_import_items;
+  sites -> site_observers;
+  observers -> site_observers;
+  sites -> attachments;
+  sites -> attachment_uploads;
+  attachment_uploads -> attachments [style=dashed, label="stored -> attachment_id"];
+  sites -> swe_samples;
+  sites -> layers;
+  sites -> site_instruments;
+  instruments -> site_instruments;
+  sites -> ssa_calibration;
+  instruments -> layers [style=dashed];
+  instruments -> ssa_calibration [style=dashed];
+
+  {rank=same; observers; sites; instruments; app_metadata}
+  {rank=same; site_observers; attachments; attachment_uploads; swe_samples; layers; site_instruments; ssa_calibration; site_revisions; transfer_imports; transfer_import_items}
+}
