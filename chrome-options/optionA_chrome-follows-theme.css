@@ -1,0 +1,70 @@
+/* ============================================================
+   VARIANT A — the chrome follows the theme
+
+   The instrument surround is a real themed surface. In light mode it is a
+   pale cool slate, still clearly darker than the white sheet so the frame
+   still reads as a frame; in dark mode it stays polar night. The theme
+   toggle then means something across the whole window, and dark mode keeps
+   a genuine value step between surround, sheet and card.
+   ============================================================ */
+:root{
+  --chrome:  #ccd8e2;
+  --chrome2: #ffffff;                     /* active nav entry, the core tray */
+  --chrome-top:  #d6e0e9;
+  --chrome-hover:#c2d0dc;
+  --chrome-ink:  #0a1a29;
+  --chrome-ink2: #47607a;
+  --chrome-ink3: #475970;   /* 4.94:1 on the surround, 5.36:1 on the bar */
+  --chrome-rule: rgba(10,26,41,.13);
+  --chrome-rule2:rgba(10,26,41,.22);
+  --chrome-over: rgba(10,26,41,.05);
+  --chrome-over2:rgba(10,26,41,.10);
+  --chrome-pip-bd:rgba(10,26,41,.26);
+  --chrome-pit-ink:#12447f;
+  --chrome-pit-bg: rgba(27,111,212,.12);
+  --chrome-pit-bd: rgba(27,111,212,.38);
+  --chrome-ok:   #0d7f57;
+  --chrome-dl:   #1b6fd4;
+  --chrome-warn: #8a5709;
+  --chrome-err:  #c02b37;
+}
+
+html[data-theme="dark"]{
+  --chrome:  #08161f;
+  --chrome2: #0f2436;
+  --chrome-top:  #0c1e2b;
+  --chrome-hover:#0b1e2b;
+  --chrome-ink:  #f2f7fb;
+  --chrome-ink2: #94aec4;
+  --chrome-ink3: #7a90a6;
+  --chrome-rule: rgba(255,255,255,.09);
+  --chrome-rule2:rgba(255,255,255,.16);
+  --chrome-over: rgba(255,255,255,.05);
+  --chrome-over2:rgba(255,255,255,.11);
+  --chrome-pip-bd:rgba(255,255,255,.22);
+  --chrome-pit-ink:#dcecff;
+  --chrome-pit-bg: rgba(27,111,212,.16);
+  --chrome-pit-bd: rgba(87,168,240,.3);
+  --chrome-ok:   #48e0af;
+  --chrome-dl:   #7cc0ff;
+  --chrome-warn: #f5c37a;
+  --chrome-err:  #ff8a91;
+}
+
+/* the core tray's cold light-fall reads as a tint on white, not a glow */
+html:not([data-theme="dark"]) #mini-core{
+  background:radial-gradient(120% 80% at 50% 0%,rgba(27,111,212,.09),transparent 70%),
+             var(--chrome2)}
+
+/* The active spine numeral and the rail's hover accents use --acc2 (firn
+   cyan), which is bright against polar night but only 2.64:1 on a light
+   surround. On light chrome they take the deeper meltwater blue instead. */
+html:not([data-theme="dark"]) .idx-item.active .idx-num,
+html:not([data-theme="dark"]) .rail:hover .rail-lbl,
+html:not([data-theme="dark"]) .rail:hover .rail-hint{color:var(--acc)}
+html:not([data-theme="dark"]) .idx-collapse:hover,
+html:not([data-theme="dark"]) .tb-csv:hover,
+html:not([data-theme="dark"]) .tb-theme:hover,
+html:not([data-theme="dark"]) .nav-toggle:hover{border-color:var(--acc);color:var(--acc)}
+html:not([data-theme="dark"]) .pit-entry:hover{border-left-color:var(--acc)}
+html:not([data-theme="dark"]) .rail:focus-visible{outline-color:var(--acc)}
