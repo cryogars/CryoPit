@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+# A second push to the same branch cancels the first. Field-season commits tend
+# to arrive in bursts; only the newest one is worth a runner.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    name: Python ${{ matrix.python }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false        # a 3.13-only break should not hide a 3.11 result
+      matrix:
+        python: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Import check
+        run: python -c "import cryopit, cryopit.web, cryopit.plot, cryopit.export; print(cryopit.__version__)"
+      - name: Density rules
+        run: python tests/test_density.py
+      - name: Profile figure
+        run: python tests/test_plot.py
+      - name: End-to-end smoke
+        run: python tests/test_smoke.py
+
+
+  full-suite:
+    name: Full Python + browser suite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: pip install -r requirements.lock
+      - run: npm ci
+      - name: Run every suite
+        run: ./tests/run_all.sh
+
+  javascript:
+    name: JS / DOM
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      # test_dom.mjs shells out to Python to assemble the real page, so this
+      # job needs BOTH runtimes — it is not a pure-JS suite.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: npm ci
+      - name: Coordinate transform
+        run: node tests/test_coords.mjs
+      - name: DOM behaviour
+        run: node tests/test_dom.mjs
+
+  docker:
+    name: Docker build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t cryopit:ci .
+      # The container must actually serve, not merely build — a missing asset
+      # or a bad WORKDIR only shows up at runtime.
+      - name: Boot and probe
+        run: |
+          docker run -d --name cryopit-ci -p 8502:8502 cryopit:ci
+          for i in $(seq 1 30); do
+            curl -sf -o /dev/null http://127.0.0.1:8502/ && break
+            sleep 2
+          done
+          curl -sf -o /dev/null -w "GET /healthz -> %{http_code}\n" http://127.0.0.1:8502/healthz
+          curl -sf -o /dev/null -w "GET /readyz -> %{http_code}\n" http://127.0.0.1:8502/readyz
+          docker logs cryopit-ci
+          docker rm -f cryopit-ci
