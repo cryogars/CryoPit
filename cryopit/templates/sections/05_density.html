@@ -1,0 +1,30 @@
+<!-- 05 DENSITY -->
+<section class="sec" id="s5" data-nav="Density">
+  <div class="sec-hd"><span class="sec-num">05</span><span class="sec-heading"><span class="sec-title">Density</span><span class="sec-subtitle">Density intervals, replicates and derived SWE</span></span><button class="tog" onclick="sortRows('d')" title="Sort rows surface → ground (exports sort automatically; this just tidies the screen)">⇅ sort</button><span class="sec-meta" id="dc-cnt">0 intervals</span></div>
+  <div class="sec-body">
+    <p style="font-family:var(--mono);font-size:11px;color:var(--ink3);margin-bottom:14px;letter-spacing:.02em">Extra = Profile C</p>
+    <div id="d-warn" class="soft-warn" style="display:none"></div>
+    <div class="row" style="margin-bottom:16px">
+      <div class="ri"><div class="rl">Density cutter (cc)</div>
+        <div class="toggles">
+          <label class="tog"><input type="checkbox" id="dc100"><span>100</span></label>
+          <label class="tog"><input type="checkbox" id="dc250"><span>250</span></label>
+          <label class="tog"><input type="checkbox" id="dc1000"><span>1000</span></label>
+        </div>
+      </div>
+      <div class="ri"><div class="rl">Auto-fill depths</div>
+        <div style="display:flex;gap:6px;align-items:center;padding:6px 12px">
+          <select id="d-interval" style="flex:0 0 auto;width:auto;padding:4px 8px;border:1px solid var(--rule);border-radius:6px">
+            <option value="10">every 10 cm</option>
+            <option value="5">every 5 cm</option>
+          </select>
+          <button class="add" style="width:auto;border:1px solid var(--rule);border-radius:999px;padding:4px 12px" onclick="autofillDensity()">↧ generate from total depth</button>
+        </div>
+      </div>
+    </div>
+    <div class="pw"><table class="pt">
+      <thead><tr><th>Top (cm)</th><th>Bottom (cm)</th><th>Profile A (kg/m³)</th><th>Profile B (kg/m³)</th><th>Extra (kg/m³)</th><th>Avg</th><th style="width:36px"></th></tr></thead>
+      <tbody id="db"></tbody>
+    </table><button class="add" onclick="addRow('d')">+ add interval</button></div>
+  </div>
+</section>

@@ -1,0 +1,47 @@
+<!-- 02 WEATHER -->
+<section class="sec" id="s2" data-nav="Weather">
+  <div class="sec-hd"><span class="sec-num">02</span><span class="sec-heading"><span class="sec-title">Weather</span><span class="sec-subtitle">Select all conditions observed during the pit</span></span></div>
+  <div class="sec-body">
+    <div class="row">
+      <div class="ri"><div class="rl">Precipitation rate</div>
+        <div class="toggles" data-weather-multi data-exclusive-value="None">
+          <label class="tog"><input type="checkbox" name="pr" value="None"><span>None</span></label>
+          <label class="tog"><input type="checkbox" name="pr" value="Very light (0.5 cm/hr)"><span>Very light</span></label>
+          <label class="tog"><input type="checkbox" name="pr" value="Light (1 cm/hr)"><span>Light</span></label>
+          <label class="tog"><input type="checkbox" name="pr" value="Moderate (5 cm/hr)"><span>Moderate</span></label>
+          <label class="tog"><input type="checkbox" name="pr" value="Heavy (10 cm/hr)"><span>Heavy</span></label>
+        </div>
+      </div>
+      <div class="ri"><div class="rl">Precipitation type</div>
+        <div class="toggles" data-weather-multi data-exclusive-value="None">
+          <label class="tog"><input type="checkbox" name="pt" value="None"><span>None</span></label>
+          <label class="tog"><input type="checkbox" name="pt" value="Rain"><span>Rain</span></label>
+          <label class="tog"><input type="checkbox" name="pt" value="Snow"><span>Snow</span></label>
+          <label class="tog"><input type="checkbox" name="pt" value="Graupel"><span>Graupel</span></label>
+          <label class="tog"><input type="checkbox" name="pt" value="Hail"><span>Hail</span></label>
+          <label class="tog"><input type="checkbox" name="pt" value="Rain/Snow mix"><span>Rain/Snow</span></label>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="ri"><div class="rl">Sky condition</div>
+        <div class="toggles" data-weather-multi>
+          <label class="tog"><input type="checkbox" name="sky" value="Clear"><span>Clear</span></label>
+          <label class="tog"><input type="checkbox" name="sky" value="Few (&lt;1/4)"><span>Few &lt;¼</span></label>
+          <label class="tog"><input type="checkbox" name="sky" value="Scattered (1/4-1/2)"><span>Scattered ¼–½</span></label>
+          <label class="tog"><input type="checkbox" name="sky" value="Broken (&gt;1/2)"><span>Broken &gt;½</span></label>
+          <label class="tog"><input type="checkbox" name="sky" value="Overcast"><span>Overcast</span></label>
+        </div>
+      </div>
+      <div class="ri"><div class="rl">Wind</div>
+        <div class="toggles" data-weather-multi>
+          <label class="tog"><input type="checkbox" name="wind" value="Calm (0 mph)"><span>Calm</span></label>
+          <label class="tog"><input type="checkbox" name="wind" value="Light (1-16 mph)"><span>Light</span></label>
+          <label class="tog"><input type="checkbox" name="wind" value="Moderate (17-25 mph)"><span>Moderate</span></label>
+          <label class="tog"><input type="checkbox" name="wind" value="Strong (26-38 mph)"><span>Strong</span></label>
+          <label class="tog"><input type="checkbox" name="wind" value="Extreme (&gt;38 mph)"><span>Extreme</span></label>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

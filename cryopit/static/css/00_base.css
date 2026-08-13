@@ -1,0 +1,1120 @@
+/* ============================================================
+   CryoPit v3 — "the instrument and the sheet"
+
+   DESIGN NOTE
+   A snow pit is read as a vertical section: surface at the top, ground at
+   the bottom, one layer at a time. Three things follow from that.
+
+   1. A DARK COMMAND BAR OVER A THEMED APP. The bar carries the pit's identity
+      and its state, and stays dark in both themes — as it always has in
+      CryoPit. Everything below it, including the section spine and the live
+      column, follows the theme, so the light/dark toggle means something
+      across the whole working area rather than just the middle of it.
+
+   2. THE COLUMN IS THE HERO. The live profile rail is the one place the app
+      spends its boldness: the snowpack you are standing in, with the derived
+      bulk density and SWE set beneath it as an instrument readout. Everything
+      else stays disciplined.
+
+   3. LEGIBLE IN GLARE. This is filled in outdoors, on snow, often in gloves.
+      Field labels are set large, bold and dark rather than as faint micro-caps,
+      and every collapse control is a real target rather than a hairline glyph.
+
+   PALETTE           polar night  #08161f   chrome base
+                     pit shadow   #0f2436   raised chrome
+                     meltwater    #1b6fd4   primary accent (a shaded pit wall)
+                     firn         #16aecb   secondary accent
+                     ground ochre #a2670f   warnings — the warm counterpoint:
+                                            cold snow above, warm earth below
+   TYPE              Space Grotesk — titles, controls, prose
+                     IBM Plex Mono — every measured value, ID and label,
+                                     always with tabular figures so a column
+                                     of densities lines up digit for digit
+   ============================================================ */
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+/* ------------------------------------------------------------
+   TOKENS
+   ------------------------------------------------------------ */
+:root{
+  /* -- the sheet (light) -- */
+  --w:    #ffffff;   /* raised surface: cards, inputs           */
+  --bg:   #e8eef4;   /* recessed surface: the sheet's own field */
+  --ink:  #0a1a29;
+  --ink2: #47607a;
+  --ink3: #56697d;   /* every 9.5px label uses this. AA on all three light
+                        surfaces: 5.66:1 on a white card, 5.35:1 on a label
+                        band, 4.84:1 on the recessed sheet — the last one
+                        matters because several section notes carry an inline
+                        color:var(--ink3) and sit directly on the sheet. */
+  --acc:  #1b6fd4;
+  --acc2: #16aecb;
+  --accent-ink:#ffffff; /* readable text/icons on the primary accent */
+  --red:  #d2323f;
+  --grn:  #0d7f57;
+  /* Foreground for anything painted ON a saturated fill. Light theme: the fills
+     are dark, so white reads. Dark theme: every fill is LIGHTENED to stay
+     visible against a dark page, and white then fails badly on it — 1.82:1 on
+     the green Y button, the control recording whether an instrument was used. */
+  --on-fill:#ffffff;   /* 5.01:1 both as text on white and as white-on-fill */
+  --rule: #dde5ed;
+  --rule2:#c3d1de;
+  /* --panel/--panel2/--green/--amber are USED by toasts, attachment chips and
+     soft warnings. They were once used but never DEFINED, so each silently
+     fell back to a hardcoded light-theme literal and dark-mode toasts came out
+     white-on-white — every "archived", "download blocked" and error message
+     invisible. They are real tokens in both themes now. */
+  --panel:#ffffff;
+  --panel2:rgba(10,26,41,.055);
+  --green:#0d7f57;
+  --amber:#a2670f;
+
+  /* -- the chrome (identical in both themes: it is the instrument) -- */
+  --chrome:  #08161f;
+  --chrome-ink:  #f2f7fb;
+  --chrome-ink2: #94aec4;
+  --chrome-ink3: #7a90a6;  /* 5.56:1 on the bar, 4.80:1 in the core tray */
+  --chrome-rule: rgba(255,255,255,.09);
+  --chrome-rule2:rgba(255,255,255,.16);
+  --chrome-top:  #0c1e2b;                 /* the bar's upper gradient stop   */
+  --chrome-over: rgba(255,255,255,.05);   /* translucent control fill        */
+  --chrome-over2:rgba(255,255,255,.11);   /* ...and its hover                */
+  --chrome-pit-ink:#dcecff;               /* the pit-ID chip                 */
+  --chrome-pit-bg: rgba(27,111,212,.16);
+  --chrome-pit-bd: rgba(87,168,240,.3);
+  --chrome-ok:   #48e0af;                 /* the four status lamps           */
+  --chrome-dl:   #7cc0ff;
+  --chrome-warn: #f5c37a;
+  --chrome-err:  #ff8a91;
+
+  --shadow:0 1px 2px rgba(10,26,41,.05),0 6px 20px -6px rgba(10,26,41,.14);
+  --shadow-lg:0 18px 44px -12px rgba(10,26,41,.34);
+
+  --sans:'Space Grotesk',ui-sans-serif,system-ui,'Segoe UI',Helvetica,Arial,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+
+  --nav:58px;      /* command bar height  */
+  --r:10px;        /* card radius         */
+  --r-sm:7px;      /* control radius      */
+  --idx:206px;     /* section spine width */
+  --rail:212px;    /* live column width   */
+}
+
+html[data-theme="dark"]{
+  --w:    #142433;
+  --bg:   #0b1826;
+  --ink:  #e9f1f8;
+  --ink2: #9cb2c6;
+  --ink3: #8299ae;   /* 5.35:1 on the dark card surface */
+  --acc:  #57a8f0;
+  --acc2: #46d0e6;
+  --accent-ink:#08161f; /* dark ink preserves contrast on the lighter dark-theme accent */
+  --red:  #ff7a82;
+  --grn:  #3fd8a0;
+  --on-fill:#08161f;   /* 10.08:1 on green, 7.30:1 on red; white would be 1.82 and 2.51 */
+  --rule: #22374b;
+  --rule2:#31506b;
+  --panel:#1a2c3d;
+  --panel2:rgba(233,241,248,.075);
+  --green:#3fd8a0;
+  --amber:#f2b85c;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -8px rgba(0,0,0,.6);
+  --shadow-lg:0 20px 48px -12px rgba(0,0,0,.7);
+}
+
+/* The theme is a data-attribute, which the browser cannot infer. Declaring
+   color-scheme makes UA-rendered chrome follow it: the <input type=date>
+   calendar icon, number spinners, the native <select> dropdown list, and
+   scrollbars — all of which rendered light-on-dark before. */
+html{color-scheme:light}
+html[data-theme="dark"]{color-scheme:dark}
+
+html,body{height:100%;background:var(--bg);font-family:var(--sans);
+  color:var(--ink);font-size:14px;overflow:hidden;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+::selection{background:var(--acc);color:var(--accent-ink)}
+
+input,select,textarea,button{font-family:inherit}
+/* Data is always mono with tabular figures — a column of densities has to line
+   up digit for digit, or a transposed reading hides in plain sight. */
+.pt input,.pt select,.rail-stat b,.tb-pitid,.tb-pct,.pitid,.cl-pct,.sn{
+  font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+
+/* thin, quiet scrollbars — one less thing competing with the data */
+*{scrollbar-width:thin;scrollbar-color:var(--rule2) transparent}
+.index,.rail{scrollbar-color:var(--rule2) transparent}
+
+
+/* ============================================================
+   COMMAND BAR
+   Pit identity on the left, the state of the pit on the right. The hairline
+   beneath it — the "firn line" — is the only saturated colour in the chrome,
+   and it is the seam where the instrument meets the sheet.
+   ============================================================ */
+.topbar{
+  position:fixed;top:0;left:0;right:0;z-index:200;height:var(--nav);
+  background:linear-gradient(180deg,var(--chrome-top) 0%,var(--chrome) 100%);
+  display:flex;align-items:center;padding:0 20px;gap:4px}
+.topbar::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;
+  background:linear-gradient(90deg,var(--acc) 0%,var(--acc2) 42%,rgba(22,174,203,0) 88%)}
+
+.tb-brand{display:flex;align-items:center;gap:11px;margin-right:6px}
+.tb-brand .cryopit-logo{color:var(--chrome-ink);opacity:.94;flex-shrink:0}
+.tb-wordmark{font-size:17px;font-weight:300;color:var(--chrome-ink);letter-spacing:-.015em;line-height:1}
+.tb-wordmark strong{font-weight:700;color:var(--chrome-ink)}
+.tb-divider{color:var(--chrome-rule2);font-size:15px;font-weight:200;margin:0 1px}
+.tb-inst{font-family:var(--mono);font-size:9px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--chrome-ink3);white-space:nowrap}
+
+/* the pit's name, and the first thing anyone looks for */
+.tb-pitid{font-family:var(--mono);font-size:12.5px;color:var(--chrome-pit-ink);margin-left:14px;
+  letter-spacing:.06em;padding:5px 13px;border-radius:999px;
+  background:var(--chrome-pit-bg);border:1px solid var(--chrome-pit-bd);
+  white-space:nowrap;max-width:250px;overflow:hidden;text-overflow:ellipsis}
+
+.tb-right{display:flex;align-items:center;gap:9px;margin-left:auto}
+
+/* completion meter: the figure first, the bar as supporting evidence */
+.tb-pct{font-family:var(--mono);font-size:11.5px;color:var(--chrome-ink2);
+  letter-spacing:.02em;min-width:32px;text-align:right}
+.tb-prog{width:74px;height:4px;background:var(--chrome-over2);
+  border-radius:999px;overflow:hidden}
+.tb-fill{height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));
+  border-radius:999px;transition:width .35s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 0 10px rgba(22,174,203,.55)}
+
+.tb-csv{padding:7px 14px;background:var(--chrome-over);color:var(--chrome-ink2);
+  border:1px solid var(--chrome-rule2);border-radius:999px;font-size:12.5px;
+  cursor:pointer;line-height:1.2;transition:background .12s,border-color .12s,color .12s}
+.tb-csv:hover{background:var(--chrome-over2);border-color:var(--acc2);color:var(--chrome-ink)}
+
+/* Archive is the consequential action — the only filled control up here */
+/* Contrast must hold at the gradient's LIGHTEST stop, and #2c81e6 gave white
+   only 3.9:1 — below AA on the most consequential button in the app. Both stops
+   are fixed rather than themed, because this button sits on the dark command
+   bar in BOTH themes. */
+.tb-save{padding:8px 20px;background:linear-gradient(180deg,#1f6fd0,#14539e);
+  color:#fff;border:none;border-radius:999px;font-size:12.5px;font-weight:700;
+  letter-spacing:.015em;cursor:pointer;margin-left:6px;line-height:1.2;
+  box-shadow:0 1px 0 rgba(255,255,255,.22) inset,0 3px 12px -2px rgba(27,111,212,.6);
+  transition:filter .12s,transform .08s}
+.tb-save:hover{filter:brightness(1.12)}
+.tb-save:active{transform:translateY(1px)}
+.tb-csv:active,.tb-theme:active{transform:translateY(1px)}
+
+/* the pit's state, as a lamp on the panel */
+.tb-status{font-family:var(--mono);font-size:10.5px;color:var(--chrome-ink2);
+  margin-left:2px;min-width:92px;letter-spacing:.02em;line-height:1.2}
+.tb-status.ok{color:var(--chrome-ok)}
+.tb-status.ok-dl{color:var(--chrome-dl)}
+.tb-status.unsaved{color:var(--chrome-warn)}
+.tb-status.err{color:var(--chrome-err)}
+
+.tb-theme{background:var(--chrome-over);border:1px solid var(--chrome-rule2);
+  border-radius:999px;color:var(--chrome-ink);opacity:.7;cursor:pointer;font-size:13px;
+  padding:5px 10px;line-height:1;transition:opacity .12s,border-color .12s}
+.tb-theme:hover{opacity:1;border-color:var(--acc2)}
+
+.nav-toggle{display:none;background:var(--chrome-over);
+  border:1px solid var(--chrome-rule2);border-radius:var(--r-sm);color:var(--chrome-ink);
+  opacity:.85;cursor:pointer;font-size:14px;padding:6px 11px;margin-right:6px;line-height:1}
+.nav-toggle:hover{opacity:1;border-color:var(--acc2)}
+
+
+/* ============================================================
+   SHELL — chrome | sheet | chrome
+   ============================================================ */
+.shell{display:flex;height:calc(100vh - var(--nav));margin-top:var(--nav);
+  overflow:hidden;background:var(--bg)}
+
+
+/* ============================================================
+   SECTION SPINE (left)
+   The 12 sections are a real sequence: they mirror the printed field sheet and
+   the order the work actually happens in a pit. The numerals earn their place —
+   they are how a crew says "put that in oh-five".
+   ============================================================ */
+.index{width:var(--idx);min-width:var(--idx);background:var(--bg);
+  border-right:1px solid var(--rule);height:100%;overflow-y:auto;
+  flex-shrink:0;display:flex;flex-direction:column;position:relative}
+
+/* SPINE COLLAPSE — was a 12px chevron in a 34px strip, hugging the right edge:
+   a target of roughly 14×14 and almost invisible against the panel. It is now a
+   full-width, 48px-tall labelled button. The word carries the meaning, the
+   chevron carries the direction, and the whole row is the hit area — which is
+   what makes it usable with a glove on. JS swaps the button's text between
+   « and », so the label is a ::before and the glyph stays the element's own
+   text content. */
+.idx-collapse{flex-shrink:0;align-self:stretch;min-height:58px;display:flex;
+  align-items:center;justify-content:flex-end;gap:9px;padding:0 16px;
+  background:color-mix(in srgb,var(--bg) 45%,var(--w));
+  border:none;border-bottom:1px solid var(--rule);color:var(--ink2);
+  font-family:var(--mono);font-size:21px;font-weight:600;line-height:1;
+  cursor:pointer;transition:background .12s,color .12s}
+.idx-collapse::before{content:'HIDE';font-size:12px;font-weight:600;
+  letter-spacing:.14em;margin-right:auto}
+body.index-collapsed .idx-collapse::before{content:'';margin-right:0}
+.idx-collapse:hover{background:color-mix(in srgb,var(--acc) 10%,var(--w));color:var(--acc)}
+
+/* .idx-item is a <button> (it was a div with onclick, so mouse-only). The reset
+   makes it look right while staying focusable. */
+.idx-item{display:flex;align-items:center;width:100%;text-align:left;font:inherit;
+  background:none;border:none;padding:10px 16px;cursor:pointer;gap:11px;
+  transition:background .12s;user-select:none;position:relative}
+.idx-item:hover{background:var(--rule)}
+.idx-item.active{background:var(--w)}
+.idx-item.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:linear-gradient(180deg,var(--acc),var(--acc2))}
+.idx-num{font-family:var(--mono);font-size:10.5px;color:var(--ink3);
+  min-width:19px;letter-spacing:.04em;transition:color .12s}
+.idx-lbl{font-size:12.5px;color:var(--ink2);font-weight:500;letter-spacing:.005em;
+  transition:color .12s}
+.idx-item:hover .idx-lbl{color:var(--ink)}
+.idx-item.active .idx-lbl{color:var(--ink);font-weight:600}
+.idx-item.active .idx-num{color:var(--acc)}
+
+/* one pip per section, carrying the same three states as the section header
+   glyph and the checklist row — spine, header and checklist always agree */
+.idx-pip{width:7px;height:7px;border-radius:50%;border:1.5px solid var(--rule2);
+  flex-shrink:0;margin-left:auto;transition:background .2s,border-color .2s,box-shadow .2s}
+.idx-pip.done{background:var(--grn);border-color:var(--grn);
+  box-shadow:0 0 0 3px rgba(63,216,160,.15)}
+
+.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;
+  margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;
+  white-space:nowrap!important;border:0!important}
+.nav-foot{border-top:1px solid var(--rule);padding:8px 0 12px;margin-top:auto}
+.saved-pits-heading{display:flex;align-items:center;justify-content:space-between;padding-right:14px}
+.nav-foot-label{font-family:var(--mono);font-size:9px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--ink3);padding:12px 16px 7px}
+.saved-pits-count{font-family:var(--mono);font-size:9px;color:var(--ink3);white-space:nowrap}
+.nav-foot-empty{font-family:var(--mono);font-size:11px;color:var(--ink3);
+  padding:8px 16px;display:block}
+.saved-pits-filters{padding:0 12px 8px}
+.saved-pits-search-row{display:flex;gap:4px}
+.saved-pits-search-row input,.saved-pits-filter-more select,.saved-pits-filter-more input{
+  width:100%;min-width:0;border:1px solid var(--rule2);border-radius:5px;background:var(--w);
+  color:var(--ink);font-family:var(--mono);font-size:10px;padding:7px 8px}
+.saved-pits-search-row input:focus,.saved-pits-filter-more select:focus,
+.saved-pits-filter-more input:focus{outline:2px solid color-mix(in srgb,var(--acc) 35%,transparent);border-color:var(--acc)}
+.saved-pits-search-row button{width:30px;flex:0 0 30px;border:1px solid var(--rule2);
+  border-radius:5px;background:var(--panel2);color:var(--ink2);font-size:17px;cursor:pointer}
+.saved-pits-search-row button:hover{border-color:var(--acc);color:var(--acc)}
+.saved-pits-filter-more{margin-top:6px;font-family:var(--mono);font-size:9px;color:var(--ink3)}
+.saved-pits-filter-more summary{cursor:pointer;user-select:none;padding:4px 1px}
+.saved-pits-filter-more[open]{padding-bottom:2px}
+.saved-pits-filter-more label{display:block;margin-top:6px;letter-spacing:.03em}
+.saved-pits-filter-more label select,.saved-pits-filter-more label input{display:block;margin-top:3px}
+.saved-pits-date-row{display:flex;gap:5px}.saved-pits-date-row label{min-width:0;flex:1}
+.pit-entry{display:block;width:100%;padding:8px 14px 9px 16px;font-family:var(--mono);
+  font-size:11px;color:var(--ink2);cursor:pointer;text-align:left;background:none;border:0;
+  border-left:2px solid transparent;transition:background .12s,color .12s,border-color .12s}
+.pit-entry:hover{background:var(--rule);color:var(--ink);border-left-color:var(--acc)}
+.pit-entry .pit-id{font-weight:700;color:var(--ink);display:block;overflow:hidden;
+  white-space:nowrap;text-overflow:ellipsis}
+.pit-entry .pit-context,.pit-entry .pit-date{font-size:9.5px;color:var(--ink3);display:block;
+  margin-top:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.pit-statuses{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px}
+.pit-status{display:inline-block;padding:2px 5px;border-radius:999px;border:1px solid var(--rule2);
+  font-size:8px;line-height:1.2;text-transform:uppercase;letter-spacing:.04em;color:var(--ink3)}
+.pit-status.archived{border-color:color-mix(in srgb,var(--grn) 45%,var(--rule2));color:var(--grn)}
+.pit-status.pending{border-color:color-mix(in srgb,var(--amber) 55%,var(--rule2));color:var(--amber)}
+.pit-status.missing{border-color:color-mix(in srgb,var(--red) 55%,var(--rule2));color:var(--red)}
+.saved-pits-more{display:block;margin:8px 12px 0;width:calc(100% - 24px);padding:7px;
+  border:1px solid var(--rule2);border-radius:5px;background:var(--panel2);color:var(--ink2);
+  font:10px var(--mono);cursor:pointer}.saved-pits-more:hover{border-color:var(--acc);color:var(--acc)}
+.saved-pits-more[hidden]{display:none}
+.recovery-pits{margin:3px 10px 8px;border:1px solid color-mix(in srgb,var(--amber) 45%,var(--rule2));
+  border-radius:6px;background:color-mix(in srgb,var(--amber) 6%,var(--w));overflow:hidden}
+.recovery-pits[hidden]{display:none}.recovery-heading{padding:7px 8px;font:9px var(--mono);
+  text-transform:uppercase;letter-spacing:.08em;color:var(--amber);border-bottom:1px solid var(--rule)}
+.pending-entry{display:flex;align-items:center;gap:6px;padding:7px 8px}
+.pending-entry+.pending-entry{border-top:1px solid var(--rule)}
+.pending-entry-text{min-width:0;flex:1}.pending-entry-text .pit-id{display:block;font:700 10px var(--mono);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pending-entry-text .pit-date{display:block;
+  color:var(--ink3);font:9px var(--mono);margin-top:2px}
+.pending-entry button{font:9px var(--mono);padding:4px 6px;border:1px solid var(--rule2);
+  border-radius:4px;background:var(--w);color:var(--ink2);cursor:pointer}
+.pending-entry button:hover{border-color:var(--amber);color:var(--amber)}
+
+
+/* ============================================================
+   THE SHEET
+   ============================================================ */
+.main{flex:1;min-width:0;height:100%;overflow-y:auto;scroll-behavior:smooth;
+  background:var(--bg)}
+
+/* SECTION — full-bleed, because a 14-column stratigraphy table needs every
+   pixel of width. Depth comes from the cards inside instead. */
+.sec{border-bottom:1px solid var(--rule)}
+.sec-hd{display:flex;align-items:center;gap:15px;padding:15px 34px;
+  border-bottom:1px solid var(--rule);position:sticky;top:0;z-index:20;
+  background:color-mix(in srgb,var(--w) 88%,var(--bg));
+  backdrop-filter:saturate(1.6) blur(10px);
+  -webkit-backdrop-filter:saturate(1.6) blur(10px)}
+.sec-num{font-family:var(--mono);font-size:22px;font-weight:300;color:var(--ink3);
+  opacity:.55;letter-spacing:.01em;min-width:36px;line-height:1}
+.sec-title{font-size:14px;font-weight:700;letter-spacing:.085em;text-transform:uppercase;
+  line-height:1.2}
+.sec-meta{font-family:var(--mono);font-size:11px;color:var(--ink3);margin-left:auto;
+  letter-spacing:.02em}
+.sec-body{padding:24px 34px 30px;max-width:1560px}
+
+
+/* ============================================================
+   FIELD ROWS — one card per group of related fields
+   ============================================================ */
+.row{display:flex;border:1px solid var(--rule);border-radius:var(--r);
+  overflow:hidden;margin-bottom:14px;background:var(--w);box-shadow:var(--shadow)}
+.ri{flex:1;border-right:1px solid var(--rule);display:flex;flex-direction:column;
+  min-width:0;transition:background .12s}
+.ri:last-child{border-right:none}
+
+/* FIELD LABELS — the questions.
+   These are read outdoors, on snow, in glare, often through goggles and while
+   wearing gloves. They were 9.5px micro-caps in the app's faintest ink, which
+   is a fine choice for a desk tool and the wrong one here: the label is what
+   tells you WHICH number you are about to write down, so it should be at least
+   as easy to read as the value. Bigger, bold, and in --ink2 rather than the
+   tertiary grey — roughly a 7:1 contrast rather than 5:1, at a size that
+   survives a bright day. Tracking eases off as the weight goes up, because
+   bold letterforms need less air between them to stay distinct. */
+.rl{font-family:var(--mono);font-size:11.5px;font-weight:600;letter-spacing:.085em;
+  text-transform:uppercase;color:var(--ink2);
+  background:color-mix(in srgb,var(--bg) 55%,var(--w));
+  padding:9px 13px;border-bottom:1px solid var(--rule);display:flex;align-items:center;
+  gap:5px;line-height:1.35;min-height:34px}
+.req{color:var(--red);font-size:13px;line-height:1;font-weight:700}
+
+.ri input,.ri select,.ri textarea{font-size:14px;color:var(--ink);border:none;
+  background:var(--w);padding:10px 13px;outline:none;width:100%;line-height:1.4}
+.ri input::placeholder,.ri textarea::placeholder{color:var(--ink3);opacity:.75}
+.ri input:focus,.ri select:focus,.ri textarea:focus{
+  background:color-mix(in srgb,var(--acc) 5%,var(--w));
+  box-shadow:inset 3px 0 0 var(--acc)}
+.ri:focus-within{background:color-mix(in srgb,var(--acc) 4%,var(--w))}
+.ri textarea{resize:vertical;line-height:1.65;min-height:70px}
+.ri select{cursor:pointer;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M1 3l4 4 4-4' stroke='%238299ae' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:30px}
+
+/* the Pit ID is the pit's name — set like an identifier, not like prose */
+.pitid{font-family:var(--mono);font-size:14px;color:var(--ink);padding:10px 13px;
+  cursor:text;outline:none;background:var(--w);letter-spacing:.07em;font-weight:500}
+.pitid:focus{background:color-mix(in srgb,var(--acc) 5%,var(--w));
+  box-shadow:inset 3px 0 0 var(--acc)}
+
+.hint{font-family:var(--mono);font-size:9.5px;color:var(--ink3);
+  padding:0 13px 7px;letter-spacing:.04em;line-height:1.5}
+/* the Pit ID hint turns amber when the ID no longer matches the pit that was
+   loaded — that keystroke is the moment Archive stops replacing and starts
+   creating, and it is otherwise invisible */
+.hint.pid-new{color:var(--amber);font-weight:600}
+.coord-note{font-family:var(--mono);font-size:9.5px;color:var(--grn);padding:0 13px 7px}
+.coord-or{font-family:var(--mono);font-size:10px;color:var(--ink3);text-align:center;
+  padding:6px 0 14px;letter-spacing:.14em;width:50%}
+
+
+/* ============================================================
+   TOGGLE PILLS
+   ============================================================ */
+.toggles{display:flex;flex-wrap:wrap;gap:6px;padding:10px 13px}
+/* background is set EXPLICITLY. .tog is used both on <label> pills (weather /
+   ground / density cutter, which have no UA background) and on <button> — the
+   ⇅ sort buttons, "↻ render profile" and "+ ρ per layer". A <button> with no
+   declared background falls back to the UA's ButtonFace system colour, which
+   stays LIGHT unless the page opts into a dark colour-scheme. In dark mode that
+   rendered those seven buttons as a light grey pill with --ink2 text on it:
+   light on light, barely readable. */
+.tog{display:inline-flex;align-items:center;position:relative;padding:5px 13px;
+  background:var(--w);border:1px solid var(--rule2);border-radius:999px;
+  font-size:12.5px;color:var(--ink2);cursor:pointer;user-select:none;line-height:1.35;
+  transition:background .12s,border-color .12s,color .12s,box-shadow .12s}
+.tog:hover{border-color:var(--acc);color:var(--acc);
+  background:color-mix(in srgb,var(--acc) 6%,var(--w))}
+/* --accent-ink, not #fff. --acc is a DARK blue in light mode (#1b6fd4) but a
+   LIGHT blue in dark mode (#57a8f0), where white text on it is 2.54:1 — under
+   half the AA floor, on the pill that says which condition was recorded.
+   Anything painting on --acc should use --accent-ink, which is themed. */
+.tog.on{background:var(--acc);color:var(--accent-ink);border-color:var(--acc);font-weight:600;
+  box-shadow:0 2px 8px -2px color-mix(in srgb,var(--acc) 70%,transparent)}
+.tog.on:hover{background:var(--acc);color:var(--accent-ink)}
+
+/* The native radio/checkbox stays in the tab order and accessibility tree,
+   but its invisible focus/hit target fills the entire pill. A former 1 × 1 px
+   target at the pill centre could make Safari scroll a field card when it tried
+   to reveal the newly focused control. Covering the label preserves native
+   keyboard/radio semantics while making mouse and touch activation stable. */
+.tog input{position:absolute;inset:0;width:100%;height:100%;opacity:0;
+  margin:0;padding:0;border:0;border-radius:inherit;cursor:pointer;appearance:none;
+  z-index:1}
+/* Field-card input rules are intentionally broad. These higher-specificity
+   resets keep their 45 px minimum height, padding, background and focus inset
+   from leaking onto the invisible pill control. */
+.tog > input[type="radio"],.tog > input[type="checkbox"]{
+  min-width:0;min-height:0;padding:0;background:transparent;box-shadow:none}
+.tog > input[type="radio"]:focus,.tog > input[type="checkbox"]:focus{
+  background:transparent;box-shadow:none}
+.tog > span{position:relative;z-index:0;pointer-events:none}
+/* the ring goes on the PILL, since the input itself is invisible */
+.tog:has(input:focus-visible){outline:2px solid var(--acc);outline-offset:2px}
+/* fallback for engines without :has() — styles the pill's text instead */
+.tog input:focus-visible ~ span{text-decoration:underline;text-underline-offset:3px}
+
+
+
+/* Optional single-select groups use an explicit clear action rather than
+   non-standard "click the selected radio again" behaviour. It appears only
+   while the group has an answer. */
+.radio-clear{align-self:flex-start;margin:-4px 13px 10px;padding:3px 0;border:0;
+  border-radius:3px;background:transparent;color:var(--ink3);font:10.5px var(--mono);
+  text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.radio-clear:hover{color:var(--acc)}
+.radio-clear:focus-visible{outline:2px solid var(--acc);outline-offset:3px;color:var(--acc)}
+.radio-clear[hidden]{display:none!important}
+
+
+/* ============================================================
+   MEASUREMENT TABLES
+   ============================================================ */
+.pw{border:1px solid var(--rule);border-radius:var(--r);overflow:hidden;
+  margin-bottom:10px;background:var(--w);box-shadow:var(--shadow)}
+.pt{width:100%;border-collapse:collapse}
+.pt thead tr{background:color-mix(in srgb,var(--bg) 62%,var(--w))}
+.pt th{padding:10px 13px;text-align:left;font-family:var(--mono);font-size:11px;
+  color:var(--ink2);letter-spacing:.07em;text-transform:uppercase;font-weight:600;
+  border-bottom:1px solid var(--rule2);white-space:nowrap}
+.pt td{border-bottom:1px solid var(--rule)}
+.pt tr:last-child td{border-bottom:none}
+.pt td input,.pt td select{border:none;background:transparent;padding:9px 13px;
+  font-size:13.5px;font-family:var(--mono);color:var(--ink);width:100%;outline:none;
+  letter-spacing:.01em}
+.pt td select{cursor:pointer}
+
+/* zebra striping: long interval tables are much easier to track across */
+.pt tbody tr:nth-child(even) td{background:color-mix(in srgb,var(--bg) 34%,var(--w))}
+.pt tbody tr:hover td{background:color-mix(in srgb,var(--acc) 5%,var(--w))}
+.pt tbody tr:nth-child(even):hover td{background:color-mix(in srgb,var(--acc) 7%,var(--w))}
+/* hovering already tints the row; give the FOCUSED row a clear owner so you can
+   see where you are in a 40-row density table */
+.pt tbody tr:focus-within td,
+.pt tbody tr:nth-child(even):focus-within td{
+  background:color-mix(in srgb,var(--acc) 10%,var(--w))}
+.pt tbody tr:focus-within{position:relative}
+.pt tbody tr:focus-within td:first-child{box-shadow:inset 3px 0 0 var(--acc)}
+.pt td input:focus,.pt td select:focus{
+  background:color-mix(in srgb,var(--acc) 9%,var(--w));
+  box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--acc) 55%,transparent)}
+
+/* COLUMN RULES. The tables had horizontal rules only, so on a wide row
+   (top / bottom / A / B / C / avg / comments) the eye had nothing to follow
+   downward and it was easy to type a density into the wrong column. Vertical
+   rules on every cell except the last, which is the narrow delete column and
+   reads better open. Measurement tables only — the §9 instrument checklist is
+   a list of named rows, not a grid of numbers, and rules make it look like a
+   spreadsheet it is not. */
+.pt td:not(:last-child),
+.pt th:not(:last-child){border-right:1px solid var(--rule)}
+
+/* every computed cell looks the same, whichever table it is in: visibly not
+   typed, but still typeable */
+.avg input,.pt td.s-den-avg input,.pt td.avg input{
+  background:color-mix(in srgb,var(--bg) 60%,var(--w));color:var(--ink2);font-weight:600}
+input.is-derived{background:color-mix(in srgb,var(--acc) 8%,var(--w));
+  color:var(--ink2);font-style:italic}
+
+/* the three ρ cells read as one measurement, not three unrelated columns */
+.pt td.s-den:first-of-type{border-left:2px solid color-mix(in srgb,var(--acc) 34%,transparent)}
+.pt td.s-den-avg{border-right:2px solid color-mix(in srgb,var(--acc) 34%,transparent)}
+.s-den-th{white-space:nowrap}
+
+.del{width:28px;height:28px;border:none;background:transparent;color:var(--ink3);
+  cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;
+  margin:4px auto;border-radius:999px;transition:background .12s,color .12s}
+.del:hover{background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red)}
+
+.add{width:100%;border:none;background:color-mix(in srgb,var(--bg) 52%,var(--w));
+  padding:9px 16px;font-size:12px;font-family:var(--mono);color:var(--ink2);
+  cursor:pointer;text-align:left;border-top:1px solid var(--rule);letter-spacing:.05em;
+  transition:background .12s,color .12s}
+.add:hover{background:color-mix(in srgb,var(--acc) 9%,var(--w));color:var(--acc)}
+
+/* the two "auto-fill intervals" selects sit loose in a section body rather than
+   in a field card, so they need their own quiet control styling to match the
+   pill button beside them */
+#t-interval,#d-interval{font-family:var(--mono);font-size:12px;color:var(--ink2);
+  background:var(--w);cursor:pointer;outline:none;line-height:1.5}
+#t-interval:focus,#d-interval:focus{
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 20%,transparent)}
+
+/* A HALF-FINISHED ROW — one you started and left with a gap.
+   This used to wash the whole row amber. Three problems with that: the tint sat
+   on top of the zebra striping so the table lost its stripes wherever a warning
+   appeared, it beat the focused-row highlight so you could not see where your
+   cursor was inside the very row you were being asked to fix, and a run of
+   warned rows read as a solid amber block rather than as several separate
+   things. A marker in the left gutter says the same thing without repainting
+   anything: the bar catches the eye down the edge of the table, the glyph names
+   the severity, and the row keeps its own colours. The message above the table
+   still names the row numbers. */
+.pt tbody tr.row-warn td:first-child{position:relative;
+  box-shadow:inset 4px 0 0 var(--amber)}
+.pt tbody tr.row-warn td:first-child::before{content:'\26A0';position:absolute;
+  left:11px;top:50%;transform:translateY(-50%);font-size:11px;line-height:1;
+  color:var(--amber);pointer-events:none}
+/* make room for the glyph so it never sits under the value */
+.pt tbody tr.row-warn td:first-child input{padding-left:30px}
+/* A cell that is merely questionable, not invalid: an extreme-but-possible
+   temperature, a reading above freezing. Amber ring rather than red fill, so it
+   reads as "look at this" and not "this is wrong". Declared BEFORE .inp-bad so
+   that a cell which is both keeps the red — both rules are !important, and the
+   later one wins. */
+.inp-warn{background:color-mix(in srgb,var(--amber) 11%,transparent)!important;
+  box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--amber) 65%,transparent)!important}
+/* invalid cells keep their red ring above the new backgrounds */
+.inp-bad{background:color-mix(in srgb,var(--red) 10%,transparent)!important;
+  box-shadow:inset 0 0 0 1.5px var(--red)!important}
+
+
+/* ============================================================
+   §9 INSTRUMENTS & TASKS
+   ============================================================ */
+.ig-lbl{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--ink2);padding:20px 0 9px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px}
+.it{width:100%;border-collapse:collapse;border:1px solid var(--rule);
+  border-radius:var(--r);overflow:hidden;margin-bottom:8px;background:var(--w);
+  box-shadow:var(--shadow)}
+.it th{padding:10px 13px;text-align:left;font-family:var(--mono);font-size:11px;
+  color:var(--ink2);letter-spacing:.07em;text-transform:uppercase;font-weight:600;
+  border-bottom:1px solid var(--rule2);
+  background:color-mix(in srgb,var(--bg) 62%,var(--w))}
+.it td{padding:9px 13px;border-bottom:1px solid var(--rule);font-size:12.5px;
+  vertical-align:middle}
+.it tr:last-child td{border-bottom:none}
+.it tbody tr:hover td{background:color-mix(in srgb,var(--acc) 4%,var(--w))}
+
+/* per-group "none used" affirmation, sitting on the group header */
+.ig-none{display:inline-flex;align-items:center;gap:7px;cursor:pointer;
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.02em;color:var(--ink3);
+  font-weight:400;text-transform:none;user-select:none;transition:color .12s}
+.ig-none input{width:14px;height:14px;accent-color:var(--acc);cursor:pointer;margin:0}
+.ig-none:hover{color:var(--acc)}
+/* a group declared empty is dimmed, so the affirmation is visible at a glance */
+table.it.group-none tbody{opacity:.42}
+
+/* Editable (Used=Y): active. Disabled (Used=N, the default): muted, so you can
+   see at a glance whether the serial field accepts input. */
+.sn{font-family:var(--mono);font-size:12.5px;border:1px solid var(--rule2);
+  border-radius:var(--r-sm);padding:5px 10px;background:var(--w);color:var(--ink);
+  width:118px;outline:none;transition:border-color .12s,box-shadow .12s}
+.sn:disabled{background:color-mix(in srgb,var(--bg) 70%,var(--w));color:var(--ink3);
+  cursor:not-allowed;opacity:.65;border-style:dashed}
+.sn:enabled:focus{border-color:var(--acc);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 18%,transparent)}
+
+.yn{display:flex;border:1px solid var(--rule2);border-radius:999px;overflow:hidden;
+  width:max-content}
+.yn button{padding:4px 13px;font-size:11.5px;font-family:var(--mono);
+  background:transparent;border:none;cursor:pointer;color:var(--ink3);line-height:1.4;
+  transition:background .12s,color .12s}
+.yn button:hover{color:var(--ink)}
+/* --on-fill, not #fff: white on the dark theme's lighter green is 1.82:1 */
+.yn button.y.on{background:var(--grn);color:var(--on-fill);font-weight:600}
+/* A chosen N must look chosen. It used --bg — all but identical to the row
+   behind it — while also being lit BY DEFAULT, so clicking N produced no
+   visible change and an untouched row was indistinguishable from an answered
+   one. Rows start with neither lit, and a picked N is solid. */
+.yn button.n.on{background:var(--ink2);color:var(--w);font-weight:600}
+/* neither picked yet: dashed frame, so an unanswered row reads as unanswered */
+.yn:not(:has(button.on)){border-style:dashed;border-color:var(--rule2)}
+
+/* a locked checklist row explains itself on screen, not only on hover */
+.lock-note{font-family:var(--mono);font-size:9.5px;color:var(--ink3);margin-top:4px;
+  line-height:1.45;max-width:280px}
+.it tr.is-locked td{background:color-mix(in srgb,var(--grn) 7%,transparent)}
+
+
+/* ============================================================
+   §12 CHECKLIST
+   ============================================================ */
+.cl-sum{display:flex;align-items:center;gap:20px;padding:18px 22px;
+  background:var(--w);border:1px solid var(--rule);border-radius:var(--r);
+  margin-bottom:20px;box-shadow:var(--shadow)}
+.cl-pct{font-family:var(--mono);font-size:38px;font-weight:300;color:var(--ink);
+  min-width:76px;line-height:1;letter-spacing:-.02em}
+.cl-bw{flex:1}
+.cl-bt{height:4px;background:var(--rule);border-radius:999px;margin-bottom:8px;
+  overflow:hidden}
+.cl-bf{height:100%;background:linear-gradient(90deg,var(--grn),var(--acc2));
+  border-radius:999px;transition:width .35s cubic-bezier(.4,0,.2,1)}
+.cl-bl{font-family:var(--mono);font-size:11.5px;color:var(--ink3)}
+
+/* The checklist is what you scan at the end of a pit, in the cold, deciding
+   whether you can pack up. It sat as faint mono rows directly on the recessed
+   sheet, which made it the quietest thing in the app despite being the most
+   consequential. It now gets the same white card every other block of content
+   has, with the item text bolder and the status dots large enough to read at a
+   glance rather than squinted at. */
+#cl-items{background:var(--w);border:1px solid var(--rule);border-radius:var(--r);
+  box-shadow:var(--shadow);padding:6px 8px;overflow:hidden}
+
+/* checklist rows are buttons: spotting what is missing and going to fix it
+   should not be two separate acts of navigation */
+.ci{display:flex;align-items:center;gap:13px;width:100%;text-align:left;
+  background:none;border:none;border-bottom:1px solid var(--rule);padding:12px 12px;
+  border-radius:var(--r-sm);font:inherit;cursor:pointer;transition:background .12s}
+.ci:hover{background:color-mix(in srgb,var(--acc) 8%,var(--w))}
+.ci:last-child{border-bottom:none}
+.cd{width:11px;height:11px;border-radius:50%;flex-shrink:0;border:2px solid var(--rule2);
+  transition:background .2s,border-color .2s,box-shadow .2s}
+.cd.done{background:var(--grn);border-color:var(--grn);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--grn) 18%,transparent)}
+.cl-num{font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--ink3);
+  min-width:23px}
+.ct{color:var(--ink2);font-family:var(--mono);font-size:13.5px;font-weight:600}
+.ct.done{color:var(--ink)}
+
+
+/* ============================================================
+   THE LIVE COLUMN  ★ signature
+   Your snowpack, always in view, drawn on the instrument chrome. Surface at
+   the top, ground at the bottom — the same way you read the pit wall.
+   ============================================================ */
+.rail{width:var(--rail);min-width:var(--rail);border-left:1px solid var(--rule);
+  background:var(--bg);height:100%;overflow-y:auto;padding:16px 15px 18px;
+  display:flex;flex-direction:column;gap:0;cursor:pointer;position:relative;
+  transition:background .12s}
+.rail-lbl{font-family:var(--mono);font-size:9px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--ink3);margin-bottom:12px;
+  transition:color .12s}
+.rail:hover .rail-lbl{color:var(--acc)}
+
+/* the column itself, sunk into the panel like a core in its tray */
+#mini-core{display:flex;justify-content:center;padding:14px 0 16px;margin-bottom:14px;
+  background:radial-gradient(120% 80% at 50% 0%,color-mix(in srgb,var(--acc) 7%,transparent),transparent 70%),
+             var(--w);
+  border:1px solid var(--rule);border-radius:var(--r);box-shadow:var(--shadow)}
+#mini-core svg{width:122px;height:auto;display:block;overflow:visible}
+
+/* derived values, set as a readout: label small and quiet, figure large and mono */
+.rail-stat{display:flex;justify-content:space-between;align-items:baseline;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--ink3);border-bottom:1px solid var(--rule2);padding:9px 2px}
+.rail-stat b{color:var(--ink);font-weight:500;font-size:13px;letter-spacing:0;
+  text-transform:none}
+/* the honesty line: how much of the column's density was interpolated rather
+   than measured. Quieter than the readings above it — it is a caveat, not a
+   result — but it must never be invisible. */
+.rail-stat.rail-cov{border-bottom:none;font-size:8.5px;letter-spacing:.1em;
+  color:var(--ink3);padding-top:10px}
+.rail-cov b{font-size:9.5px;font-weight:400;color:var(--ink2);
+  letter-spacing:.02em;text-transform:none}
+
+.rail-hint{font-family:var(--mono);font-size:9px;color:var(--ink3);
+  letter-spacing:.05em;margin-top:auto;padding-top:16px;opacity:.85;transition:color .12s}
+.rail:hover .rail-hint{color:var(--acc);opacity:1}
+
+/* The rail is interactive (it opens the full profile), so it behaves like a
+   button: focusable, keyboard-activatable, and it says so. */
+.rail:hover,.rail:focus-visible{background:color-mix(in srgb,var(--acc) 5%,var(--bg))}
+.rail:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
+
+
+/* ============================================================
+   MESSAGES — two severities, two appearances
+   A blocker stops Archive; a warning is advice. They shared one amber box
+   once, so a hard error read as a suggestion.
+   ============================================================ */
+.soft-warn,.warn-box{font-family:var(--mono);font-size:11.5px;padding:9px 13px;
+  border:1px dashed color-mix(in srgb,var(--amber) 50%,transparent);
+  border-radius:var(--r-sm);margin-bottom:14px;line-height:1.75;color:var(--amber)}
+/* The box takes the severity of the worst thing in it and KEEPS it until the
+   condition is fixed — both states are solid and tinted, so an unresolved
+   warning is as persistent on screen as an unresolved error. has-block wins
+   when a box holds both. */
+.warn-box.has-warn{border-style:solid;
+  border-color:color-mix(in srgb,var(--amber) 55%,transparent);
+  background:color-mix(in srgb,var(--amber) 9%,transparent)}
+.warn-box.has-block{border-style:solid;
+  border-color:color-mix(in srgb,var(--red) 55%,transparent);
+  background:color-mix(in srgb,var(--red) 8%,transparent)}
+.warn-soft{color:var(--amber)}
+.warn-block{color:var(--red);font-weight:700}
+.err-note{font-family:var(--mono);font-size:10px;color:var(--red);margin-left:8px}
+
+/* PER-SECTION STATUS GLYPH
+   Sits beside each section title. Crucially it survives a collapse — the header
+   is all that remains of a folded section, so a blocking error inside one can
+   still announce itself instead of only showing up as Archive refusing. */
+.sec-status{margin-left:6px;font-family:var(--mono);font-size:17px;line-height:1;
+  letter-spacing:0;user-select:none}
+.sec-status.is-done{color:var(--grn)}
+.sec-status.is-warn{color:var(--amber)}
+.sec-status.is-block{color:var(--red);font-weight:700}
+/* the spine pip carries the same three states, so spine and headers agree */
+.idx-pip.warn{background:var(--amber);border-color:var(--amber);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--amber) 26%,transparent)}
+.idx-pip.block{background:var(--red);border-color:var(--red);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--red) 26%,transparent)}
+/* an item can hold data AND block the archive; red wins over green */
+.cd.bad{background:var(--red);border-color:var(--red);color:var(--on-fill);
+  display:flex;align-items:center;justify-content:center;font-size:8px;line-height:1;
+  border-width:1px;box-shadow:0 0 0 3px color-mix(in srgb,var(--red) 20%,transparent)}
+.ct.bad{color:var(--red);font-weight:600}
+.cd.warn{background:var(--amber);border-color:var(--amber);color:var(--w);
+  display:flex;align-items:center;justify-content:center;font-size:8px;line-height:1;
+  border-width:1px;box-shadow:0 0 0 3px color-mix(in srgb,var(--amber) 20%,transparent)}
+.ct.warn{color:var(--amber)}
+
+/* TOASTS — transient messages; the command-bar chip keeps only pit state.
+   Colour is set EXPLICITLY: the toast inherited body's --ink while its
+   background fell back to a literal #fff, which is the white-on-white bug.
+   white-space:pre-line so a multi-line toast (Archive reports one labelled
+   fact per line) breaks where the message says to. textContent is used rather
+   than innerHTML, so \n is the only break available — and that is the right
+   trade: an export path must never be parsed as markup. */
+#toasts{position:fixed;right:20px;bottom:20px;z-index:400;display:flex;
+  flex-direction:column;gap:9px;max-width:min(480px,80vw);
+  max-height:70vh;overflow:hidden auto;scrollbar-width:none}
+#toasts::-webkit-scrollbar{display:none}
+.toast{font-family:var(--mono);font-size:12px;line-height:1.55;white-space:pre-line;
+  padding:12px 16px;border-radius:var(--r);background:var(--panel);color:var(--ink);
+  border:1px solid var(--rule);box-shadow:var(--shadow-lg);
+  animation:toast-in .2s cubic-bezier(.2,.8,.3,1)}
+.toast.ok{border-left:3px solid var(--green)}
+.toast.err{border-left:3px solid var(--red)}
+.toast.info{border-left:3px solid var(--acc)}
+.toast.bye{opacity:0;transition:opacity .3s}
+@keyframes toast-in{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
+
+
+/* ============================================================
+   §11 ATTACHMENTS
+   ============================================================ */
+.att-list{padding:6px 2px 12px}
+.att-row{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:8px 0;
+  border-bottom:1px dashed var(--rule)}
+.att-cat{font-family:var(--mono);font-size:11.5px;font-weight:600;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ink2);min-width:158px}
+.att-n{color:var(--ink2)}
+.att-chip{font-family:var(--mono);font-size:11px;background:var(--panel2);
+  border:1px solid var(--rule);border-radius:999px;padding:3px 11px}
+.att-chip.pending{border-style:dashed;color:var(--ink2);
+  background:color-mix(in srgb,var(--amber) 12%,transparent)}
+.att-chip.pending.uploading{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 10%,transparent)}
+.att-chip.pending.failed,.att-chip.pending.volatile{border-color:var(--red);background:color-mix(in srgb,var(--red) 9%,transparent)}
+.att-chip.server-pending{border-style:dotted;border-color:var(--amber);background:color-mix(in srgb,var(--amber) 8%,transparent);color:var(--ink2)}
+.att-chip.pending.saving{opacity:.75}
+.att-qstate{font-size:9px;opacity:.72;margin-left:5px}
+.att-outbox-state{font-family:var(--mono);font-size:10.5px;line-height:1.45;min-height:15px;padding:2px 2px 5px;color:var(--ink3)}
+.att-outbox-state.warn{color:var(--red)}
+.att-none{font-family:var(--mono);font-size:11px;color:var(--ink3)}
+.att-x{margin-left:7px;cursor:pointer;color:var(--ink3);font-weight:700}
+.att-x:hover{color:var(--red)}
+/* §11 local message line. pre-line: one line per category, so a skipped photo
+   can be traced to the pile it came from */
+.attach-msg{font-family:var(--mono);font-size:11.5px;line-height:1.6;
+  white-space:pre-line;min-height:16px;padding:2px 2px 8px;color:var(--ink2)}
+.attach-msg.err{color:var(--red)}
+.attach-msg.ok{color:var(--green)}
+
+/* per-layer camera button in §7 */
+.cam{width:32px;height:28px;display:inline-flex;align-items:center;justify-content:center;
+  gap:2px;background:var(--w);border:1px solid var(--rule2);border-radius:var(--r-sm);
+  font-size:12px;line-height:1;cursor:pointer;color:var(--ink3);
+  transition:border-color .12s,color .12s,background .12s}
+.cam:hover:not(:disabled){border-color:var(--acc);color:var(--acc);
+  background:color-mix(in srgb,var(--acc) 8%,var(--w))}
+.cam:disabled{opacity:.35;cursor:not-allowed}
+.cam.has{border-color:var(--grn);color:var(--grn);
+  background:color-mix(in srgb,var(--grn) 9%,var(--w))}
+.cam-n{font-family:var(--mono);font-size:9px;font-weight:700}
+.s-cam{text-align:center}
+/* which layer a queued photo belongs to, on its chip */
+.chip-layer{font-family:var(--mono);font-size:9px;opacity:.65;margin-left:3px}
+
+/* layer photo expander — a row under the layer, never another column */
+/* The per-layer photo expander was a 10px caret with no real target. Bigger and
+   darker, but still a bare caret — boxing it put a second bordered control
+   right next to the camera button, which read as two competing boxes rather
+   than a button and its disclosure. */
+.lp-toggle{margin-left:5px;background:transparent;border:none;color:var(--ink2);
+  font-size:15px;line-height:1;cursor:pointer;padding:5px 8px;
+  transition:color .12s}
+.lp-toggle:hover{color:var(--acc)}
+.pt tr.lp-row td{background:color-mix(in srgb,var(--acc) 6%,var(--w));
+  border-top:none;padding:8px 12px 10px}
+.lp-wrap{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.lp-lbl{font-family:var(--mono);font-size:10px;color:var(--ink3);margin-right:4px}
+.lp-empty{font-family:var(--mono);font-size:10.5px;color:var(--ink3);opacity:.75}
+
+
+/* ============================================================
+   §10 PROFILE — keeps the previous figure visible while a new one renders
+   ============================================================ */
+#profile-wrap{position:relative}
+#profile-wrap.is-rendering img{opacity:.35;transition:opacity .12s}
+#profile-wrap.is-rendering::after{content:'rendering…';position:absolute;left:50%;top:50%;
+  transform:translate(-50%,-50%);font-family:var(--mono);font-size:11px;color:var(--ink2);
+  background:var(--panel);border:1px solid var(--rule);border-radius:999px;
+  padding:6px 16px;box-shadow:var(--shadow-lg)}
+.pf-msg{font-family:var(--mono);font-size:12px;color:var(--ink3);padding:28px;
+  text-align:center;line-height:1.7}
+.pf-msg.err{color:var(--red)}
+
+
+/* ============================================================
+   COLLAPSIBLE SECTIONS
+   ============================================================ */
+.sec-hd.collapsible{cursor:pointer;user-select:none}
+/* SECTION COLLAPSE — was a bare 12px ▾ in the faintest ink, with no edge to
+   aim at. It is now a 32px round button sitting at the end of the header row.
+   The header itself still toggles on click, so this is an affordance rather
+   than the only target: it shows that the section folds, and where. */
+.sec-hd.collapsible::after{content:'▾';margin-left:12px;flex-shrink:0;
+  width:32px;height:32px;display:flex;align-items:center;justify-content:center;
+  font-size:15px;line-height:1;color:var(--ink2);
+  border:1px solid var(--rule2);border-radius:50%;
+  background:color-mix(in srgb,var(--bg) 50%,var(--w));
+  transition:transform .18s ease,background .12s,color .12s,border-color .12s}
+.sec-hd.collapsible:hover::after{background:color-mix(in srgb,var(--acc) 12%,var(--w));
+  border-color:var(--acc);color:var(--acc)}
+.sec.collapsed .sec-hd.collapsible::after{transform:rotate(-90deg)}
+.sec.collapsed .sec-body{display:none}
+/* headers without a right-side counter still anchor the chevron right */
+.sec-hd.collapsible:not(:has(.sec-meta))::after{margin-left:auto}
+.sec-hd.collapsible:has(.sec-meta:empty)::after{margin-left:auto}
+.sec-meta:empty{display:none}
+/* actions on hidden content are confusing; the chevron and counters stay */
+.sec.collapsed .sec-hd .tog{display:none}
+
+
+/* ============================================================
+   FOCUS VISIBILITY
+
+   The app is largely keyboard-operable already: every native control is
+   focusable, and buttons keep a ring. Text inputs set outline:none but replace
+   it with their own indicator (background shift + inset accent bar), which is
+   deliberate and works.
+
+   What genuinely was NOT keyboard-reachable was four controls built from
+   non-focusable elements — the nav entries, the section headers, the profile
+   rail, and the remove-from-queue "×". Those are fixed in the markup.
+
+   This block gives buttons and links an EXPLICIT ring instead of the UA
+   default, which varies by browser and renders poorly against dark chrome.
+   Inputs are deliberately left alone.
+
+   NOTE: no border-radius here. An outline already follows the element's own
+   border-radius, so setting one RESHAPES the control — .del is a 999px circle,
+   and forcing var(--r) turned its ring into a rounded box the moment it took
+   focus.
+   ============================================================ */
+button:focus-visible,
+[role="button"]:focus-visible,
+a:focus-visible,
+summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.topbar button:focus-visible,
+.index button:focus-visible,
+.index a:focus-visible{outline-color:var(--acc);outline-offset:2px}
+.idx-item:focus-visible{outline-offset:-2px}
+/* the "×" chips sit inside a bordered pill; an inset ring reads better */
+.att-x:focus-visible,.del:focus-visible{outline-offset:0}
+/* Full-bleed controls inside a clipping container need an INSET ring. `.add`
+   spans the full width and sits flush against the bottom edge of `.pw`, which
+   is overflow:hidden — so a ring drawn 2px OUTSIDE has its left, right and
+   bottom sides clipped away, leaving only the top edge visible. Drawing it 2px
+   inside puts the whole rectangle back within the clip. */
+.add:focus-visible{outline-offset:-2px}
+.pw > .add:focus-visible,.pw .tog:focus-visible{outline-offset:-2px}
+
+/* Skip link — 12 sections of dense form means a keyboard user otherwise tabs
+   through the whole spine before reaching the first field. */
+/* Only ever seen by someone navigating by keyboard, so nobody would notice it
+   was unreadable in dark mode by using the app normally. */
+.skip{position:absolute;left:10px;top:-52px;z-index:500;background:var(--acc);color:var(--accent-ink);
+  font-size:13px;padding:10px 18px;border-radius:999px;text-decoration:none;
+  box-shadow:var(--shadow-lg);transition:top .14s}
+.skip:focus{top:10px}
+
+
+/* ============================================================
+   COLLAPSED SPINE (wide screens)
+   The 206px column is a permanent cost on a laptop screen. Collapsed, it keeps
+   the numbers and the completion pips — still clickable, still showing
+   progress — and hands ~160px back to the sheet.
+   ============================================================ */
+body.index-collapsed .index{width:48px;min-width:48px}
+body.index-collapsed .idx-lbl,
+body.index-collapsed .nav-foot{display:none}
+body.index-collapsed .idx-item{justify-content:center;padding:11px 0;gap:0}
+body.index-collapsed .idx-num{opacity:.9}
+body.index-collapsed .idx-pip{position:absolute;right:6px;top:50%;transform:translateY(-50%)}
+body.index-collapsed .idx-collapse{justify-content:center;padding:0}
+
+
+/* ============================================================
+   RESPONSIVE — the app is used on field tablets. Below ~900px the spine
+   becomes a drawer, because a 206px column plus 34px section padding left
+   almost nothing for the data tables, and overflow:hidden on body meant the
+   page could not be scrolled out of that state.
+   ============================================================ */
+@media(max-width:1240px){.rail{display:none}}
+
+@media(max-width:900px){
+  .shell{position:relative}
+  .index{position:absolute;left:0;top:0;bottom:0;z-index:150;width:196px;
+    transform:translateX(-100%);transition:transform .2s ease;
+    box-shadow:6px 0 24px rgba(0,0,0,.34)}
+  body.nav-open .index{transform:none}
+  .nav-toggle{display:inline-flex}
+  .sec-hd{padding:13px 16px;gap:11px}
+  .sec-num{font-size:19px;min-width:30px}
+  .sec-body{padding:18px 16px 22px}
+  .topbar{padding:0 12px;gap:5px}
+  .tb-inst,.tb-divider,.tb-pct{display:none}
+  .tb-pitid{margin-left:8px;max-width:130px;font-size:11.5px;padding:4px 10px}
+  .tb-right{gap:6px}
+  /* wide measurement tables scroll sideways instead of crushing their cells */
+  .pw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .pt{min-width:580px}
+  /* the drawer owns the spine here; collapsing is a wide-screen idea and would
+     fight it */
+  .idx-collapse{display:none}
+  body.index-collapsed .index{width:196px;min-width:196px}
+  body.index-collapsed .idx-lbl{display:block}
+  body.index-collapsed .nav-foot{display:block}
+  body.index-collapsed .idx-item{justify-content:flex-start;padding:10px 16px;gap:11px}
+  .cl-sum{gap:14px;padding:15px 16px}
+  .cl-pct{font-size:30px;min-width:62px}
+}
+
+/* FIELD STACKING — earlier than the drawer breakpoint on purpose. A five-field
+   row (UTM easting / northing / zone / elevation, or the GPS group) squeezes to
+   ~136px per cell at 960px, which is narrower than its own label: "GPS
+   UNCERTAINTY" set in tracked 9.5px mono needs ~131px before the padding. The
+   row wraps instead.
+
+   Several .ri carry an inline flex ratio (flex:1.4, flex:1.3, flex:2) straight
+   from the section templates, and an inline style beats anything declared here
+   — so setting flex-basis is useless: those cells keep a 0 basis and collapse
+   anyway. min-width is not set inline, and the flex algorithm clamps each
+   item's hypothetical size to it, so the row genuinely wraps. */
+@media(max-width:1080px){
+  .row{flex-wrap:wrap}
+  .ri{flex:1 1 220px;min-width:210px;border-right:none;
+    border-bottom:1px solid var(--rule)}
+  .ri:last-child{border-bottom:none}
+}
+
+@media(max-width:560px){
+  .tb-wordmark{display:none}
+  .tb-save{padding:8px 14px}
+  .tb-csv{padding:7px 11px}
+  .tb-status{min-width:0;font-size:9.5px}
+  .coord-or{width:100%}
+}
+
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition:none!important;animation:none!important}
+  .main{scroll-behavior:auto}
+}
+
+/* Explicit saved-record mode. This remains visible while the user scrolls so
+   Archive Changes can never be mistaken for creating a copy. */
+/* --rule and --ink, not --border and --text: those two were never defined
+   anywhere. An invalid var() with no fallback does not fall back to something
+   sensible — it makes the whole declaration invalid at computed-value time, so
+   this bar lost its bottom border and the buttons below inherited their colour
+   from whatever surrounded them. In dark mode that resolved to dark text on a
+   dark panel. */
+.record-mode,.post-archive{margin:0;padding:8px 18px;font-family:var(--mono);font-size:12px;display:flex;gap:12px;align-items:center;justify-content:center;border-bottom:1px solid var(--rule)}
+.record-mode{background:var(--panel2)}
+.record-mode[hidden],.post-archive[hidden]{display:none}
+.post-archive{background:var(--panel);flex-wrap:wrap}
+.post-archive button{font:inherit;padding:5px 9px;border:1px solid var(--rule2);border-radius:4px;background:var(--panel2);color:var(--ink);cursor:pointer}
+.post-archive button:hover{border-color:var(--acc);color:var(--acc)}
+
+/* ============================================================
+   STAGE 11 WORKSPACE
+   A compact operational landing page. It is part of the same single-page
+   field app, so moving between the workspace, finder and form preserves the
+   current record, finder filters and browser photo outbox in memory.
+   ============================================================ */
+.workspace{height:calc(100vh - var(--nav));margin-top:var(--nav);overflow-y:auto;
+  background:
+    radial-gradient(circle at 82% 8%,color-mix(in srgb,var(--acc2) 13%,transparent),transparent 28rem),
+    linear-gradient(180deg,color-mix(in srgb,var(--bg) 72%,var(--w)),var(--bg));
+  padding:clamp(28px,5vw,72px) 24px 54px}
+.workspace[hidden],.shell[hidden]{display:none}
+.workspace-inner{width:min(1040px,100%);margin:0 auto}
+.workspace-hero{max-width:720px;margin-bottom:30px}
+.workspace-kicker,.workspace-label{display:block;font-family:var(--mono);font-size:10px;
+  line-height:1.3;letter-spacing:.17em;text-transform:uppercase;color:var(--ink3)}
+.workspace-hero h1{font-size:clamp(42px,7vw,72px);line-height:.96;letter-spacing:-.055em;
+  font-weight:300;margin:9px 0 15px;color:var(--ink)}
+.workspace-hero h1 strong{font-weight:700}
+.workspace-hero p{font-size:17px;line-height:1.55;color:var(--ink2);max-width:650px}
+.workspace-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:18px}
+.workspace-action{display:flex;align-items:center;gap:18px;text-align:left;min-height:112px;
+  padding:22px 24px;border:1px solid var(--rule2);border-radius:var(--r);background:var(--w);
+  color:var(--ink);cursor:pointer;box-shadow:var(--shadow);transition:transform .12s,border-color .12s,box-shadow .12s}
+.workspace-action:hover{transform:translateY(-2px);border-color:var(--acc);box-shadow:var(--shadow-lg)}
+.workspace-action.primary{background:linear-gradient(145deg,var(--acc),color-mix(in srgb,var(--acc) 72%,var(--acc2)));
+  color:#fff;border-color:transparent}
+.workspace-action-mark{width:48px;height:48px;flex:0 0 48px;border-radius:50%;display:grid;place-items:center;
+  font:28px/1 var(--mono);background:color-mix(in srgb,currentColor 12%,transparent);border:1px solid color-mix(in srgb,currentColor 20%,transparent)}
+.workspace-action strong{display:block;font-size:18px;line-height:1.25}
+.workspace-action small{display:block;margin-top:5px;font-size:13px;line-height:1.35;color:var(--ink2);font-weight:400}
+.workspace-action.primary small{color:rgba(255,255,255,.8)}
+.workspace-current{display:flex;align-items:center;justify-content:space-between;gap:20px;margin:0 0 18px;
+  padding:18px 20px;border:1px solid color-mix(in srgb,var(--acc) 38%,var(--rule));border-radius:var(--r);
+  background:color-mix(in srgb,var(--acc) 7%,var(--w));box-shadow:var(--shadow)}
+.workspace-current[hidden]{display:none}
+.workspace-current strong{display:block;font:600 17px var(--mono);margin:5px 0 3px;color:var(--ink)}
+.workspace-current #workspace-current-detail{display:block;font-size:12px;color:var(--ink2)}
+.workspace-current-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.workspace-current-actions button,.workspace-link{border:1px solid var(--rule2);border-radius:999px;
+  background:var(--w);color:var(--ink2);font-size:12px;padding:8px 13px;cursor:pointer}
+.workspace-current-actions button:first-child{border-color:var(--acc);color:var(--acc);font-weight:600}
+.workspace-current-actions button:hover,.workspace-link:hover{border-color:var(--acc);color:var(--acc)}
+.workspace-grid{display:grid;grid-template-columns:1.35fr 1fr;gap:16px}
+.workspace-card{min-width:0;padding:20px;border:1px solid var(--rule);border-radius:var(--r);
+  background:var(--w);box-shadow:var(--shadow)}
+.workspace-photo-card{grid-column:1/-1;display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:18px}
+.workspace-card-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px}
+.workspace-card h2{font-size:18px;line-height:1.2;margin-top:4px;color:var(--ink)}
+.workspace-count{display:inline-grid;place-items:center;min-width:30px;height:30px;padding:0 9px;border-radius:999px;
+  font:11px var(--mono);color:var(--ink2);background:var(--panel2);border:1px solid var(--rule)}
+.workspace-list{display:grid;gap:8px}
+.workspace-list[aria-busy="true"]{opacity:.72}
+.workspace-empty{font:11px/1.5 var(--mono);color:var(--ink3);padding:9px 2px}
+.workspace-pit,.workspace-recovery-item{width:100%;display:flex;align-items:center;justify-content:space-between;
+  gap:14px;text-align:left;border:1px solid var(--rule);border-radius:var(--r-sm);background:var(--panel2);
+  color:var(--ink);padding:11px 12px;cursor:pointer}
+.workspace-pit:hover,.workspace-recovery-item:hover{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 6%,var(--w))}
+.workspace-pit-copy,.workspace-recovery-copy{min-width:0}
+.workspace-pit strong,.workspace-recovery-item strong{display:block;font:600 12px var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.workspace-pit span,.workspace-recovery-item span{display:block;margin-top:3px;font-size:11px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.workspace-pit-status{flex:0 0 auto;font:9px var(--mono)!important;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--ink3)!important;margin:0!important}
+.workspace-recovery-item{background:color-mix(in srgb,var(--amber) 8%,var(--w));border-color:color-mix(in srgb,var(--amber) 35%,var(--rule))}
+.workspace-recovery-item .workspace-pit-status{color:var(--amber)!important}
+.workspace-photo-summary{font:12px/1.55 var(--mono);color:var(--ink2);margin:0}
+.workspace-photo-action{justify-self:end}
+.workspace-scope{margin:20px auto 0;max-width:760px;text-align:center;font-size:11px;line-height:1.55;color:var(--ink3)}
+body.workspace-open .record-mode,body.workspace-open .post-archive{display:none}
+body.workspace-open .tb-form-only{display:none}
+body:not(.workspace-open) .tb-workspace{border-color:var(--acc2);color:var(--chrome-ink)}
+
+@media(max-width:760px){
+  .workspace{padding:28px 14px 40px}
+  .workspace-actions,.workspace-grid{grid-template-columns:1fr}
+  .workspace-photo-card{grid-column:auto;display:block}
+  .workspace-photo-action{margin-top:13px}
+  .workspace-current{align-items:flex-start;flex-direction:column}
+  .workspace-current-actions{justify-content:flex-start}
+  .workspace-action{min-height:96px;padding:18px}
+}

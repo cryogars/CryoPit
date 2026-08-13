@@ -1,0 +1,24 @@
+<!-- 04 TEMPERATURE -->
+<section class="sec" id="s4" data-nav="Temperature">
+  <div class="sec-hd"><span class="sec-num">04</span><span class="sec-heading"><span class="sec-title">Temperature profile</span><span class="sec-subtitle">Snow-temperature profile through the pit</span></span><button class="tog" onclick="sortRows('t')" title="Sort rows surface → ground (exports sort automatically; this just tidies the screen)">⇅ sort</button><span class="sec-meta" id="tc-cnt">0 measurements</span></div>
+  <div class="sec-body">
+    <div id="t-warn" class="warn-box" style="display:none"></div>
+    <div class="row" style="margin-bottom:16px">
+      <div class="ri"><div class="rl">Profile start</div><input id="ts" maxlength="4" data-example-placeholder="0808" oninput="milCheck(this)" style="font-family:var(--mono);letter-spacing:.05em"><div class="hint">HHMM</div></div>
+      <div class="ri"><div class="rl">Profile end</div><input id="te" maxlength="4" data-example-placeholder="0828" oninput="milCheck(this)" style="font-family:var(--mono);letter-spacing:.05em"><div class="hint">HHMM</div></div>
+      <div class="ri"><div class="rl">Auto-fill depths</div>
+        <div style="display:flex;gap:6px;align-items:center;padding:6px 12px">
+          <select id="t-interval" style="flex:0 0 auto;width:auto;padding:4px 8px;border:1px solid var(--rule);border-radius:6px">
+            <option value="10">every 10 cm</option>
+            <option value="5">every 5 cm</option>
+          </select>
+          <button class="add" style="width:auto;border:1px solid var(--rule);border-radius:999px;padding:4px 12px" onclick="autofillTemp()">↧ generate from total depth</button>
+        </div>
+      </div>
+    </div>
+    <div class="pw"><table class="pt">
+      <thead><tr><th>Height above ground (cm)</th><th>Temperature (°C)</th><th style="width:36px"></th></tr></thead>
+      <tbody id="tb"></tbody>
+    </table><button class="add" onclick="addRow('t')">+ add measurement</button></div>
+  </div>
+</section>

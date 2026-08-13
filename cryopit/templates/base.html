@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#08161f">
+<meta name="color-scheme" content="light dark">
+<title>__PAGE_TITLE__</title>
+<link rel="icon" type="image/svg+xml" href="/static/logo.svg">
+<style>
+__CSS__
+</style>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to the form</a>
+
+<div class="topbar">
+  <button type="button" class="nav-toggle" id="nav-toggle" onclick="toggleNav()"
+          aria-label="Show section index" aria-expanded="false" aria-controls="section-index">☰</button>
+  <div class="tb-brand">
+    __LOGO_SVG__
+    <span class="tb-wordmark">Cryo<strong>Pit</strong></span>
+    <span class="tb-divider">|</span>
+    <span class="tb-inst" id="tb-inst">__RESEARCH_GROUP__</span>
+  </div>
+  <span class="tb-pitid" id="tb-pid">—</span>
+  <button type="button" class="tb-csv tb-workspace" id="workspace-btn" onclick="openWorkspace()" title="Open CryoPit workspace" aria-label="Open CryoPit workspace">Workspace</button>
+  <div class="tb-right">
+    <span class="tb-pct tb-form-only" id="tb-pct">0%</span>
+    <div class="tb-prog tb-form-only" id="tb-prog" role="progressbar" aria-label="Form completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" title="Completion"><div class="tb-fill" id="tb-fill"></div></div>
+    <button type="button" class="tb-csv tb-form-only" id="new-pit-btn" onclick="newPit()" title="Clear the form to start a new pit">New pit</button>
+    <button type="button" class="tb-csv tb-download tb-form-only" onclick="doDownload()" title="Download the CSVs to your computer (does not save to the database)">Download</button>
+    <button type="button" class="tb-save tb-form-only" id="archive-btn" onclick="doArchive()" title="Save the pit to the database and write the CSVs to the server's export folder">Archive</button>
+    <span class="tb-status unsaved tb-form-only" id="tb-st" role="status" aria-live="polite">● not archived</span>
+    <button type="button" class="tb-theme" onclick="toggleTheme()" id="theme-btn" title="Toggle light and dark theme" aria-label="Toggle light and dark theme">◑</button>
+  </div>
+</div>
+
+<div class="record-mode" id="record-mode" hidden role="status" aria-live="polite">
+  <strong id="record-mode-title">Editing archived pit</strong>
+  <span id="record-mode-detail"></span>
+</div>
+<div class="post-archive" id="post-archive" hidden>
+  <span>Pit archived successfully. You are continuing to edit this record.</span>
+  <button type="button" onclick="dismissPostArchive()">Continue Editing</button>
+  <button type="button" onclick="newPit()">Start New Pit</button>
+</div>
+
+__WORKSPACE__
+
+<div class="shell" id="app-shell" hidden>
+
+<nav class="index" id="section-index" aria-label="Form sections">
+  <button type="button" class="idx-collapse" id="idx-collapse" onclick="toggleIndex()"
+          aria-expanded="true" aria-controls="section-index"
+          title="Collapse the section index (⌘/Ctrl + \\)">«</button>
+  <div class="index-title" aria-hidden="true"><span>Pit record</span><small>12 sections</small></div>
+  __NAV__
+  __SAVED_PITS_SECTION__
+</nav>
+
+<main class="main" id="main" tabindex="-1">
+
+__SECTIONS__
+
+</main>
+
+__RAIL__
+</div>
+
+<script>
+__APP_JS__
+</script>
+</body></html>

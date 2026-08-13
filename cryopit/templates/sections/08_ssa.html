@@ -1,0 +1,28 @@
+<!-- 08 SSA -->
+<section class="sec" id="s8" data-nav="SSA">
+  <div class="sec-hd"><span class="sec-num">08</span><span class="sec-heading"><span class="sec-title">SSA</span><span class="sec-subtitle">Specific-surface-area measurements</span></span><button class="tog" onclick="sortRows('sa')" title="Sort rows surface → ground (exports sort automatically; this just tidies the screen)">⇅ sort</button><span class="sec-meta" id="sa-cnt">0 measurements</span></div>
+  <div class="sec-body">
+    <div id="ssa-warn" class="warn-box" style="display:none"></div>
+    <div class="row">
+      <div class="ri"><div class="rl">Instrument</div>
+        <select id="ssa-inst">
+          <option value="">Select instrument…</option>
+          <option value="IceCube">IceCube</option>
+          <option value="IRIS2">IRIS2</option>
+          <option value="IRIS">IRIS</option>
+        </select>
+      </div>
+      <div class="ri"><div class="rl">Calibration time (HHMM)</div><input id="ssa-cal-time" maxlength="4" data-example-placeholder="0800" oninput="milCheck(this)" style="font-family:var(--mono);letter-spacing:.05em"></div>
+      <div class="ri"><div class="rl">SSA operator</div><input id="ssa-operator" placeholder="if different from recorder"></div>
+      <div class="ri" style="flex:2"><div class="rl">Spectralon levels (comma-separated)</div><input id="ssa-spec" data-example-placeholder="99,60,40,20,5,0" style="font-family:var(--mono)"></div>
+    </div>
+    <div class="row">
+      <div class="ri"><div class="rl">Calibration values V (comma-separated)</div><input id="ssa-calv" data-example-placeholder="2.024,1.686,1.226,0.705,0.328,0.062" style="font-family:var(--mono)"></div>
+      <div class="ri"><div class="rl">Calibration notes</div><input id="ssa-notes" placeholder="—"></div>
+    </div>
+    <div class="pw"><table class="pt">
+      <thead><tr><th>Height (cm)</th><th>Signal (V)</th><th>Reflectance (%)</th><th>SSA (m²/kg)</th><th>Grain type</th><th>Comments</th><th style="width:36px"></th></tr></thead>
+      <tbody id="ssab"></tbody>
+    </table><button class="add" onclick="addRow('sa')">+ add measurement</button></div>
+  </div>
+</section>

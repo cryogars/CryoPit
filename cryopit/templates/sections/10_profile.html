@@ -1,0 +1,16 @@
+<!-- 11 PROFILE -->
+<section class="sec" id="s10" data-nav="Profile">
+  <div class="sec-hd"><span class="sec-num">10</span><span class="sec-heading"><span class="sec-title">Profile</span><span class="sec-subtitle">Generated profile for review before archive</span></span>
+    <button class="tog" onclick="drawProfile()" title="Render/refresh the figure from the current form state">↻ render profile</button><span class="sec-meta" id="p10-meta"></span></div>
+  <div class="sec-body">
+    <p style="font-family:var(--mono);font-size:11px;color:var(--ink3);margin-bottom:10px;letter-spacing:.02em">Needs Total depth (§1) and stratigraphy layers (§7).</p>
+    <div class="toggles" style="padding:0 0 8px">
+      <label class="tog"><input type="checkbox" id="fig-notitle" onchange="toggleFigTitle()"><span>No title</span></label>
+    </div>
+    <div class="row" style="margin-bottom:10px;max-width:560px" id="fig-title-row"><div class="ri">
+      <div class="rl">Figure title (optional — blank = pit · location · date)</div>
+      <input type="text" id="fig-title" placeholder="auto" oninput="tick()">
+    </div></div>
+    <div id="profile-wrap" style="overflow-x:auto;border:1px solid var(--rule);border-radius:var(--r);background:var(--w);padding:8px"></div>
+  </div>
+</section>

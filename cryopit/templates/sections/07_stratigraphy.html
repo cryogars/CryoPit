@@ -1,0 +1,15 @@
+<!-- 07 STRATIGRAPHY -->
+<section class="sec" id="s7" data-nav="Stratigraphy">
+  <div class="sec-hd"><span class="sec-num">07</span><span class="sec-heading"><span class="sec-title">Stratigraphy</span><span class="sec-subtitle">Layer boundaries, hardness and grain forms</span></span>
+    <button class="tog" id="ld-toggle" onclick="toggleLayerDensity()" style="margin-left:14px"
+            title="Measured density per stratigraphy layer? Toggle to add a ρ column. Interval densities still go in §5.">+ ρ per layer</button>
+    <button class="tog" onclick="sortRows('s')" title="Sort rows surface → ground (exports sort automatically; this just tidies the screen)">⇅ sort</button><span class="sec-meta" id="sc-cnt">0 layers</span></div>
+  <div class="sec-body">
+    <div class="hint" style="padding:0 2px 8px">Up to __LIM_STRAT__ per layer, __LIM_MB__ MB per file, __LIM_TOTAL__ per pit.</div>
+    <div id="s-warn" class="soft-warn" style="display:none"></div>
+    <div class="pw"><table class="pt">
+      <thead><tr><th>Top</th><th>Bot</th><th>Gmin</th><th>Gmax</th><th>Gavg</th><th>Type</th><th>Hardness</th><th>Wet</th><th id="s-den-th" class="s-den-th" style="display:none">ρA</th><th id="s-den-th2" class="s-den-th" style="display:none">ρB</th><th id="s-den-th3" class="s-den-th" style="display:none">ρ avg</th><th>Comments</th><th style="width:52px" title="Attach photographs of this layer">Photos</th><th style="width:36px"></th></tr></thead>
+      <tbody id="sb"></tbody>
+    </table><button class="add" onclick="addRow('s')">+ add layer</button></div>
+  </div>
+</section>

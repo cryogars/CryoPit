@@ -1,0 +1,77 @@
+<!-- 03 GROUND -->
+<section class="sec" id="s3" data-nav="Ground">
+  <div class="sec-hd"><span class="sec-num">03</span><span class="sec-heading"><span class="sec-title">Ground &amp; vegetation</span><span class="sec-subtitle">Ground surface, vegetation and melt evidence</span></span></div>
+  <div class="sec-body">
+    <div class="row">
+      <div class="ri"><div class="rl">Ground condition</div>
+        <div class="hint">Select all conditions present at the pit.</div>
+        <div class="toggles" data-ground-multi>
+          <label class="tog"><input type="checkbox" name="gc" value="Frozen"><span>Frozen</span></label>
+          <label class="tog"><input type="checkbox" name="gc" value="Moist"><span>Moist</span></label>
+          <label class="tog"><input type="checkbox" name="gc" value="Saturated"><span>Saturated</span></label>
+        </div>
+      </div>
+      <div class="ri"><div class="rl">Ground roughness</div>
+        <div class="toggles" data-clearable-radio>
+          <label class="tog"><input type="radio" name="gr" value="Smooth (&lt;5 cm)"><span>Smooth &lt;5 cm</span></label>
+          <label class="tog"><input type="radio" name="gr" value="Rough (5-20 cm)"><span>Rough 5–20</span></label>
+          <label class="tog"><input type="radio" name="gr" value="Rugged (&gt;20 cm)"><span>Rugged &gt;20</span></label>
+        </div>
+      </div>
+      <div class="ri"><div class="rl">Snow cover condition</div>
+        <div class="toggles" data-clearable-radio>
+          <label class="tog"><input type="radio" name="scc" value="Continuous"><span>Continuous</span></label>
+          <label class="tog"><input type="radio" name="scc" value="Discontinuous"><span>Discontinuous</span></label>
+          <label class="tog"><input type="radio" name="scc" value="Patchy"><span>Patchy</span></label>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="ri"><div class="rl">Tree canopy</div>
+        <div class="toggles" data-clearable-radio>
+          <label class="tog"><input type="radio" name="tc" value="No trees"><span>No trees</span></label>
+          <label class="tog"><input type="radio" name="tc" value="Sparse (5-20%)"><span>Sparse 5–20%</span></label>
+          <label class="tog"><input type="radio" name="tc" value="Open (20-70%)"><span>Open 20–70%</span></label>
+          <label class="tog"><input type="radio" name="tc" value="Closed (&gt;70%)"><span>Closed &gt;70%</span></label>
+        </div>
+      </div>
+      <div class="ri"><div class="rl">Standing water</div>
+        <div class="toggles" data-clearable-radio>
+          <label class="tog"><input type="radio" name="sw" value="N/A"><span>N/A</span></label>
+          <label class="tog"><input type="radio" name="sw" value="Yes"><span>Yes</span></label>
+          <label class="tog"><input type="radio" name="sw" value="No"><span>No</span></label>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="ri"><div class="rl">Vegetation</div>
+        <div class="toggles">
+          <label class="tog"><input type="checkbox" id="vb"><span>Bare</span></label>
+          <label class="tog"><input type="checkbox" id="vg"><span>Grass</span></label>
+          <label class="tog"><input type="checkbox" id="vs"><span>Shrub</span></label>
+          <label class="tog"><input type="checkbox" id="vd"><span>Deadfall</span></label>
+        </div>
+      </div>
+      <div class="ri"><div class="rl">Veg. height (cm)</div><input type="number" id="vh" min="0" data-example-placeholder="0"></div>
+    </div>
+    <div class="row">
+      <div class="ri" style="flex:2"><div class="rl">Interval board SWE measurement</div>
+        <div class="hint" style="padding:9px 13px 8px">Enter depth plus either SWE or density.</div>
+        <table class="pt">
+          <thead><tr><th style="width:44px">Sample</th><th>Depth (cm)</th><th>SWE (mm)</th><th>Density (kg/m³)</th></tr></thead>
+          <tbody>
+            <tr><td style="padding:0 12px;font-family:var(--mono);font-size:12px">A</td><td><input type="number" id="ib-d-a" oninput="ibSolve('a','d')"></td><td><input type="number" id="ib-s-a" oninput="ibSolve('a','s')"></td><td><input type="number" id="ib-r-a" oninput="ibSolve('a','r')"></td></tr>
+            <tr><td style="padding:0 12px;font-family:var(--mono);font-size:12px">B</td><td><input type="number" id="ib-d-b" oninput="ibSolve('b','d')"></td><td><input type="number" id="ib-s-b" oninput="ibSolve('b','s')"></td><td><input type="number" id="ib-r-b" oninput="ibSolve('b','r')"></td></tr>
+            <tr><td style="padding:0 12px;font-family:var(--mono);font-size:12px">C</td><td><input type="number" id="ib-d-c" oninput="ibSolve('c','d')"></td><td><input type="number" id="ib-s-c" oninput="ibSolve('c','s')"></td><td><input type="number" id="ib-r-c" oninput="ibSolve('c','r')"></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="ri"><div class="rl">Evidence of melt resulting in SWE loss?</div>
+        <div class="toggles" data-clearable-radio>
+          <label class="tog"><input type="radio" name="melt" value="Y"><span>Yes</span></label>
+          <label class="tog"><input type="radio" name="melt" value="N"><span>No</span></label>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

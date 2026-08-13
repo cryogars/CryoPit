@@ -1,0 +1,87 @@
+<section class="workspace" id="workspace" tabindex="-1" aria-labelledby="workspace-title">
+  <div class="workspace-inner">
+    <header class="workspace-hero">
+      <div class="workspace-hero-copy">
+        <span class="workspace-kicker">Field workspace</span>
+        <h1 id="workspace-title">Cryo<strong>Pit</strong></h1>
+        <p>Build a new snow-pit record, continue work already underway, or return to your archived observations.</p>
+      </div>
+      <div class="workspace-assurance" aria-label="CryoPit workspace capabilities">
+        <span><b aria-hidden="true">●</b> Owner-scoped</span>
+        <span><b aria-hidden="true">●</b> Offline-capable</span>
+        <span><b aria-hidden="true">●</b> Recoverable archive</span>
+      </div>
+    </header>
+
+    <div class="workspace-actions" aria-label="Primary CryoPit actions">
+      <button type="button" class="workspace-action primary" id="workspace-new"
+              onclick="workspaceStartNewPit()">
+        <span class="workspace-action-mark" aria-hidden="true">＋</span>
+        <span class="workspace-action-copy"><strong>Start New Pit</strong><small>Open a clean field record</small></span>
+        <span class="workspace-action-arrow" aria-hidden="true">→</span>
+      </button>
+      <button type="button" class="workspace-action" id="workspace-find"
+              onclick="openSavedPitsFinder()">
+        <span class="workspace-action-mark" aria-hidden="true">⌕</span>
+        <span class="workspace-action-copy"><strong>Find Existing Pit</strong><small>Search your archived observations</small></span>
+        <span class="workspace-action-arrow" aria-hidden="true">→</span>
+      </button>
+    </div>
+
+    <section class="workspace-current" id="workspace-current" hidden aria-labelledby="workspace-current-title">
+      <div class="workspace-current-icon" aria-hidden="true">↗</div>
+      <div class="workspace-current-copy">
+        <span class="workspace-label" id="workspace-current-title">Currently editing</span>
+        <strong id="workspace-current-pit">—</strong>
+        <span id="workspace-current-detail"></span>
+      </div>
+      <div class="workspace-current-actions">
+        <button type="button" class="workspace-continue" id="workspace-current-continue" onclick="openRecord()">Continue draft</button>
+        <button type="button" onclick="workspaceStartNewPit()">Start New Pit</button>
+      </div>
+    </section>
+
+    <div class="workspace-grid">
+      <section class="workspace-card workspace-recent-card" aria-labelledby="workspace-recent-title">
+        <div class="workspace-card-head">
+          <div class="workspace-card-heading">
+            <span class="workspace-card-icon" aria-hidden="true">◫</span>
+            <div><span class="workspace-label">Your archive</span><h2 id="workspace-recent-title">Recent pits</h2></div>
+          </div>
+          <button type="button" class="workspace-link" onclick="openSavedPitsFinder()">View all</button>
+        </div>
+        <div id="workspace-recent" class="workspace-list" aria-live="polite" aria-busy="true">
+          <span class="workspace-empty">Loading recent pits…</span>
+        </div>
+      </section>
+
+      <section class="workspace-card workspace-attention-card" aria-labelledby="workspace-recovery-title">
+        <div class="workspace-card-head">
+          <div class="workspace-card-heading">
+            <span class="workspace-card-icon" aria-hidden="true">!</span>
+            <div><span class="workspace-label">Operations</span><h2 id="workspace-recovery-title">Needs attention</h2></div>
+          </div>
+          <span class="workspace-count" id="workspace-recovery-count">0</span>
+        </div>
+        <div id="workspace-recovery" class="workspace-list" aria-live="polite" aria-busy="true">
+          <span class="workspace-empty">Checking archive state…</span>
+        </div>
+      </section>
+
+      <section class="workspace-card workspace-photo-card" aria-labelledby="workspace-photo-title">
+        <div class="workspace-card-head">
+          <div class="workspace-card-heading">
+            <span class="workspace-card-icon" aria-hidden="true">▣</span>
+            <div><span class="workspace-label">This browser</span><h2 id="workspace-photo-title">Photo queue</h2></div>
+          </div>
+          <span class="workspace-count" id="workspace-photo-count">0</span>
+        </div>
+        <p id="workspace-photo-summary" class="workspace-photo-summary">Checking local recovery storage…</p>
+        <button type="button" class="workspace-link workspace-photo-action" id="workspace-photo-action"
+                onclick="openWorkspacePhotoQueue()" hidden>Review queued photos</button>
+      </section>
+    </div>
+
+    <p class="workspace-scope"><span aria-hidden="true">◆</span> Hosted CryoPit is designed to use your institution’s SSO identity. Only pits owned by that authenticated identity appear here.</p>
+  </div>
+</section>

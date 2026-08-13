@@ -1,0 +1,30 @@
+<!-- 12 ATTACHMENTS -->
+<section class="sec" id="s11" data-nav="Attachments">
+  <div class="sec-hd"><span class="sec-num">11</span><span class="sec-heading"><span class="sec-title">Attachments</span><span class="sec-subtitle">Pit sheets, wall photographs and local queue</span></span><span class="sec-meta" id="att-cnt"></span></div>
+  <div class="sec-body">
+    <div class="row" id="attach-box">
+      <div class="ri">
+        <div class="rl">Pit sheet (one PDF or up to __LIM_SHEET__ JPG/PNG/WebP/HEIC)</div>
+        <input type="file" id="att-sheet" accept="image/*,.heic,.heif,.pdf" multiple style="padding:8px 12px" onchange="uploadAttachment('att-sheet','sheet')">
+      </div>
+      <div class="ri">
+        <div class="rl">Pit wall photos (max __LIM_PITWALL__ · JPG/PNG/WebP/HEIC)</div>
+        <input type="file" id="att-pitwall" accept="image/*,.heic,.heif" multiple style="padding:8px 12px" onchange="uploadAttachment('att-pitwall','pitwall')">
+      </div>
+    </div>
+    <!-- Layer photographs are attached from the camera on each row in §7, which
+         files each one against the interval it shows. The card that used to sit
+         here only pointed at §7, so it has gone; the list below still shows the
+         photographs, grouped under Stratigraphy.
+
+         This input must stay. It is not a spare upload box: pickLayerPhotos()
+         in 85_attachments.js retargets this one hidden input at whichever
+         layer's camera was clicked, then clicks it. Removing it silently breaks
+         every layer camera in §7. -->
+    <input type="file" id="att-strat" accept="image/*,.heic,.heif" multiple style="display:none" onchange="uploadAttachment('att-strat','stratigraphy')">
+    <div class="hint" style="padding:0 2px 6px">limits: __LIM_MB__ MB per file · __LIM_TOTAL__ files per pit · the same photo can only be attached once</div>
+    <div id="attach-outbox-state" class="att-outbox-state" aria-live="polite"></div>
+    <div id="attach-msg" class="attach-msg"></div>
+    <div id="attach-list" class="att-list"></div>
+  </div>
+</section>

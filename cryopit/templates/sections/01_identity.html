@@ -1,0 +1,62 @@
+<!-- 01 IDENTITY -->
+<section class="sec" id="s1" data-nav="Identity">
+  <div class="sec-hd"><span class="sec-num">01</span><span class="sec-heading"><span class="sec-title">Identity</span><span class="sec-subtitle">Pit identity, field team and coordinates</span></span></div>
+  <div class="sec-body">
+    <div id="time-warn" class="warn-box" style="display:none"></div>
+    <div class="row">
+      <div class="ri" style="flex:1.4">
+        <div class="rl">Location <span class="req">*</span></div>
+        <select id="loc" onchange="onLoc()">
+          <option value="">Select…</option>
+          <option>Grand Mesa, CO</option>
+          <option>Senator Beck Basin, CO</option>
+          <option>Mores Creek, ID</option>
+          <option>Banner Summit, ID</option>
+          <option value="__c">Other…</option>
+        </select>
+        <input id="loc-c" placeholder="Type location" style="display:none;border-top:1px solid var(--rule)" oninput="updateId();tick()">
+      </div>
+      <div class="ri"><div class="rl">Site / transect <span class="req">*</span></div><input id="site" data-example-placeholder="LSOS, Transect A…" oninput="updateId()"></div>
+      <div class="ri"><div class="rl">Date <span class="req">*</span></div><input type="date" id="date" oninput="updateId();tick()"></div>
+      <div class="ri"><div class="rl">Campaign</div><input id="campaign" placeholder="__CAMPAIGN__" value="__CAMPAIGN__"></div>
+    </div>
+    <div class="row">
+      <div class="ri" style="flex:1.3">
+        <div class="rl">Pit ID <span class="req">*</span></div>
+        <div contenteditable="true" class="pitid" id="pitid" spellcheck="false" oninput="onPitEdit()">—</div>
+        <div class="hint" id="pidhint">auto · site + date · tap to edit</div>
+      </div>
+      <div class="ri"><div class="rl">Total depth (cm)</div><input type="number" id="depth" min="0" data-example-placeholder="120" oninput="tick()"></div>
+      <div class="ri"><div class="rl">Pit open</div><input id="po" maxlength="4" data-example-placeholder="0830" oninput="milCheck(this);if(typeof densityWarnings==='function')densityWarnings()" style="font-family:var(--mono);letter-spacing:.05em"><div class="hint">HHMM · 24-hr</div></div>
+      <div class="ri"><div class="rl">Slope (°)</div><input type="number" id="slope" min="0" max="90" data-example-placeholder="0"></div>
+    </div>
+    <div class="row">
+      <div class="ri"><div class="rl">Recorded by <span class="req">*</span></div><input id="recby" placeholder="Your name" oninput="tick()"></div>
+      <div class="ri"><div class="rl">Field observers <span class="req">*</span></div><input id="surv" data-example-placeholder="A. Jones, B. Lee" oninput="tick()"></div>
+      <div class="ri"><div class="rl">GPS device</div><input id="gps" data-example-placeholder="GAIA GPSMAP 66"></div>
+      <div class="ri"><div class="rl">GPS uncertainty</div><input type="number" step="0.1" min="0" id="gps-unc" data-example-placeholder="3" style="font-family:var(--mono)"></div>
+      <div class="ri"><div class="rl">Unit</div>
+        <select id="gps-unc-unit">
+          <option value="m">m</option>
+          <option value="cm">cm</option>
+          <option value="ft">ft</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div class="ri"><div class="rl">UTM Easting</div><input id="utme" data-example-placeholder="476455" oninput="onUTM();tick()" style="font-family:var(--mono)"><div class="coord-note" id="utme-note"></div></div>
+      <div class="ri"><div class="rl">UTM Northing</div><input id="utmn" data-example-placeholder="7226118" oninput="onUTM();tick()" style="font-family:var(--mono)"><div class="coord-note" id="utmn-note"></div></div>
+      <div class="ri"><div class="rl">UTM Zone</div><input id="utmz" data-example-placeholder="11N" oninput="onUTM()" style="font-family:var(--mono)"></div>
+      <div class="ri"><div class="rl">Elevation (m)</div><input type="number" id="elev" placeholder="—"></div>
+    </div>
+    <div class="coord-or">— or enter lat / lon · all coordinates are WGS84 —</div>
+    <div class="row">
+      <div class="ri"><div class="rl">Latitude (°N)</div><input id="lat" data-example-placeholder="65.157650" oninput="onLatLon();tick()" style="font-family:var(--mono)"><div class="coord-note" id="lat-note"></div></div>
+      <div class="ri"><div class="rl">Longitude (°E)</div><input id="lon" data-example-placeholder="-147.502260" oninput="onLatLon();tick()" style="font-family:var(--mono)"><div class="coord-note" id="lon-note"></div></div>
+      <div class="ri"><div class="rl">Flags</div><input id="flags" data-example-placeholder="None"></div>
+    </div>
+    <div class="row">
+      <div class="ri"><div class="rl">Comments / notes</div><textarea id="comments" placeholder="Site conditions, access, anomalies…"></textarea></div>
+    </div>
+  </div>
+</section>
