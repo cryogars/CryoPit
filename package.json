@@ -1,0 +1,11 @@
+{
+  "name": "cryopit-tests",
+  "private": true,
+  "description": "Dev-only. CryoPit ships no JS build step — this exists solely so the DOM test harness has a pinned jsdom.",
+  "scripts": {
+    "test": "node tests/test_coords.mjs && node tests/test_dom.mjs"
+  },
+  "devDependencies": {
+    "jsdom": "^24.1.3"
+  }
+}
