@@ -648,4 +648,4 @@ WHERE s.pit_id = 'GM1' AND l.kind = 'density'
 ORDER BY l.top_cm DESC;
 ```
 
-Kinds available for the `l.kind` filter are `temperature`, `density`, `lwc` (permittivity), `stratigraphy`, and `ssa`. See [CHANGELOG.md](CHANGELOG.md) for the full history of fixes and schema changes.
+Kinds available for the `l.kind` filter are `temperature`, `density`, `lwc` (permittivity), `stratigraphy`, and `ssa`.
