@@ -6,7 +6,7 @@ pending archive and attachment journals.
 
 ## Before upgrading
 
-1. read `CHANGELOG.md` and the release report;
+1. review the release notes for the version you are installing;
 2. stop writes or remove the instance from the proxy pool;
 3. create and verify a CryoPit backup bundle;
 4. record the current application ZIP/image digest and environment file;
