@@ -1,0 +1,33 @@
+cff-version: 1.2.0
+message: "If you use CryoPit in your research, please cite the software using the citation metadata in this file."
+title: "CryoPit"
+version: "3.7.0rc6"
+authors:
+  - family-names: "Alabi"
+    given-names: "Ibrahim"
+    affiliation: "Boise State university"
+  - family-names: "Marshall"
+    given-names: "Hans-Peter"
+    affiliation: "Boise State University"
+  - family-names: "Kane"
+    given-names: "Coleman"
+    affiliation: "Boise State University"
+  - family-names: "Elder"
+    given-names: "Kelly"
+    affiliation: "US Forest Service"
+repository-code: "https://github.com/cryogars/CryoPit"
+url: "https://github.com/cryogars/CryoPit"
+abstract: >-
+  CryoPit is an offline-first application for structured collection,
+  validation, archiving, and retrieval of snow-pit observations. It links
+  measurements, stratigraphy, photographs, metadata, and archive products
+  through stable pit identifiers and supports local field deployments,
+  institutional authentication, and later database consolidation.
+keywords:
+  - "snow pit"
+  - "snow stratigraphy"
+  - "snow hydrology"
+  - "field observations"
+  - "cryosphere"
+  - "scientific software"
+  - "SQLite"
