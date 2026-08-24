@@ -502,6 +502,37 @@ def test_thick_layers_keep_a_full_boundary():
     _ = _p
 
 
+
+def test_temperature_only_profile_renders_without_stratigraphy():
+    """A pit can have useful profile data before §7 has any complete layers."""
+    pit = {
+        "meta": {"pit_id": "TEMP-ONLY", "total_depth": 100, "date": "2026-08-15"},
+        "stratigraphy": [],
+        "density": [],
+        "temperature": [{"height": 100, "temp": -8.0}, {"height": 0, "temp": -0.5}],
+    }
+    assert render_profile(pit)[:4] == b"\x89PNG"
+
+
+def test_density_only_profile_renders_without_stratigraphy():
+    """Density alone is enough to produce a useful profile preview."""
+    pit = {
+        "meta": {"pit_id": "DEN-ONLY", "total_depth": 100, "date": "2026-08-15"},
+        "stratigraphy": [],
+        "density": [{"top": 100, "bottom": 0, "a": 300}],
+        "temperature": [],
+    }
+    assert render_profile(pit)[:4] == b"\x89PNG"
+
+
+def test_empty_stratigraphy_is_defensive_for_direct_renderer_calls():
+    """Direct callers must never hit max() on an empty stratigraphy iterable."""
+    pit = {
+        "meta": {"pit_id": "EMPTY", "total_depth": 100, "date": "2026-08-15"},
+        "stratigraphy": [], "density": [], "temperature": [],
+    }
+    assert render_profile(pit)[:4] == b"\x89PNG"
+
 if __name__ == "__main__":
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for fn in fns:
