@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false        # a 3.13-only break should not hide a 3.11 result
       matrix:
-        python: ["3.10", "3.11", "3.12", "3.13"]
+        python: ["3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
