@@ -99,6 +99,8 @@ checks that it opened.
 
 ## Dependency-limited runs
 
+CryoPit supports Python 3.11 and newer. CI installs `requirements.lock` across the supported Python matrix and also runs the full dependency-backed suite in a Python 3.11 Conda environment. A separate floating-dependency job installs `requirements.txt` to detect future compatibility drift.
+
 The scientific, cumulative integration, operations, security-core, and lightweight JavaScript suites do not require Flask or jsdom. The end-to-end and route-isolation suites require the Python dependencies in `requirements.lock`; the DOM suite requires `npm ci`. A syntax-only pass is not reported as a runtime pass when those dependencies are unavailable. A Stage 14 release candidate is not production-ready until the full dependency-backed suite passes in the target build environment. The Stage 13 interface also receives a real-browser layout/runtime check at representative desktop, tablet, and mobile widths; screenshot review supplements but does not replace the DOM assertions.
 
 ### DOM placeholder guard
