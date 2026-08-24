@@ -1,6 +1,6 @@
 # Deploying CryoPit
 
-How to run CryoPit beyond a personal laptop. For plain local use, the README covers everything. Production and release-candidate builds should install `requirements.lock`, not resolve broad dependency ranges at deployment time.
+How to run CryoPit beyond a personal laptop. For plain local use, the README covers everything. CryoPit requires Python 3.11 or newer. Production and release-candidate builds should install `requirements.lock`, not resolve broad dependency ranges at deployment time.
 
 ## 1. Docker
 
@@ -55,10 +55,14 @@ docker build -t cryopit . && docker stop cryopit && docker rm cryopit
 
 ## 2. LAN deployment without Docker
 
-On the host that will serve the team:
+On the host that will serve the team, create a dedicated Python 3.11+ environment and install the locked dependencies:
 
 ```bash
-pip install -r requirements.lock
+python3 --version   # must be 3.11 or newer
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.lock
 CRYOPIT_HOST=0.0.0.0 CRYOPIT_DB_PATH=/var/lib/cryopit/cryopit.db \
 CRYOPIT_EXPORT_DIR=/srv/snow/exports python -m cryopit
 ```
@@ -79,7 +83,7 @@ WorkingDirectory=/opt/cryopit
 Environment=CRYOPIT_HOST=0.0.0.0
 Environment=CRYOPIT_DB_PATH=/var/lib/cryopit/cryopit.db
 Environment=CRYOPIT_EXPORT_DIR=/srv/snow/exports
-ExecStart=/usr/bin/python3 -m cryopit
+ExecStart=/opt/cryopit/.venv/bin/python -m cryopit
 Restart=on-failure
 
 [Install]
@@ -172,8 +176,8 @@ The fastest way to hand teammates a URL. Free tier: always-on HTTPS at
 reminded.
 
 1. Upload `cryopit.zip`, then in a Bash console: `unzip cryopit.zip -d cryopit`
-   and `pip install --user -r cryopit/requirements.lock`.
-2. Web tab → Add a new web app → **Manual configuration** (your Python 3.x).
+   and `python -m pip install --user -r cryopit/requirements.lock`.
+2. Web tab → Add a new web app → **Manual configuration** using Python 3.11 or newer.
 3. Edit the WSGI file to exactly:
 
 ```python
@@ -213,7 +217,7 @@ Before fixing RAM or worker settings for a shared deployment, install the locked
 dependencies and run the Stage 6 qualification harness on the actual host:
 
 ```bash
-pip install -r requirements.lock
+python -m pip install -r requirements.lock
 python tests/benchmark_resource_stage6.py --qualification --output stage6.json
 ```
 
