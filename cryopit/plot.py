@@ -403,7 +403,11 @@ def render_profile(payload, dpi=150, fmt="png"):
     _r0 = fig.canvas.get_renderer()
     _inv0 = ax3.transData.inverted()
     _dx_per_px = abs(_inv0.transform((1, 0))[0] - _inv0.transform((0, 0))[0])
-    _longest = max((f"{(r.get('gtype') or '')} (W)" for r in strat), key=len)
+    # Empty stratigraphy is a normal in-progress state.  Keep the renderer
+    # defensive even though the browser avoids requesting a completely blank
+    # profile: temperature/density-only profiles must still render, and direct
+    # callers must never trip max() on an empty layer list.
+    _longest = max((f"{(r.get('gtype') or '')} (W)" for r in strat), key=len, default="")
     _probe = ax3.text(0, 0, _longest, fontsize=CODE_FONTSIZE)
     _pb = _probe.get_window_extent(_r0)
     code_w = abs(_inv0.transform((_pb.x1, 0))[0] - _inv0.transform((_pb.x0, 0))[0])
