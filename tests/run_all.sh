@@ -50,6 +50,8 @@ run "attachment uploads"   "$NODE_BIN"    tests/test_attachment_flush.mjs
 run "attachment manifest UI" "$NODE_BIN"   tests/test_attachment_manifest_ui.mjs
 run "Saved Pits finder UI" "$NODE_BIN"   tests/test_stage10_saved_pits_ui.mjs
 run "workspace UI" "$NODE_BIN"   tests/test_stage11_workspace_ui.mjs
+run "profile empty-state API" "$PYTHON_BIN" tests/test_profile_empty_state.py
+run "profile empty states" "$NODE_BIN" tests/test_profile_empty_state_ui.mjs
 run "profile figure"       "$PYTHON_BIN" tests/test_plot.py
 run "end-to-end smoke"     "$PYTHON_BIN" tests/test_smoke.py
 run "Stage 12 Flask security" "$PYTHON_BIN" tests/test_stage12_flask_security.py
