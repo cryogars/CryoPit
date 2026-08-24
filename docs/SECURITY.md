@@ -32,8 +32,6 @@ oversized identity receives `401`. Trusted mode also requires a stable
 
 ## Request protections
 
-Stage 12 adds:
-
 - owner-bound, expiring HMAC CSRF tokens on state-changing API requests;
 - rejection of browser-declared cross-site API requests;
 - request-body and per-attachment size limits;
