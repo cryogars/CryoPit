@@ -17,7 +17,7 @@ A snow-pit data logger for field snow science built by the [CryoGARS research gr
 
 ## Requirements
 
-* Python 3.10+
+* Python 3.11+
 * Direct dependency policy is maintained in **[requirements.txt](requirements.txt)**.
 * **[requirements.lock](requirements.lock)** pins the complete tested environment.
 
