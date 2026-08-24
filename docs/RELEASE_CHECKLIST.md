@@ -3,7 +3,7 @@
 ## Build
 
 - [ ] Build from a clean source tree.
-- [ ] Install `requirements.lock` in a fresh virtual environment.
+- [ ] Confirm Python 3.11+ and install `requirements.lock` in a fresh virtual or Conda environment.
 - [ ] Run `npm ci` for the browser test harness.
 - [ ] Run `tests/run_all.sh` with no skipped suites.
 - [ ] Confirm the DOM suite reports at least 300 executed assertions, not merely exit code 0.
