@@ -863,6 +863,8 @@ table.it.group-none tbody{opacity:.42}
 .pf-msg{font-family:var(--mono);font-size:12px;color:var(--ink3);padding:28px;
   text-align:center;line-height:1.7}
 .pf-msg.err{color:var(--red)}
+.pf-note{font-family:var(--mono);font-size:11px;color:var(--ink3);margin:0 0 8px;
+  padding:7px 9px;border-bottom:1px solid var(--rule);line-height:1.5}
 
 
 /* ============================================================
