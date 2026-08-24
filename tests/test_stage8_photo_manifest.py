@@ -18,6 +18,7 @@ import tempfile
 import types
 import uuid
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 TMP = Path(tempfile.mkdtemp(prefix="cryopit-stage8-"))
@@ -323,7 +324,9 @@ def test_interrupted_archive_keeps_expected_manifest_through_recovery():
     def render_fail(_payload):
         raise RuntimeError("fault injected while building archive")
 
-    failed = lifecycle.archive_payload(payload(manifest=[item]), None, render_fail)
+    with patch.object(__import__("logging").getLogger(lifecycle.__name__), "exception") as expected_log:
+        failed = lifecycle.archive_payload(payload(manifest=[item]), None, render_fail)
+    expected_log.assert_called_once()
     assert failed["ok"] is False and failed["pending"]
     site_id = failed["site_id"]
     conn = sqlite3.connect(os.environ["CRYOPIT_DB_PATH"])
