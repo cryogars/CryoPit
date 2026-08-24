@@ -14,10 +14,10 @@ concurrency:
 
 jobs:
   python:
-    name: Python ${{ matrix.python }}
+    name: Locked Python ${{ matrix.python }}
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false        # a 3.13-only break should not hide a 3.11 result
+      fail-fast: false        # a version-specific break should not hide the others
       matrix:
         python: ["3.11", "3.12", "3.13"]
     steps:
@@ -26,7 +26,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
           cache: pip
-      - run: pip install -r requirements.lock
+      - run: python -m pip install -r requirements.lock
       - name: Import check
         run: python -c "import cryopit, cryopit.web, cryopit.plot, cryopit.export; print(cryopit.__version__)"
       - name: Density rules
@@ -35,7 +35,6 @@ jobs:
         run: python tests/test_plot.py
       - name: End-to-end smoke
         run: python tests/test_smoke.py
-
 
   full-suite:
     name: Full Python + browser suite
@@ -50,9 +49,33 @@ jobs:
         with:
           node-version: "20"
           cache: npm
-      - run: pip install -r requirements.lock
+      - run: python -m pip install -r requirements.lock
       - run: npm ci
       - name: Run every suite
+        run: ./tests/run_all.sh
+
+  conda-full-suite:
+    name: Conda Python 3.11 + browser suite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: cryopit
+          environment-file: environment.yml
+          auto-activate-base: false
+      - name: Verify Conda environment and install browser dependencies
+        shell: bash -el {0}
+        run: |
+          python --version
+          python -c "import flask, waitress, matplotlib, dotenv, pillow_heif; print('Conda Python dependencies OK')"
+          npm ci
+      - name: Run every suite under Conda
+        shell: bash -el {0}
         run: ./tests/run_all.sh
 
   javascript:
@@ -70,12 +93,27 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - run: pip install -r requirements.txt
+      - run: python -m pip install -r requirements.lock
       - run: npm ci
       - name: Coordinate transform
         run: node tests/test_coords.mjs
       - name: DOM behaviour
         run: node tests/test_dom.mjs
+
+  floating-deps:
+    name: Floating dependency compatibility
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - name: Import check
+        run: python -c "import cryopit, cryopit.web, cryopit.plot, cryopit.export; print(cryopit.__version__)"
+      - name: End-to-end smoke
+        run: python tests/test_smoke.py
 
   docker:
     name: Docker build
@@ -93,7 +131,7 @@ jobs:
             curl -sf -o /dev/null http://127.0.0.1:8502/ && break
             sleep 2
           done
-          curl -sf -o /dev/null -w "GET /healthz -> %{http_code}\n" http://127.0.0.1:8502/healthz
-          curl -sf -o /dev/null -w "GET /readyz -> %{http_code}\n" http://127.0.0.1:8502/readyz
+          curl -sf -o /dev/null -w "GET /healthz -> %{http_code}\\n" http://127.0.0.1:8502/healthz
+          curl -sf -o /dev/null -w "GET /readyz -> %{http_code}\\n" http://127.0.0.1:8502/readyz
           docker logs cryopit-ci
           docker rm -f cryopit-ci
