@@ -14,6 +14,7 @@ import sqlite3
 import sys
 import tempfile
 import types
+from unittest.mock import patch
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -182,7 +183,9 @@ def test_first_archive_is_hidden_until_publication_finishes():
     reset()
     def fail(_payload):
         raise RuntimeError("injected render failure")
-    result = lifecycle.archive_payload(payload("PENDING"), None, fail)
+    with patch.object(__import__("logging").getLogger(lifecycle.__name__), "exception") as expected_log:
+        result = lifecycle.archive_payload(payload("PENDING"), None, fail)
+    expected_log.assert_called_once()
     assert result["ok"] is False and result["pending"] is True
     sid, _, export_folder, pending = one_site()
     assert export_folder is None and pending == "WY2026_PENDING_20260210"
