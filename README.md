@@ -19,50 +19,41 @@ A snow-pit data logger for field snow science built by the [CryoGARS research gr
 
 * Python 3.11+
 * Direct dependency policy is maintained in **[requirements.txt](requirements.txt)**.
-* **[requirements.lock](requirements.lock)** pins the complete tested environment.
+* **[requirements.lock](requirements.lock)** pins the complete tested Python environment.
+* **[environment.yml](environment.yml)** defines the supported Conda environment and installs CryoPit's direct Python dependencies from `conda-forge`.
 
-For normal CryoPit installation, including field laptops and production servers, use the lock file so everyone runs the dependency versions that were actually tested:
+For normal CryoPit installation, choose either the standard virtual-environment path or the Conda path below. Standard `venv` and production installs use `requirements.lock`; Conda users install from `environment.yml`. CI runs the full suite through both paths.
 
-```bash
-pip install -r requirements.lock
-```
-
-Maintainers use `requirements.txt` when intentionally changing dependency ranges, then update/regenerate `requirements.lock` and test that exact locked environment.
+Maintainers use `requirements.txt` when intentionally changing dependency ranges, then update/regenerate `requirements.lock`, keep the direct Conda pins in `environment.yml` aligned, and run CI through both installation paths.
 
 ---
 
 ## Running CryoPit on your Local Machine
 
-### macOS or Linux
+### Option A: standard Python virtual environment
+
+#### macOS or Linux
+
+First confirm that `python3` is Python 3.11 or newer:
 
 ```bash
+python3 --version
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -r requirements.lock
-
-mkdir -p test-data
-export CRYOPIT_DB_PATH="$PWD/test-data/cryopit.db"
-export CRYOPIT_EXPORT_DIR="$PWD/test-data/exports"
-
-python -m cryopit
 ```
 
-### Windows PowerShell
+#### Windows PowerShell
 
-Run these commands from the extracted CryoPit project directory:
+Run these commands from the extracted CryoPit project directory and confirm the selected Python is 3.11 or newer:
 
 ```powershell
+py --version
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 python -m pip install -r requirements.lock
-
-New-Item -ItemType Directory -Force .\test-data | Out-Null
-$env:CRYOPIT_DB_PATH = Join-Path $PWD "test-data\cryopit.db"
-$env:CRYOPIT_EXPORT_DIR = Join-Path $PWD "test-data\exports"
-
-python -m cryopit
 ```
 
 If PowerShell blocks the activation script, allow it for the current terminal only, then activate the environment again:
@@ -70,6 +61,42 @@ If PowerShell blocks the activation script, allow it for the current terminal on
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\.venv\Scripts\Activate.ps1
+```
+
+### Option B: Conda
+
+CryoPit includes `environment.yml` for Conda users. Conda installs Python 3.11 and CryoPit’s direct Python dependencies from `conda-forge`, including the compiled scientific and HEIC stack. No separate pip-install step is required.
+
+From the extracted CryoPit project directory:
+
+```bash
+conda env create -f environment.yml
+conda activate cryopit
+python --version
+```
+
+The same commands work in Anaconda Prompt, Miniconda Prompt, or a shell where Conda has been initialized.
+
+### Configure data paths and start CryoPit
+
+#### macOS or Linux
+
+```bash
+mkdir -p test-data
+export CRYOPIT_DB_PATH="$PWD/test-data/cryopit.db"
+export CRYOPIT_EXPORT_DIR="$PWD/test-data/exports"
+
+python -m cryopit
+```
+
+#### Windows PowerShell
+
+```powershell
+New-Item -ItemType Directory -Force .\test-data | Out-Null
+$env:CRYOPIT_DB_PATH = Join-Path $PWD "test-data\cryopit.db"
+$env:CRYOPIT_EXPORT_DIR = Join-Path $PWD "test-data\exports"
+
+python -m cryopit
 ```
 
 The PowerShell environment variables above apply only to that terminal window. Keep the active SQLite database on local disk rather than in OneDrive, Dropbox, Google Drive, or a network-mounted directory.
@@ -418,7 +445,7 @@ Before changing RAM or concurrency for an institutional host, benchmark that
 host with the locked environment:
 
 ```bash
-pip install -r requirements.lock
+python -m pip install -r requirements.lock
 python tests/benchmark_resource_stage6.py --qualification --output stage6.json
 ```
 
