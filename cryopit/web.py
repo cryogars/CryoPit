@@ -508,11 +508,40 @@ def _existing_uploads(site_id):
     return out
 
 
+PROFILE_EMPTY_MESSAGE = (
+    "No profile data yet. Add temperature, density, or stratigraphy observations "
+    "to generate a snow profile."
+)
+
+
+def _has_profile_data(payload):
+    """True when the profile renderer has at least one plottable observation.
+
+    LWC is deliberately excluded: it is archived/exported but is not part of the
+    snow-profile figure.  This guard also keeps a direct API call from spending a
+    profile-render slot on a completely blank figure.
+    """
+    for r in payload.get("temperature") or []:
+        if _num_or_none(r.get("height")) is not None and _num_or_none(r.get("temp")) is not None:
+            return True
+    for r in payload.get("density") or []:
+        if _num_or_none(r.get("top")) is None or _num_or_none(r.get("bottom")) is None:
+            continue
+        if any((_num_or_none(r.get(k)) or 0) > 0 for k in ("a", "b", "c")):
+            return True
+    for r in payload.get("stratigraphy") or []:
+        if _num_or_none(r.get("top")) is not None and _num_or_none(r.get("bottom")) is not None:
+            return True
+    return False
+
+
 @bp.post("/api/profile")
 def api_profile():
     """Render the reference profile figure for the CURRENT form state and
     return it as a PNG. Read-only: no database write, no files written."""
     payload = _json_or_400()
+    if not _has_profile_data(payload):
+        return jsonify({"ok": False, "empty": True, "msg": PROFILE_EMPTY_MESSAGE}), 400
     try:
         from .plot import render_profile
         with profile_render_slot():
