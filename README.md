@@ -467,8 +467,7 @@ python tests/evaluate_resource_stage7.py stage6-soak.json --ram-gib 3.5
 
 A `PASS` is the production-sizing result. `PROVISIONAL` means one or more final
 conditions were not demonstrated, for example the test used a HEIC proxy, ran
-on a materially larger host, or omitted the full soak. See `DEPLOYMENT.md` and
-`RESOURCE_STAGE7_REPORT.md` for the full policy and rationale.
+on a materially larger host, or omitted the full soak. See `DEPLOYMENT.md` for the full policy and rationale.
 
 ---
 
