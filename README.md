@@ -467,7 +467,8 @@ python tests/evaluate_resource_stage7.py stage6-soak.json --ram-gib 3.5
 
 A `PASS` is the production-sizing result. `PROVISIONAL` means one or more final
 conditions were not demonstrated, for example the test used a HEIC proxy, ran
-on a materially larger host, or omitted the full soak. See `DEPLOYMENT.md` for the full policy and rationale.
+on a materially larger host, or omitted the full soak. See `DEPLOYMENT.md` for
+the full policy and rationale.
 
 ---
 
@@ -500,8 +501,8 @@ header, clearly marked); the `density_gap_filled` CSV is its fully-filled
 mirror — the same table with every hole filled (profile cells from each
 profile's own gap-filled column), `Source` naming what was measured, and
 per-profile derivations in the header. Gaps are
-filled by documented rules (neighbor means, ≤ 25 % edge extensions,
-weighted-mean fallback), values are bounded to 1–917 kg/m³, and per-layer
+filled by documented rules (neighbor means for middle gaps and nearest-interval
+extensions at the surface and ground), values are bounded to 1–917 kg/m³, and per-layer
 densities serve as the fallback only when no interval densities exist.
 **[docs/DENSITY.md](docs/DENSITY.md)** is the authoritative reference. Every error and warning the form can raise — what triggers it, and whether it stops an archive — is listed in **[docs/VALIDATION.md](docs/VALIDATION.md)**. How uploaded images are handled — accepted formats, HEIC conversion, resolution and deduplication — is in **[docs/PHOTOGRAPHS.md](docs/PHOTOGRAPHS.md)**, the export folder layout is in **[docs/STRUCTURE.md](docs/STRUCTURE.md)**, and house rules for contributors are in **[docs/CONVENTIONS.md](docs/CONVENTIONS.md)**.
 

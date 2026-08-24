@@ -15,14 +15,14 @@ MEAS = [{"top": 88, "bottom": 78, "a": 180, "b": 184},
 def test_three_gap_types():
     r = analyze(MEAS, 95)
     col = r["column"]
-    # top gap 7.4% <= 25%: edge interval extended up, measured extent kept
+    # top gap: nearest edge interval extends to the surface, measured extent kept
     assert col[0]["top"] == 95 and col[0]["meas_top"] == 88
     assert "extended to HS" in col[0]["source"]
     # middle gap 68-58: mean of neighbours
     mid = [x for x in col if x["source"].startswith("gap-filled")][0]
     assert (mid["top"], mid["bottom"]) == (68, 58)
     assert abs(mid["value"] - (225 + 278) / 2) < 1e-9
-    # bottom gap 15.8% <= 25%: extended to ground
+    # bottom gap: nearest edge interval extends to ground
     assert col[-1]["bottom"] == 0 and col[-1]["meas_bottom"] == 15
     assert "extended to 0" in col[-1]["source"]
     # the filled column tiles the full HS
@@ -50,11 +50,8 @@ def test_interval_mean_is_measured_only():
 def test_large_edge_gap_carries_the_nearest_measurement():
     """An edge gap carries the nearest measured interval, however large.
 
-    An earlier version filled anything over 25% of HS with the
-    thickness-weighted mean of the WHOLE pit, which is the wrong estimate at an
-    edge: surface snow is the lightest in the pack, so a top gap filled with the
-    pit mean comes out far too dense. The nearest interval is the best
-    information available regardless of distance."""
+    The nearest interval is used regardless of distance; edge gaps are never
+    replaced with a whole-pit weighted mean."""
     r = analyze([{"top": 100, "bottom": 60, "a": 200},
                  {"top": 60, "bottom": 40, "a": 300}], 100)
     last = r["column"][-1]

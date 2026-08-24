@@ -12,8 +12,8 @@ function drawMini(){
   // Bulk density and SWE per the documented CryoPit density rules
   // (README "Density rules"): sort surface->ground, clip overlaps (upper
   // interval wins), per-interval mean of measured profiles, then vertical
-  // gap filling — middle gap = mean of neighbours; edge gaps <=25% of HS
-  // extend the edge interval; >25% fall back to the thickness-weighted mean.
+  // gap filling — middle gap = mean of neighbours; each edge gap extends
+  // the nearest measured interval all the way to the surface or ground.
   // Only DENSITY is inferred for gaps; every centimetre of depth is real.
   if(typeof densityWarnings==='function')densityWarnings();
   // rows that fail geometry bounds (negative bottoms, tops beyond HS) are
@@ -44,11 +44,11 @@ function drawMini(){
   const wmean=sumT>0?sumRT/sumT:null;
   let swe_mm=null,bulk=null,filledCm=0;
   if(dcol.length&&HS){
-    const maxEdge=0.25*HS,full=[];
+    const full=[];
     const gapTop=HS-dcol[0].top;
     if(gapTop>0.001){
-      if(gapTop<=maxEdge){dcol[0].top=HS;filledCm+=gapTop;}   // extension applies density to unmeasured cm — counts as interp
-      else{full.push({top:HS,bottom:dcol[0].top,rho:wmean});filledCm+=gapTop;}
+      dcol[0].top=HS;
+      filledCm+=gapTop;  // extension applies density to unmeasured cm — counts as interp
     }
     for(let i=0;i<dcol.length;i++){
       full.push(dcol[i]);
@@ -60,10 +60,10 @@ function drawMini(){
     }
     const last=dcol[dcol.length-1];
     if(last.bottom>0.001){
-      // Both branches apply density to UNMEASURED centimetres, so both count
-      // toward the "interp" label — "measured full depth" must mean exactly that.
-      if(last.bottom<=maxEdge){filledCm+=last.bottom;last.bottom=0;}
-      else{full.push({top:last.bottom,bottom:0,rho:wmean});filledCm+=last.bottom;}
+      // Extending the edge density applies it to unmeasured centimetres, so
+      // those centimetres count toward the gap-filled coverage label.
+      filledCm+=last.bottom;
+      last.bottom=0;
     }
     let sRT=0;full.forEach(x=>sRT+=x.rho*(x.top-x.bottom));
     swe_mm=sRT/100;bulk=sRT/HS;

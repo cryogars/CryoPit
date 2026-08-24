@@ -40,9 +40,8 @@ Whole missing intervals only — depth is never invented, only density:
 | Gap | Rule | Source tag |
 |---|---|---|
 | Middle | mean of the intervals directly above and below | `gap-filled (neighbor-mean)` |
-| Top ≤ 25 % of HS | top interval extends to HS (same measurement, larger weight) | `measured (extended to HS)` |
-| Bottom ≤ 25 % of HS | bottom interval extends to 0 | `measured (extended to 0)` |
-| Edge > 25 % of HS | thickness-weighted mean of all measured intervals | `gap-filled (mean-fallback)` |
+| Top edge | highest measured interval extends to HS, regardless of gap size | `measured (extended to HS)` |
+| Bottom edge | lowest measured interval extends to 0, regardless of gap size | `measured (extended to 0)` |
 
 ## Derived bulk density and SWE
 
@@ -90,6 +89,6 @@ recording-only: they export in the stratigraphy CSV (always-present column,
 
 ## Live rail parity
 
-The in-app rail computes SWE/bulk by these same rules (clipping, means,
-gap filling, the 25 % guards), labels gap-filled centimeters
+The in-app rail computes SWE/bulk by these same rules (clipping, interval
+means, neighbor-mean middle gaps, and nearest-interval edge extensions), labels gap-filled centimeters
 (`est · 12 cm gap-filled`), and excludes intervals that fail geometry bounds.

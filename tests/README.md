@@ -11,7 +11,8 @@ means a green pipeline.
 
 | suite | needs | covers |
 |---|---|---|
-| `python3 tests/test_density.py` | nothing | gap-fill and extension rules |
+| `python3 tests/test_density.py` | nothing | backend gap-fill and edge-extension rules |
+| `node tests/test_density_rail_parity.mjs` | Node | live-rail edge-gap parity with the backend, including gaps larger than 25% of HS |
 | `python3 tests/test_instrument_state.py` | nothing | Y / N / unanswered persistence, CSV export, re-archive and contradiction validation |
 | `python3 tests/test_stage6_integration.py` | nothing | cumulative site identity, legacy migration, staged first archive, recovery, re-archive renaming, attachment preservation, duplicate-ID and instrument-state behavior |
 | `python3 tests/test_stage8_photo_manifest.py` | nothing | expected-photo schema/migration, archive registration, recovery, explicit cancellation, limits, queue-ID identity and idempotent server upload |

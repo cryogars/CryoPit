@@ -76,8 +76,8 @@ one-to-one onto the `Source` tags in the `density_gap_filled` CSV:
 | Style | Meaning | Source tag |
 |---|---|---|
 | White, hatched `/`, black edge, whisker | Measured (mean of the profiles measured on that interval; whisker = ± half-range, absent when only one profile) | `measured`, `measured (clipped)` |
-| Hatched + grey dashed extension, **one whisker spanning the merged extent** | Edge interval extended to HS / to 0 (≤ 25 % rule) | `measured (extended to HS/0)` |
-| Grey, dashed edge, no hatch, no whisker | Derived interval | `gap-filled (neighbor-mean)`, `gap-filled (mean-fallback)` |
+| Hatched + grey dashed extension, **one whisker spanning the merged extent** | Nearest measured edge interval extended to HS / to 0 | `measured (extended to HS/0)` |
+| Grey, dashed edge, no hatch, no whisker | Derived middle-gap interval | `gap-filled (neighbor-mean)` |
 
 Source tags and derivations are documented in full in
 [docs/DENSITY.md](DENSITY.md).

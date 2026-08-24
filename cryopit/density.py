@@ -24,14 +24,10 @@ Implements the documented CryoPit density rules (README "Density rules"):
      measurement, larger weight).                    -> "measured (extended to 0)"
   8. Top gap: mirror of rule 7.                      -> "measured (extended to HS)"
 
-     There is no size limit on either. An earlier version extended only gaps
-     up to 25% of HS and filled anything larger with the thickness-weighted
-     mean of the WHOLE pit, which is the wrong estimate for an edge: a top gap
-     filled with the pit mean is far too dense, because surface snow is the
-     lightest in the pack and the mean is dominated by everything below it.
-     The nearest measured interval is the best information available at an
-     edge regardless of how far it has to reach, so it carries. The extent is
-     reported instead of being silently swapped for a different method.
+     There is no size limit on either edge extension. The nearest measured
+     interval is the best information available at an edge regardless of how
+     far it has to reach, so it carries to the surface or ground. The extent
+     is reported explicitly in the source tag.
 
   DERIVED VALUES
   10. Overall bulk density and SWE come from the gap-filled interval-mean
@@ -50,10 +46,6 @@ SRC_EXT_BOTTOM = "measured (extended to 0)"
 SRC_EXT_TOP = "measured (extended to HS)"
 SRC_CLIPPED = "measured (clipped)"
 SRC_NEIGHBOR = "gap-filled (neighbor-mean)"
-SRC_FALLBACK = "gap-filled (mean-fallback)"   # retained: no-measurement pits only
-
-EDGE_GAP_MAX_FRACTION = 0.25   # the "25% guard" for top/bottom extensions
-
 
 class DensityValidationError(ValueError):
     """Blocking data problem (e.g. an inverted interval)."""

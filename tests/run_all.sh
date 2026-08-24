@@ -16,6 +16,7 @@ run() {
 }
 
 run "density rules"        "$PYTHON_BIN" tests/test_density.py
+run "density rail parity"  node tests/test_density_rail_parity.mjs
 run "instrument states"     "$PYTHON_BIN" tests/test_instrument_state.py
 run "Stage 1-5 integration"  "$PYTHON_BIN" tests/test_stage6_integration.py
 run "Stage 8 photo manifest" "$PYTHON_BIN" tests/test_stage8_photo_manifest.py
