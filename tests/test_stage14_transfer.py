@@ -17,6 +17,7 @@ import types
 import uuid
 import zipfile
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 TMP = Path(tempfile.mkdtemp(prefix="cryopit-stage14-"))
@@ -517,10 +518,12 @@ def test_semantic_identity_and_provenance_tampering_is_rejected():
 
 def test_source_pending_archive_is_not_exportable():
     reset_source()
-    failed = SRC.archive_lifecycle.archive_payload(
-        payload("PENDING"), None,
-        lambda _p: (_ for _ in ()).throw(RuntimeError("render failed")),
-    )
+    with patch.object(__import__("logging").getLogger(SRC.archive_lifecycle.__name__), "exception") as expected_log:
+        failed = SRC.archive_lifecycle.archive_payload(
+            payload("PENDING"), None,
+            lambda _p: (_ for _ in ()).throw(RuntimeError("render failed")),
+        )
+    expected_log.assert_called_once()
     assert failed["pending"]
     try:
         bundle_for(TMP / "pending.zip")
