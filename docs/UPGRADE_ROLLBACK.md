@@ -11,7 +11,7 @@ pending archive and attachment journals.
 3. create and verify a CryoPit backup bundle;
 4. record the current application ZIP/image digest and environment file;
 5. copy the release candidate to a new application directory;
-6. install `requirements.lock` in a new virtual environment;
+6. confirm Python 3.11+ and install `requirements.lock` in a new virtual or Conda environment;
 7. run the complete test suite against disposable data.
 
 ## Upgrade
