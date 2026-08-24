@@ -21,7 +21,7 @@
 # Either way, /data must be REAL LOCAL DISK (see the WAL warning in the
 # README): never a Drive/Dropbox-synced folder or network filesystem. All
 # CRYOPIT_* settings can be overridden with -e flags or an --env-file. Full
-# walkthrough: DEPLOYMENT.md.
+# walkthrough: docs/DEPLOYMENT.md.
 
 FROM python:3.12-slim
 

@@ -169,4 +169,4 @@ python -m cryopit.transfer \
 On a central installation, `import --owner` is mandatory. It is the trusted,
 stable institutional identity that will own the imported pits. The importer does
 not trust an owner requested by the bundle itself. Run a verified backup and a
-`--dry-run` before a real import. See [docs/MERGING.md](docs/MERGING.md).
+`--dry-run` before a real import. See [MERGING.md](MERGING.md).

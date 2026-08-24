@@ -331,4 +331,4 @@ return `503`, rejects new API writes, and holds the shared storage lock. In a
 load-balanced deployment, drain the node before import and ensure all workers
 sharing the database/export pair honor the same maintenance marker. Retain the
 original ZIP and result report for audit. Full operating details and conflict
-rules are in [docs/MERGING.md](docs/MERGING.md).
+rules are in [MERGING.md](MERGING.md).

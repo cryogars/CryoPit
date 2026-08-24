@@ -136,7 +136,7 @@ NO_DATA        = -9999
 
 # SQLite journal mode. WAL (default) gives concurrent readers+writer on REAL
 # LOCAL DISK; DELETE is the conservative classic mode for network-backed
-# storage (e.g. PythonAnywhere). Full trade-offs: CONFIGURATION.md.
+# storage (e.g. PythonAnywhere). Full trade-offs: docs/CONFIGURATION.md.
 SQLITE_JOURNAL = os.environ.get("CRYOPIT_SQLITE_JOURNAL", "WAL").upper()
 if SQLITE_JOURNAL not in ("WAL", "DELETE", "TRUNCATE", "PERSIST", "MEMORY", "OFF"):
     SQLITE_JOURNAL = "WAL"

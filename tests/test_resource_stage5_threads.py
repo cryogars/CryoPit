@@ -79,8 +79,8 @@ def test_waitress_receives_configured_thread_count_and_startup_reports_caps():
 
 def test_stage5_docs_treat_threads_as_tunable_not_heavy_memory_control():
     readme = (ROOT / "README.md").read_text()
-    config_doc = (ROOT / "CONFIGURATION.md").read_text()
-    deploy = (ROOT / "DEPLOYMENT.md").read_text()
+    config_doc = (ROOT / "docs" / "CONFIGURATION.md").read_text()
+    deploy = (ROOT / "docs" / "DEPLOYMENT.md").read_text()
     production = (ROOT / ".env.production.example").read_text()
 
     assert "CRYOPIT_THREADS=8" in readme

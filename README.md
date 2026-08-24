@@ -130,7 +130,7 @@ power-loss durability.
 
 Operational references:
 
-* **[DEPLOYMENT.md](DEPLOYMENT.md)** — local, Docker, and institutional deployment.
+* **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** — local, Docker, and institutional deployment.
 * **[docs/SECURITY.md](docs/SECURITY.md)** — SSO trust boundary and authorization limits.
 * **[docs/BACKUP_RESTORE.md](docs/BACKUP_RESTORE.md)** — consistent database + export backups.
 * **[docs/UPGRADE_ROLLBACK.md](docs/UPGRADE_ROLLBACK.md)** — migration and rollback procedure.
@@ -191,7 +191,7 @@ See **[docs/MERGING.md](docs/MERGING.md)** for the complete protocol.
 
 ## Deploying for Multiple Users
 
-CryoPit can be hosted so several people reach it over a URL. See **[DEPLOYMENT.md](DEPLOYMENT.md)** on how to do that. A ready-to-use **[Dockerfile](Dockerfile)** is included:
+CryoPit can be hosted so several people reach it over a URL. See **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** on how to do that. A ready-to-use **[Dockerfile](Dockerfile)** is included:
 
 ```bash
 docker build -t cryopit .
@@ -398,7 +398,7 @@ fields are corrected.
 
 ## Configuration
 
-CryoPit reads these environment variables (all optional, defaults shown). You can set them in a `.env` file in the project directory — copy **[.env.example](.env.example)** to `.env` and uncomment what you want to change. **[CONFIGURATION.md](CONFIGURATION.md)** documents every setting with its trade-offs (including the SQLite journal modes for hosted deployments).
+CryoPit reads these environment variables (all optional, defaults shown). You can set them in a `.env` file in the project directory — copy **[.env.example](.env.example)** to `.env` and uncomment what you want to change. **[docs/CONFIGURATION.md](docs/CONFIGURATION.md)** documents every setting with its trade-offs (including the SQLite journal modes for hosted deployments).
 
 | Variable | Default | Purpose |
 |---|---|---|
@@ -422,7 +422,7 @@ CryoPit reads these environment variables (all optional, defaults shown). You ca
 | `CRYOPIT_RESEARCH_GROUP` | `CryoGARS` | Research group (shown in the in-app topbar) |
 | `CRYOPIT_INSTITUTION` | `Boise State University` | Institution / university (shown in the browser tab title) |
 | `CRYOPIT_CAMPAIGN` | Current water year; e.g., `WY2026` | Default campaign code. Set this to pin a fixed value |
-| `CRYOPIT_SQLITE_JOURNAL` | `WAL` | SQLite journal mode; use `DELETE` on network-backed hosting (see CONFIGURATION.md) |
+| `CRYOPIT_SQLITE_JOURNAL` | `WAL` | SQLite journal mode; use `DELETE` on network-backed hosting (see docs/CONFIGURATION.md) |
 
 In any server or Docker deployment, set `CRYOPIT_DB_PATH` and `CRYOPIT_EXPORT_DIR` to explicit absolute paths (or a mounted volume), so data doesn't land in an unexpected working directory.
 
@@ -467,7 +467,7 @@ python tests/evaluate_resource_stage7.py stage6-soak.json --ram-gib 3.5
 
 A `PASS` is the production-sizing result. `PROVISIONAL` means one or more final
 conditions were not demonstrated, for example the test used a HEIC proxy, ran
-on a materially larger host, or omitted the full soak. See `DEPLOYMENT.md` for
+on a materially larger host, or omitted the full soak. See `docs/DEPLOYMENT.md` for
 the full policy and rationale.
 
 ---

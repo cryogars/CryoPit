@@ -157,7 +157,7 @@ def test_autofill_and_copy_remain_real_values_not_example_placeholders():
 
 
 def test_example_placeholder_contract_is_documented():
-    cfg = (ROOT / "CONFIGURATION.md").read_text(encoding="utf-8")
+    cfg = (ROOT / "docs" / "CONFIGURATION.md").read_text(encoding="utf-8")
     env = (ROOT / ".env.example").read_text(encoding="utf-8")
     prod = (ROOT / ".env.production.example").read_text(encoding="utf-8")
     assert '`CRYOPIT_SHOW_EXAMPLE_PLACEHOLDERS` | `false`' in cfg

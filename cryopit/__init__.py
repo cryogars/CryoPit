@@ -4,7 +4,7 @@ Run it:
     python -m cryopit                      # waitress (or Flask dev fallback)
     waitress-serve --call cryopit:make_app # any WSGI server, via the factory
 
-Configuration is env-driven (CRYOPIT_*); see CONFIGURATION.md.
+Configuration is env-driven (CRYOPIT_*); see docs/CONFIGURATION.md.
 """
 from __future__ import annotations
 
