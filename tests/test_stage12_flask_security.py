@@ -16,6 +16,7 @@ import tempfile
 import uuid
 import zipfile
 from pathlib import Path
+from unittest.mock import patch
 
 try:
     import flask  # noqa: F401
@@ -201,8 +202,10 @@ def test_cross_owner_recovery_is_denied_without_disclosure():
         conn.commit()
     finally:
         conn.close()
-    response = client.post(f"/api/recover/{BOB_ID}",
-                           headers=headers("alice-subject", csrf=True))
+    with patch.object(__import__("logging").getLogger(web.__name__), "exception") as expected_log:
+        response = client.post(f"/api/recover/{BOB_ID}",
+                               headers=headers("alice-subject", csrf=True))
+    expected_log.assert_called_once()
     assert response.status_code == 409
     assert "Bob Ridge" not in response.get_data(as_text=True)
 
@@ -285,7 +288,9 @@ def test_oversized_body_and_internal_errors_are_safe():
                            headers=headers("alice-subject", csrf=True))
     assert response.status_code == 413
 
-    boom = client.get("/api/stage12-boom", headers=headers("alice-subject"))
+    with patch.object(app.logger, "exception") as expected_log:
+        boom = client.get("/api/stage12-boom", headers=headers("alice-subject"))
+    expected_log.assert_called_once()
     text = boom.get_data(as_text=True)
     assert boom.status_code == 500
     assert "/srv/secret" not in text
