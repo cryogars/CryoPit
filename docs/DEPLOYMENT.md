@@ -34,8 +34,7 @@ Named volumes live inside Docker's storage area (on Docker Desktop, inside
 its VM), which is exactly why they suit the database and don't suit exports.
 
 **Rules that always apply:** `/data` must be real local disk — never a
-Drive/Dropbox-synced folder or a network filesystem (WAL-mode SQLite, see the
-README warning). On Linux hosts, a bind-mounted folder must be writable by
+Drive/Dropbox-synced folder or a network filesystem (WAL-mode SQLite; see [CONFIGURATION.md](CONFIGURATION.md)). On Linux hosts, a bind-mounted folder must be writable by
 the container's unprivileged user (UID of `cryopit`, typically 1000):
 `sudo chown -R 1000 ~/cryopit-data` if you hit permission errors.
 
@@ -287,7 +286,7 @@ must not show material post-warm-up RSS growth.
 | Symptom | Cause / fix |
 |---|---|
 | "Port 8502 is already in use…" on start | Another CryoPit (or other app) holds the port. Stop it, or `CRYOPIT_PORT=8503`. |
-| `database is locked` errors, corrupted DB | The DB sits on a synced/network folder. Move it to local disk (WAL warning in the README). |
+| `database is locked` errors, corrupted DB | The DB sits on a synced/network folder. Move it to local disk (see [CONFIGURATION.md](CONFIGURATION.md)). |
 | Permission denied writing /data (Docker, Linux host) | Bind-mounted folder not writable by container UID: `sudo chown -R 1000 <folder>`. |
 | App reachable on the host but not from other machines | Bound to 127.0.0.1. Set `CRYOPIT_HOST=0.0.0.0` (deliberately — read §2/§3 first). |
 | Everyone's pits appear under one user | No SSO in front / trust flag off — that's the intended shared-dev-user mode. See §3. |

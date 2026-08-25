@@ -31,7 +31,7 @@ Raising the thread count does not raise HEIC or profile concurrency. It only giv
 
 | Variable | Default | Notes |
 |---|---|---|
-| `CRYOPIT_DB_PATH` | `cryopit.db` | SQLite file, created if absent. Real local disk only — never a Drive/Dropbox-synced folder or network filesystem (see the README's WAL warning). Relative paths resolve against the launch directory; prefer absolute for anything long-lived. |
+| `CRYOPIT_DB_PATH` | `cryopit.db` | SQLite file, created if absent. Real local disk only — never a Drive/Dropbox-synced folder or network filesystem (see the SQLite journal-mode guidance below). Relative paths resolve against the launch directory; prefer absolute for anything long-lived. |
 | `CRYOPIT_EXPORT_DIR` | `exports` | Pit folders plus archive/attachment staging, temporary download scratch files, trash, recovery journals, and `.locks/storage.lock`. Local disk is recommended; a network/synced filesystem requires a single process and verified rename/locking behavior. |
 | `CRYOPIT_SQLITE_JOURNAL` | `WAL` | SQLite journal mode — see the table below. |
 

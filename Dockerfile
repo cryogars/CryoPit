@@ -18,8 +18,8 @@
 #     -v /srv/snow/exports:/data/exports \
 #     cryopit
 #
-# Either way, /data must be REAL LOCAL DISK (see the WAL warning in the
-# README): never a Drive/Dropbox-synced folder or network filesystem. All
+# Either way, /data must be REAL LOCAL DISK (see the SQLite storage guidance in
+# docs/CONFIGURATION.md): never a Drive/Dropbox-synced folder or network filesystem. All
 # CRYOPIT_* settings can be overridden with -e flags or an --env-file. Full
 # walkthrough: docs/DEPLOYMENT.md.
 
@@ -40,7 +40,7 @@ COPY cryopit/ ./cryopit/
 # Inside a container the app must bind 0.0.0.0 to be reachable through the
 # published port; the container boundary is what limits exposure. Identity
 # stays off by default — set CRYOPIT_TRUST_PROXY_AUTH=true only when an
-# authenticating reverse proxy fronts this container (see README).
+# authenticating reverse proxy fronts this container (see docs/DEPLOYMENT.md).
 ENV CRYOPIT_HOST=0.0.0.0 \
     CRYOPIT_PORT=8502 \
     CRYOPIT_DB_PATH=/data/cryopit.db \

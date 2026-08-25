@@ -10,7 +10,7 @@ function drawMini(){
   document.getElementById('mc-hs').textContent=HS?HS+' cm':'—';
   document.getElementById('mc-lay').textContent=strat.length;
   // Bulk density and SWE per the documented CryoPit density rules
-  // (README "Density rules"): sort surface->ground, clip overlaps (upper
+  // (docs/DENSITY.md): sort surface->ground, clip overlaps (upper
   // interval wins), per-interval mean of measured profiles, then vertical
   // gap filling — middle gap = mean of neighbours; each edge gap extends
   // the nearest measured interval all the way to the surface or ground.

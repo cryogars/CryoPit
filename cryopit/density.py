@@ -1,6 +1,6 @@
 """Density gap-filling and derived quantities (bulk density, SWE).
 
-Implements the documented CryoPit density rules (README "Density rules"):
+Implements the documented CryoPit density rules (docs/DENSITY.md):
 
   DATA
   1. The database stores measured values only. Everything here is DERIVED at

@@ -1,4 +1,4 @@
-"""CryoPit density-rule tests (README "Density rules"). Plain asserts, no
+"""CryoPit density-rule tests (docs/DENSITY.md). Plain asserts, no
 test framework needed:  python3 tests/test_density.py"""
 import os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))

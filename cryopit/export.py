@@ -90,7 +90,7 @@ def _safe_name(s, fallback="unnamed"):
 
 def _fname(m, kind):
     """{CAMPAIGN}_{PitID}_{YYYYMMDD}_{parameter}_v01_0.csv — the SnowEx-style
-    convention documented in the README (restored from the original)."""
+    convention documented in docs/STRUCTURE.md (restored from the original)."""
     camp = _safe_name(m.get("campaign") or CAMPAIGN, "campaign")
     pid = _safe_name(m.get("pit_id"), "pit")
     dstr = _safe_name((m.get("date") or "").replace("-", ""), "nodate")
@@ -252,7 +252,7 @@ def _build_csvs(payload):
     ]
     out[_fname(m, "density")] = _csv(rows)
 
-    # -- density_gap_filled (derived; see README "Density rules") -------------
+    # -- density_gap_filled (derived; see docs/DENSITY.md) -------------
     # The verbatim file above is the measurement record; this one is the
     # analysis-ready column: geometry cleaned (overlaps clipped, upper wins),
     # every vertical gap resolved, per-row provenance in Source. Cells of
