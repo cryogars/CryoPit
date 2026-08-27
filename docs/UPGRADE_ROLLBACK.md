@@ -35,14 +35,14 @@ post-upgrade schema. Otherwise:
 Never point two different CryoPit versions at the same live SQLite database and
 export tree simultaneously.
 
-## Stage 14 revision migration
+## Revision and transfer-audit migration
 
-On first Stage 14 startup, CryoPit creates `app_metadata`, `site_revisions`,
-`transfer_imports`, and `transfer_import_items`, adds
-`sites.current_revision_id`, generates one persistent installation UUID, and
-backfills each readable pre-existing pit as revision 1 without changing its
-scientific payload or export folder.
+When upgrading a database that predates revision-aware field transfer, CryoPit
+creates `app_metadata`, `site_revisions`, `transfer_imports`, and
+`transfer_import_items`, adds `sites.current_revision_id`, generates one persistent
+installation UUID, and backfills each readable pre-existing pit as revision 1
+without changing its scientific payload or export folder.
 
-A pre-Stage-14 application does not understand imported revision/audit state.
-Use the verified pre-upgrade backup for rollback rather than continuing to write
-with an older build against the migrated live database.
+Older CryoPit builds that predate this schema do not understand imported revision
+and audit state. Use the verified pre-upgrade backup for rollback rather than
+continuing to write with an older build against the migrated live database.
