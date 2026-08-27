@@ -134,7 +134,6 @@ See **[docs/MERGING.md](docs/MERGING.md)** for export, inspection, dry-run, impo
 | Archive structure | [docs/STRUCTURE.md](docs/STRUCTURE.md) |
 | Validation | [docs/VALIDATION.md](docs/VALIDATION.md) |
 | Interface and accessibility | [docs/INTERFACE.md](docs/INTERFACE.md) |
-| Project conventions | [docs/CONVENTIONS.md](docs/CONVENTIONS.md) |
 | Release checks | [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md) |
 | Future work | [docs/FUTURE_WORK.md](docs/FUTURE_WORK.md) |
 | Test suite | [tests/README.md](tests/README.md) |
