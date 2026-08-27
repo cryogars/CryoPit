@@ -6,11 +6,11 @@ What happens to an image between your camera and the archive.
 
 | | |
 |---|---|
-| **Accepted** | JPEG, PNG, WebP, HEIC — plus PDF for the pit sheet only |
+| **Accepted** | JPEG, PNG, WebP, HEIC - plus PDF for the pit sheet only |
 | **Resolution** | untouched. Whatever your camera shot is what gets stored |
 | **HEIC** | converted to JPEG, same pixel dimensions |
 | **PNG / WebP** | stored exactly as uploaded, *not* converted |
-| **Size limit** | 10 MB per file |
+| **Size limit** | 10 MB per file by default; configurable with `CRYOPIT_ATTACHMENT_MAX_MB` |
 | **Identity** | the file's bytes, the pit, the category, and (for layer photos) the depth interval |
 
 **Not everything comes out as JPEG.** Only HEIC is converted. A PNG stays a
@@ -22,7 +22,7 @@ PNG.
 
 **Pixel dimensions.** A 4032 × 3024 photograph is stored as 4032 × 3024.
 
-It does **not** mean 300 DPI. DPI is a printing instruction stored as metadata —
+It does **not** mean 300 DPI. DPI is a printing instruction stored as metadata;
 it says how large to print an image, not how much detail it holds. The same
 4032 × 3024 photograph is 13 inches wide at 300 DPI and 40 inches wide at 100
 DPI, with identical pixels either way. For a photograph of a crystal card, the
@@ -30,21 +30,17 @@ pixel count is what matters and the DPI tag is irrelevant.
 
 ### Why this is worth stating
 
-An earlier version redrew every uploaded image through a canvas at a maximum of
-2000 px and re-encoded it as JPEG at quality 0.8 — roughly a **75% cut in
-pixels**, plus compression artefacts, applied silently, with the original never
-leaving the phone.
-
-That is survivable for a pit-wall overview. It is not survivable for a grain
-photograph you would zoom into to argue facets versus rounds. The downscale was
-removed: the app no longer makes that decision for you.
+Downscaling or re-encoding a field photograph can remove detail needed for later
+scientific interpretation, especially for grain photographs. CryoPit therefore
+preserves uploaded JPEG, PNG, and WebP files as received and preserves pixel
+dimensions when HEIC conversion is required.
 
 ## 2. HEIC, and why it is the exception
 
 iPhones have shot **HEIC** by default since iOS 11, so it is the format a field
 crew is most likely to produce.
 
-CryoPit converts HEIC to JPEG on upload at full resolution — every pixel kept,
+CryoPit converts HEIC to JPEG on upload at full resolution - every pixel kept,
 `quality=95`, no chroma subsampling. Only the compression changes.
 
 **Why convert rather than store it?** So the archive stays in one format that
@@ -60,9 +56,9 @@ as it arrived rather than refused. Losing a field photograph because a server
 lacks a dependency would be the worse failure by far.
 
 HEIC decoding is intentionally bounded separately from normal web-request
-concurrency. `CRYOPIT_HEIC_CONCURRENCY` defaults to `1`, matching CryoPit's
-pre-resource-hardening effective serialization while allowing routine form and
-archive requests to continue. The HEIC source and converted JPEG are staged on
+concurrency. `CRYOPIT_HEIC_CONCURRENCY` defaults to `1`, providing a conservative
+memory bound while allowing routine form and archive requests to continue. The
+HEIC source and converted JPEG are staged on
 disk; only the decoder's unavoidable full-resolution pixel buffers remain in
 memory. Raise the conversion limit only after measuring representative iPhone
 files on the deployment host.
@@ -70,7 +66,7 @@ files on the deployment host.
 ### One thing to know about iPhones
 
 Uploading straight from the phone through Safari often converts HEIC to JPEG
-before CryoPit ever sees it — iOS does this itself for file inputs. The case
+before CryoPit ever sees it - iOS does this itself for file inputs. The case
 where a real HEIC arrives is usually photographs copied to a laptop first and
 uploaded from there. Either path works.
 
@@ -82,11 +78,11 @@ If you would rather avoid HEIC entirely:
 CryoPit reads the first few bytes of every upload and identifies the format from
 them. Renaming `notes.txt` to `photo.jpg` does not get it in.
 
-Those leading bytes are called *magic bytes* — a short signature at the start of
+Those leading bytes are called *magic bytes* - a short signature at the start of
 a file that identifies its format. A JPEG begins `FF D8 FF`; a PNG begins
 `89 P N G`.
 
-**HEIC is identified by its `ftyp` box.** `ftyp` is not a library or a package —
+**HEIC is identified by its `ftyp` box.** `ftyp` is not a library or a package;
 it is four literal characters sitting inside the file, at byte offset 4,
 followed by a four-character *brand* saying which flavour of the container it
 is:
@@ -98,7 +94,7 @@ is:
 ```
 
 HEIC shares this container format with MP4 video, which is why the brand matters
-— `heic` is a photograph, `mif1` and `heix` are related image brands, and
+Here, `heic` is a photograph, `mif1` and `heix` are related image brands, and
 CryoPit accepts that set.
 
 ## 4. The same photograph is never stored twice
@@ -220,7 +216,7 @@ category, and layer can satisfy another queue UUID without writing another file.
 
 ## 7. Recoverable server publication and deletion
 
-The browser/server manifest makes a retry identifiable; Stage 9 makes the
+The browser/server manifest makes a retry identifiable, while CryoPit makes the
 filesystem and SQLite sides recoverable. They still cannot participate in one
 true transaction, so CryoPit uses a small per-upload journal.
 
@@ -265,7 +261,7 @@ file cannot be mistaken for a valid attachment.
 
 ## 8. Where photographs are stored
 
-Never in the database — only their metadata is. The files live in the pit's
+Never in the database - only their metadata is. The files live in the pit's
 export folder:
 
 ```
@@ -279,7 +275,7 @@ exports/WY2026_GM1_20260210/uploads/
 ```
 
 Stratigraphy photographs are filed by **depth interval**, not by layer number,
-because a layer number shifts the moment anyone inserts a layer above it — while
+because a layer number shifts the moment anyone inserts a layer above it - while
 `062-045cm` keeps meaning the same snow.
 
 Files are renamed to the pit's convention on upload
@@ -293,15 +289,11 @@ derived from the database and come back if deleted; a photograph does not. See
 ## 9. The profile figure is not a photograph
 
 The `..._profile_v01_0.png` in each pit folder is drawn by CryoPit from your
-measurements — it is not an uploaded image, and it *is* regenerable.
+measurements - it is not an uploaded image, and it *is* regenerable.
 
-It is rendered at **150 DPI** by default (`CRYOPIT_FIGURE_DPI`), 9 × 7.2 inches, giving roughly **1335 × 1128
-pixels**. That is comfortable on screen and in a report. Set `CRYOPIT_FIGURE_DPI=300` to write a larger PNG (about 2670 × 2256 px). **300 DPI is the supported raster maximum.** Complex profiles at 600 DPI and above can require more than a GiB of transient server memory, while the PDF already provides scale-free output. The
-on-screen preview is always 150 regardless: it is redrawn on every edit, so a
-larger render would slow the form for no visible gain.
+The archived PNG is rendered at **150 DPI by default** (`CRYOPIT_FIGURE_DPI`; supported range 72–300). The profile canvas is adaptive rather than fixed: it starts at 9 × 7.2 inches and can grow with layer count, annotation needs, and very thin colored layers, up to 12 × 16 inches. Because the canvas and tight output bounds vary with the pit, there is no single fixed PNG pixel dimension.
 
-Usually you do not need the larger PNG. The PDF in the same folder is vector
-and already scale-free, which is what a journal actually wants.
+The on-screen preview always renders at 150 DPI. Increasing `CRYOPIT_FIGURE_DPI` affects the archived PNG, not the preview. Usually a larger raster is unnecessary: the PDF in the same folder is vector and already scale-free, which is the preferred format for arbitrary publication scaling. See [PLOTS.md](PLOTS.md) for the figure's current layout and rendering conventions.
 
 ## 10. Limits
 
@@ -309,6 +301,6 @@ and already scale-free, which is what a journal actually wants.
 |---|---|---|
 | Pit sheet | 1 PDF **or** 3 images | a scan is one thing or the other, never a mix |
 | Pit wall | 6 | |
-| Stratigraphy | 20 **per layer** | a 15-layer pit under a pit-wide cap of 20 averaged 1.3 a layer |
-| Whole pit | 150 | the point beyond which Download cannot assemble the result |
-| Per file | 10 MB | applies to the real file now that nothing is downscaled, so a high-end camera can exceed it |
+| Stratigraphy | 20 **per layer** | keeps each layer-specific queue bounded while allowing detailed documentation |
+| Whole pit | 150 | pit-wide manifest and transfer limit |
+| Per file | 10 MB by default | configurable with `CRYOPIT_ATTACHMENT_MAX_MB`; applies to the original upload before HEIC conversion |
