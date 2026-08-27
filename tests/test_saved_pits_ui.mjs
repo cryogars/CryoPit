@@ -1,4 +1,4 @@
-// Lightweight execution of the real Stage 10 Saved Pits finder without jsdom.
+// Lightweight execution of the real Saved Pits finder without jsdom.
 import fs from 'node:fs';
 import vm from 'node:vm';
 
@@ -89,9 +89,20 @@ check(!query.includes('owner='),'browser cannot choose an owner scope');
 const card=context._renderSavedPit(pages[0].pits[0]);
 const cardText=allText(card);
 check(card.tagName==='BUTTON','saved pit result is a keyboard-operable button');
-check(cardText.includes('Upper Ridge')&&cardText.includes('WY2026'),'result shows site and campaign context');
+check(card.children[0]?.className==='pit-id'&&card.children[0]?.textContent==='ALPHA','Pit ID is the primary row content');
+check(cardText.includes('Upper Ridge · Grand Mesa')&&cardText.includes('2026-01-10'),'result shows compact site/location and observation-date context');
+check(!cardText.includes('archived'),'ordinary saved-pit rows do not repeat the implicit archived state');
+check(!cardText.includes('2 attachments'),'ordinary rows do not spend sidebar space on non-actionable attachment counts');
 check(cardText.includes('1 photo pending')&&cardText.includes('1 missing'),'result shows pending and missing attachment states');
+check(card.children.some(c=>c.className==='pit-alerts'),'actionable states are grouped in the compact alert row');
 check(typeof card.listeners.click==='function','result loads by an explicit click handler');
+
+const quietCard=context._renderSavedPit(pages[0].pits[1]);
+check(quietCard.children.length===2,'a normal saved pit renders as exactly two quiet lines');
+check(!allText(quietCard).includes('WY2026'),'campaign is not repeated when site/location context is available');
+
+const fallbackCard=context._renderSavedPit({site_id:'s4',pit_id:'DELTA',campaign:'WY2028',date:'2028-01-12',pending_photos:0,missing_attachments:0});
+check(allText(fallbackCard).includes('WY2028 · 2028-01-12'),'campaign remains available as context when site/location is missing');
 
 // Clear filters before exercising page accumulation.
 els['saved-pits-search'].value='';els['saved-pits-campaign'].value='';
@@ -111,5 +122,5 @@ check(els['saved-pits-count'].textContent==='3 of 3','count advances after pagin
 check(els['saved-pits-more'].hidden===true,'load-more control hides at the end');
 check(els['saved-pits-campaign'].options.some(o=>o.value==='WY2027'),'campaign facets populate the filter');
 
-if(fail){console.error(`${fail} Stage 10 Saved Pits UI tests failed`);process.exit(1);}
-console.log(`${pass} Stage 10 Saved Pits UI tests passed`);
+if(fail){console.error(`${fail} Saved Pits UI tests failed`);process.exit(1);}
+console.log(`${pass} Saved Pits UI tests passed`);
