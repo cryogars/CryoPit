@@ -1,9 +1,9 @@
 # CryoPit interface contract
 
-Stage 13 is a presentation and interaction redesign over the hardened Stage 12
-application. It intentionally does not change scientific fields, calculations,
-validation rules, archive semantics, attachment consistency, ownership, or API
-contracts.
+This document describes CryoPit's presentation and interaction contract. Interface
+changes must preserve the scientific fields, calculations, validation rules, archive
+semantics, attachment consistency, ownership model, and API contracts unless those
+behaviors are deliberately changed and tested elsewhere.
 
 ## Field-use priorities
 
@@ -31,14 +31,14 @@ with the application.
 ## Form hierarchy
 
 Each scientific section retains its stable number, title, fields, IDs, and
-collection behavior. Stage 13 adds a concise subtitle and a separate status
+collection behavior. Each section includes a concise subtitle and a separate status
 badge. Field cards expose labels and units before values, and populated cards
 receive a small non-semantic marker. The marker is never used to determine
 validity or completeness.
 
-`95_stage13_ui.js` is presentation-only. It may add accessible names, CSS
-classes, and measured layout variables. It must not collect, validate, calculate,
-archive, upload, delete, or mutate field values.
+The presentation enhancement layer may add accessible names, CSS classes, and
+measured layout variables. It must not collect, validate, calculate, archive, upload,
+delete, or mutate field values.
 
 ## Responsive behavior
 
@@ -72,11 +72,11 @@ widths or under browser zoom.
 
 ## Testing
 
-Stage 13 adds source-level and lightweight runtime tests for offline assets,
-workspace hierarchy, section subtitles, accessible names, populated-state
-behavior, lifecycle banners, responsive rules, theme completeness, contrast,
-reduced motion, and print. The existing DOM assertion floor remains mandatory,
-and representative layouts are also exercised in a real Chromium runtime.
+Source-level and lightweight runtime tests cover offline assets, workspace
+hierarchy, section subtitles, accessible names, populated-state behavior, lifecycle
+banners, responsive rules, theme completeness, contrast, reduced motion, and print.
+The DOM assertion floor remains mandatory, and representative layouts are also
+exercised in a real Chromium runtime.
 
 ### Toggle-card focus geometry
 
