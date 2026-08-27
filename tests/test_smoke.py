@@ -88,7 +88,7 @@ app.config["TESTING"] = True
 c = app.test_client()
 SITE_IDS = {}
 
-# Stage 12 protects every state-changing API call with a token embedded in the
+# Every state-changing API call is protected with a token embedded in the
 # authenticated page. Keep the existing smoke test readable by adding that
 # header centrally to every test-client POST.
 _real_post = c.post

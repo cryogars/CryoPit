@@ -1,4 +1,4 @@
-"""Resource-hardening Stage 3: bounded, disk-backed HEIC conversion."""
+"""Bounded, disk-backed HEIC conversion resource tests."""
 from __future__ import annotations
 
 import hashlib
@@ -20,7 +20,7 @@ import cryopit.heic_conversion as heic
 from cryopit.upload_staging import cleanup_staged_upload, staging_dir, sweep_staged_uploads
 
 
-def test_default_conversion_limit_preserves_pre_stage3_serial_behavior():
+def test_default_conversion_limit_is_serial():
     assert heic.HEIC_CONCURRENCY == 1
 
 
@@ -79,7 +79,7 @@ def test_conversion_failure_releases_permit():
 
 def test_converter_writes_and_hashes_disk_backed_output_without_bytesio():
     # pillow-heif is optional in this test environment. A no-op registration
-    # module lets Pillow open a JPEG source so we can exercise the exact Stage 3
+    # module lets Pillow open a JPEG source so we can exercise the exact disk-backed
     # file-to-file encoder/digest/cleanup path without pretending this is a HEIC
     # codec correctness test.
     from PIL import Image
@@ -147,5 +147,5 @@ if __name__ == "__main__":
             failures += 1
             print("FAIL", test.__name__, repr(exc))
     if failures:
-        raise SystemExit(f"{failures} resource Stage 3 HEIC tests failed")
-    print(f"{len(TESTS)} resource Stage 3 HEIC tests passed")
+        raise SystemExit(f"{failures} resource HEIC tests failed")
+    print(f"{len(TESTS)} resource HEIC tests passed")

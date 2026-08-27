@@ -1,13 +1,13 @@
-"""Reproducible CryoPit Stage 6 server-resource qualification harness.
+"""Reproducible CryoPit server-resource qualification harness.
 
 This is intentionally not part of the normal CI suite: qualification loads are
 large and machine-specific. Run it on the deployment host after installing
-``requirements.lock``. It exercises the exact Stage 1/2/3/4 resource paths in
+``requirements.lock``. It exercises the production download/upload/HEIC/profile resource paths in
 one process and emits JSON suitable for attaching to an infrastructure ticket.
 
 Examples:
-  python tests/benchmark_resource_stage6.py --quick
-  python tests/benchmark_resource_stage6.py --qualification --output stage6.json
+  python tests/benchmark_server_resources.py --quick
+  python tests/benchmark_server_resources.py --qualification --output server-resources.json
 """
 from __future__ import annotations
 
@@ -41,7 +41,7 @@ class _ProcMetrics:
             self._proc = None
         else:
             raise SystemExit(
-                "Stage 6 benchmark needs psutil on this platform; install it only "
+                "Server-resource benchmark needs psutil on this platform; install it only "
                 "for qualification (it is not a CryoPit runtime dependency)."
             )
 
@@ -192,7 +192,7 @@ def main():
         image = Image.new("RGB", (width, height), (135, 145, 155))
         image.save(source, format="JPEG", quality=95)
         image.close()
-        # Let the Stage 3 file-to-file helper exercise the same Pillow decode /
+        # Let the file-to-file helper exercise the same Pillow decode /
         # encode path without claiming this is HEIC codec performance.
         import types
         sys.modules["pillow_heif"] = types.SimpleNamespace(register_heif_opener=lambda: None)

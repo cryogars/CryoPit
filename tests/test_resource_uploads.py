@@ -1,4 +1,4 @@
-"""Resource-hardening Stage 2: bounded-memory inbound upload staging."""
+"""Bounded-memory inbound upload staging resource tests."""
 from __future__ import annotations
 
 import hashlib
@@ -96,5 +96,5 @@ if __name__ == "__main__":
             failures += 1
             print("FAIL", test.__name__, repr(exc))
     if failures:
-        raise SystemExit(f"{failures} resource Stage 2 upload tests failed")
-    print(f"{len(TESTS)} resource Stage 2 upload tests passed")
+        raise SystemExit(f"{failures} resource upload tests failed")
+    print(f"{len(TESTS)} resource upload tests passed")

@@ -1,4 +1,4 @@
-"""Resource-hardening Stage 5: HTTP thread tuning and operator diagnostics."""
+"""HTTP thread tuning and operator diagnostics resource tests."""
 from __future__ import annotations
 
 import contextlib
@@ -77,7 +77,7 @@ def test_waitress_receives_configured_thread_count_and_startup_reports_caps():
     assert "profiles 2" in text
 
 
-def test_stage5_docs_treat_threads_as_tunable_not_heavy_memory_control():
+def test_docs_treat_threads_as_tunable_not_heavy_memory_control():
     config_doc = (ROOT / "docs" / "CONFIGURATION.md").read_text()
     deploy = (ROOT / "docs" / "DEPLOYMENT.md").read_text()
     production = (ROOT / ".env.production.example").read_text()
@@ -100,5 +100,5 @@ if __name__ == "__main__":
             failures += 1
             print("FAIL", test.__name__, repr(exc))
     if failures:
-        raise SystemExit(f"{failures} resource Stage 5 thread tests failed")
-    print(f"{len(TESTS)} resource Stage 5 thread tests passed")
+        raise SystemExit(f"{failures} resource thread tests failed")
+    print(f"{len(TESTS)} resource thread tests passed")

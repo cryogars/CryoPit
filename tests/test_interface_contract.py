@@ -1,4 +1,4 @@
-"""Stage 13 visual-system, responsive and accessibility regression checks."""
+"""Visual-system, responsive, and accessibility regression checks."""
 from __future__ import annotations
 
 import ast
@@ -177,7 +177,7 @@ def test_responsive_contrast_motion_and_print_modes_exist():
     assert "@media print" in CSS
 
 
-def test_stage13_buttons_and_attachment_states_are_explicitly_styled():
+def test_buttons_and_attachment_states_are_explicitly_styled():
     flat = re.sub(r"/\*[\s\S]*?\*/", "", CSS)
     for selector in (".workspace-action", ".workspace-link", ".workspace-current-actions button"):
         assert re.search(re.escape(selector) + r"\{[^}]*background", flat), selector
@@ -252,7 +252,7 @@ def test_optional_radio_groups_have_explicit_clear_actions():
     assert "background:transparent" in clear.group(1)
     assert ".radio-clear:focus-visible" in flat
 
-def test_section_status_anchor_supports_stage13_heading_wrapper():
+def test_section_status_anchor_supports_heading_wrapper():
     assert "title.closest('.sec-heading')" in UI_JS
 
 
@@ -275,5 +275,5 @@ if __name__ == "__main__":
             failures += 1
             print("FAIL", test.__name__, repr(exc))
     if failures:
-        raise SystemExit(f"{failures} Stage 13 UI tests failed")
-    print(f"{len(TESTS)} Stage 13 UI tests passed")
+        raise SystemExit(f"{failures} interface contract tests failed")
+    print(f"{len(TESTS)} interface contract tests passed")

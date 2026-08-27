@@ -1,4 +1,4 @@
-"""Stage 6 live Waitress qualification smoke.
+"""Live Waitress resource-qualification smoke test.
 
 Runs only when Flask + Waitress are installed. It starts the real CryoPit WSGI
 server with eight threads, launches two profile requests, and probes health
@@ -25,7 +25,7 @@ try:
     import flask  # noqa: F401
     import waitress  # noqa: F401
 except ImportError:
-    print("SKIP Stage 6 live Waitress test (Flask/Waitress unavailable)")
+    print("SKIP live Waitress resource test (Flask/Waitress unavailable)")
     raise SystemExit(0)
 
 sys.path.insert(0, str(ROOT))

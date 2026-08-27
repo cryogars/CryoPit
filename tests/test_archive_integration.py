@@ -1,4 +1,4 @@
-"""Cumulative Stage 1-5 integration tests without Flask.
+"""Cumulative archive integration tests without Flask.
 
 Covers immutable site identity, legacy migration, recoverable first archive,
 recoverable re-archive folder renaming, in-place attachment preservation, edit
@@ -353,5 +353,5 @@ if __name__ == "__main__":
     for test in tests:
         test()
         print("PASS", test.__name__)
-    print(f"{len(tests)} Stage 6 integration tests passed")
+    print(f"{len(tests)} archive integration tests passed")
 

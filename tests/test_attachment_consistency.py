@@ -1,4 +1,4 @@
-"""Stage 9 attachment filesystem/SQLite compensation and recovery tests."""
+"""Attachment filesystem/SQLite compensation and recovery tests."""
 from __future__ import annotations
 
 import hashlib
@@ -140,9 +140,9 @@ def prepare_staged(site_id, item, data, filename="reserved.jpg"):
     return folder, staged, rel
 
 
-def test_stage8_database_migrates_before_new_index_is_created():
+def test_legacy_database_migrates_before_new_index_is_created():
     # CREATE TABLE IF NOT EXISTS cannot add columns to an existing table, so
-    # indexes involving Stage 9 columns must be created by _migrate afterward.
+    # indexes involving later attachment columns must be created by _migrate afterward.
     db_path = Path(os.environ["CRYOPIT_DB_PATH"])
     exports = Path(os.environ["CRYOPIT_EXPORT_DIR"])
     if db_path.exists(): db_path.unlink()
@@ -162,7 +162,7 @@ def test_stage8_database_migrates_before_new_index_is_created():
         ):
             legacy_sql = legacy_sql.replace(line, "")
         # Removing the final attachment column leaves the preceding timestamp
-        # with a comma; restore the Stage 8 closing form.
+        # with a comma; restore the legacy closing form.
         legacy_sql = legacy_sql.replace(
             "    uploaded_at TEXT DEFAULT (datetime('now')),\n);",
             "    uploaded_at TEXT DEFAULT (datetime('now'))\n);")
@@ -365,4 +365,4 @@ if __name__ == "__main__":
     tests = sorted((n, f) for n, f in globals().items() if n.startswith("test_") and callable(f))
     for name, fn in tests:
         fn(); print("PASS", name)
-    print(f"{len(tests)} Stage 9 attachment-consistency tests passed")
+    print(f"{len(tests)} attachment-consistency tests passed")

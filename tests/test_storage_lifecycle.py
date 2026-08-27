@@ -1,4 +1,4 @@
-"""Stage 12 shared storage lock and crash-durability tests."""
+"""Shared storage lock and crash-durability tests."""
 from __future__ import annotations
 
 import builtins
@@ -70,7 +70,7 @@ def test_archive_and_attachment_operations_share_one_lock():
     assert archive_entered.wait(3)
     assert attachment_attempted.wait(3)
     # The attachment must remain outside until the archive releases the shared
-    # lifecycle lock. Separate Stage 9 lock files would fail this assertion.
+    # lifecycle lock. Separate per-feature lock files would fail this assertion.
     assert not attachment_entered.wait(0.15)
     release_archive.set()
     assert attachment_entered.wait(3)
@@ -171,5 +171,5 @@ if __name__ == "__main__":
             failures += 1
             print("FAIL", test.__name__, repr(exc))
     if failures:
-        raise SystemExit(f"{failures} Stage 12 storage-lifecycle tests failed")
-    print(f"{len(TESTS)} Stage 12 storage-lifecycle tests passed")
+        raise SystemExit(f"{failures} storage-lifecycle tests failed")
+    print(f"{len(TESTS)} storage-lifecycle tests passed")

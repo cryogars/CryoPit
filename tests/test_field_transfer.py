@@ -1,4 +1,4 @@
-"""Stage 14 one-way, revision-aware field transfer tests.
+"""One-way, revision-aware field transfer tests.
 
 Dependency-independent: Flask is stubbed because these tests exercise the
 storage/repository layer and CLI bundle protocol rather than HTTP routing.
@@ -575,4 +575,4 @@ if __name__ == "__main__":
     for name, test in tests:
         test()
         print("PASS", name)
-    print(f"{len(tests)} Stage 14 transfer tests passed")
+    print(f"{len(tests)} field-transfer tests passed")

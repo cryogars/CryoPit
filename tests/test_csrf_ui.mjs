@@ -63,4 +63,4 @@ for(const test of tests){
   catch(error){ failures++; console.error('FAIL',test.name,error); }
 }
 if(failures) process.exit(1);
-console.log(`${tests.length} Stage 12 CSRF UI tests passed`);
+console.log(`${tests.length} CSRF UI tests passed`);

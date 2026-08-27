@@ -1,4 +1,4 @@
-"""Resource-hardening Stage 1: disk-backed download ZIP lifecycle."""
+"""Disk-backed download ZIP lifecycle resource tests."""
 from __future__ import annotations
 
 import io
@@ -101,5 +101,5 @@ if __name__ == "__main__":
             failures += 1
             print("FAIL", test.__name__, repr(exc))
     if failures:
-        raise SystemExit(f"{failures} resource Stage 1 download tests failed")
-    print(f"{len(TESTS)} resource Stage 1 download tests passed")
+        raise SystemExit(f"{failures} resource download tests failed")
+    print(f"{len(TESTS)} resource download tests passed")

@@ -1,4 +1,4 @@
-"""Stage 10 owner-scoped Saved Pits search, filters and pagination tests."""
+"""Owner-scoped Saved Pits search, filters and pagination tests."""
 from __future__ import annotations
 
 import importlib
@@ -252,5 +252,5 @@ if __name__ == "__main__":
             failures += 1
             print("FAIL", test.__name__, repr(exc))
     if failures:
-        raise SystemExit(f"{failures} Stage 10 saved-pits tests failed")
-    print(f"{len(TESTS)} Stage 10 saved-pits tests passed")
+        raise SystemExit(f"{failures} Saved Pits tests failed")
+    print(f"{len(TESTS)} Saved Pits tests passed")

@@ -1,4 +1,4 @@
-"""Stage 12 framework-independent security checks."""
+"""Framework-independent security checks."""
 from __future__ import annotations
 
 import importlib
@@ -121,5 +121,5 @@ if __name__ == "__main__":
             failures += 1
             print("FAIL", test.__name__, repr(exc))
     if failures:
-        raise SystemExit(f"{failures} Stage 12 security tests failed")
-    print(f"{len(TESTS)} Stage 12 security tests passed")
+        raise SystemExit(f"{failures} security-core tests failed")
+    print(f"{len(TESTS)} security-core tests passed")

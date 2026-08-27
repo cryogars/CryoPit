@@ -1,4 +1,4 @@
-"""Stage 8 server-side expected-photo manifest and idempotent upload tests.
+"""Server-side expected-photo manifest and idempotent upload tests.
 
 Runs without Flask by importing the real HTTP module behind a tiny decorator /
 request stub.  Database, archive lifecycle, filesystem writes, upload route and
@@ -359,4 +359,4 @@ if __name__ == "__main__":
     for name, fn in tests:
         fn()
         print("PASS", name)
-    print(f"{len(tests)} Stage 8 photo-manifest tests passed")
+    print(f"{len(tests)} photo-manifest tests passed")

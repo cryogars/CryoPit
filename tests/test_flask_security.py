@@ -1,4 +1,4 @@
-"""Full Flask boundary tests for the Stage 12 release candidate.
+"""Full Flask boundary and security tests.
 
 These deliberately use real routes and two authenticated identities. They are
 skipped only when the deployment environment has not installed Flask.
@@ -249,7 +249,7 @@ def test_attachment_upload_streaming_route_stores_and_cleans_inbound_scratch():
     bad = b"not-a-real-jpeg" * 100
     good_q = str(uuid.uuid4())
     bad_q = str(uuid.uuid4())
-    payload = pit("STAGE2-UPLOAD", "Stage 2")
+    payload = pit("UPLOAD-LIMIT", "Upload Limit")
     payload["attachment_manifest"] = [
         {"queue_id": good_q, "category": "pitwall", "filename": "good.jpg",
          "mime_type": "image/jpeg", "size_bytes": len(good),
@@ -308,5 +308,5 @@ if __name__ == "__main__":
             failures += 1
             print("FAIL", test.__name__, repr(exc))
     if failures:
-        raise SystemExit(f"{failures} Stage 12 Flask security tests failed")
-    print(f"{len(TESTS)} Stage 12 Flask security tests passed")
+        raise SystemExit(f"{failures} Flask security tests failed")
+    print(f"{len(TESTS)} Flask security tests passed")

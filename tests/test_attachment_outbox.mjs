@@ -1,4 +1,4 @@
-/** Lightweight Stage 7 tests for the real durable attachment-outbox module.
+/** Lightweight tests for the real durable attachment-outbox module.
  * No jsdom or fake-indexeddb dependency is required: the module's documented
  * adapter seam is backed by an in-memory map while all queue/state logic is the
  * production code.

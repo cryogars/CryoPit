@@ -1,4 +1,4 @@
-"""Stage 12 backup/verify/restore tests."""
+"""Backup, verify, and restore tests."""
 from __future__ import annotations
 
 import json
@@ -229,5 +229,5 @@ if __name__ == "__main__":
             failures += 1
             print("FAIL", test.__name__, repr(exc))
     if failures:
-        raise SystemExit(f"{failures} Stage 12 operations tests failed")
-    print(f"{len(TESTS)} Stage 12 operations tests passed")
+        raise SystemExit(f"{failures} backup/restore tests failed")
+    print(f"{len(TESTS)} backup/restore tests passed")

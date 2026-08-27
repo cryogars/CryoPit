@@ -1,4 +1,4 @@
-"""Resource-hardening Stage 4: bounded, single-build profile rendering."""
+"""Bounded, single-build profile rendering resource tests."""
 from __future__ import annotations
 
 import os
@@ -145,5 +145,5 @@ if __name__ == "__main__":
             failures += 1
             print("FAIL", test.__name__, repr(exc))
     if failures:
-        raise SystemExit(f"{failures} resource Stage 4 profile tests failed")
-    print(f"{len(TESTS)} resource Stage 4 profile tests passed")
+        raise SystemExit(f"{failures} resource profile tests failed")
+    print(f"{len(TESTS)} resource profile tests passed")

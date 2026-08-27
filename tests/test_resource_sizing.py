@@ -5,7 +5,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location(
-    "stage7_eval", ROOT / "tests" / "evaluate_resource_stage7.py"
+    "server_sizing_eval", ROOT / "tests" / "evaluate_server_sizing.py"
 )
 mod = importlib.util.module_from_spec(spec)
 assert spec.loader is not None

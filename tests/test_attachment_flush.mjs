@@ -1,4 +1,4 @@
-/** Stage 7 upload lifecycle: failed server writes stay durable; confirmed
+/** Upload lifecycle: failed server writes stay durable; confirmed
  * writes (including byte duplicates) remove the local outbox entry. */
 import fs from 'node:fs';
 import vm from 'node:vm';

@@ -1,11 +1,11 @@
-"""Evaluate a Stage 6 qualification report against CryoPit's Stage 7 RAM policy.
+"""Evaluate a server-resource qualification report against CryoPit's RAM policy.
 
 This does not benchmark the machine. It evaluates JSON produced by
-``tests/benchmark_resource_stage6.py`` and reports whether a planned memory
+``tests/benchmark_server_resources.py`` and reports whether a planned memory
 allocation has been demonstrated on a representative host.
 
 Example:
-    python tests/evaluate_resource_stage7.py stage6-soak.json --ram-gib 3.5
+    python tests/evaluate_server_sizing.py server-resource-soak.json --ram-gib 3.5
 """
 from __future__ import annotations
 
@@ -53,7 +53,7 @@ def evaluate(report: dict, ram_gib: float) -> dict:
         failures.append("peak RSS is missing")
     elif peak > peak_limit:
         failures.append(
-            f"CryoPit peak RSS {peak:.0f} MiB exceeds the Stage 7 planning ceiling "
+            f"CryoPit peak RSS {peak:.0f} MiB exceeds the server planning ceiling "
             f"of {peak_limit:.0f} MiB ({APP_PEAK_FRACTION:.0%} of target RAM)"
         )
     else:
@@ -68,7 +68,7 @@ def evaluate(report: dict, ram_gib: float) -> dict:
     elif system_total is not None and system_total <= ram_mib * (1.0 + TARGET_HOST_TOLERANCE):
         if min_available < available_floor:
             failures.append(
-                f"minimum MemAvailable {min_available:.0f} MiB is below the Stage 7 "
+                f"minimum MemAvailable {min_available:.0f} MiB is below the server headroom "
                 f"floor of {available_floor:.0f} MiB"
             )
         else:
@@ -157,7 +157,7 @@ def evaluate(report: dict, ram_gib: float) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("report", help="Stage 6 qualification JSON")
+    parser.add_argument("report", help="server-resource qualification JSON")
     parser.add_argument("--ram-gib", type=float, default=3.5,
                         help="planned server RAM in GiB (default: 3.5)")
     parser.add_argument("--output", help="optional path for evaluator JSON")

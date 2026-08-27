@@ -1,4 +1,4 @@
-/** Stage 8 browser tests: manifest handoff and explicit server cancellation. */
+/** Browser tests: manifest handoff and explicit server cancellation. */
 import fs from 'node:fs';
 import vm from 'node:vm';
 import { webcrypto } from 'node:crypto';
@@ -126,4 +126,4 @@ await uiContext.deleteStoredAttachment('7','stored.jpg');
 check(uiContext.deleteCalls.some(c=>c.url==='/api/attachment/site-8/7/delete'&&c.opts?.method==='POST'),'stored attachment deletion targets immutable site and attachment IDs');
 check(uiContext.deleteCalls.some(c=>c.url==='/api/attachments/site-8'),'successful deletion refreshes the server attachment list');
 
-console.log(`${passed} Stage 8 browser manifest tests passed`);
+console.log(`${passed} browser manifest tests passed`);

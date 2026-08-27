@@ -1,4 +1,4 @@
-"""Resource-hardening Stage 6: crash/restart cleanup and permit recovery."""
+"""Crash/restart cleanup and permit recovery resource tests."""
 from __future__ import annotations
 
 import os
@@ -125,5 +125,5 @@ if __name__ == "__main__":
             failures += 1
             print("FAIL", test.__name__, repr(exc))
     if failures:
-        raise SystemExit(f"{failures} resource Stage 6 resilience tests failed")
-    print(f"{len(TESTS)} resource Stage 6 resilience tests passed")
+        raise SystemExit(f"{failures} resource resilience tests failed")
+    print(f"{len(TESTS)} resource resilience tests passed")
