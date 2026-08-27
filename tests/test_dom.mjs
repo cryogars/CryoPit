@@ -1033,20 +1033,22 @@ check(document.getElementById("toasts").getAttribute("aria-live") !== null,
   window.eval("_loaded_site_id=null;_loaded_pit_id=null"); window.eval("refreshAttachUI()");
 }
 
-// Toggling "No title" re-renders — but only when a profile is already drawn.
+// Toggling "No title" requests a re-render — but only when a profile is already
+// drawn. Stub drawProfile directly so this test stays independent of the
+// separate empty-profile/data-validation rules inside drawProfile().
 {
   const wrap = document.getElementById("profile-wrap");
   wrap.innerHTML = "";
   let renders = 0;
-  const realFetch = window.fetch;
-  window.fetch = (u, o) => { if (String(u).includes("/api/profile")) renders++; return realFetch(u, o); };
+  const realDrawProfile = window.drawProfile;
+  window.drawProfile = () => { renders++; };
   const cb = document.getElementById("fig-notitle");
   cb.checked = true; window.eval("toggleFigTitle()");
   check(renders === 0, "toggling with no profile on screen does not fire a render");
   const img = document.createElement("img"); img.src = "data:,"; wrap.appendChild(img);
   cb.checked = false; window.eval("toggleFigTitle()");
   check(renders === 1, "toggling with a profile on screen re-renders it");
-  window.fetch = realFetch; wrap.innerHTML = "";
+  window.drawProfile = realDrawProfile; wrap.innerHTML = "";
 }
 
 // Duplicate photos must be REPORTED, not merely refused. The server always
@@ -1094,7 +1096,7 @@ check(document.getElementById("toasts").getAttribute("aria-live") !== null,
   // the ARCHIVE toast specifically — it is multi-line, so joining all toasts
   // would destroy the structure being asserted
   const toasts = document.querySelector('#toasts [data-tid="archive"]').textContent;
-  // "Pit archived" / "Changes archived", not a bare "Archived": Stage 4 made
+  // "Pit archived" / "Changes archived", not a bare "Archived": the workflow made
   // creating a record and updating one distinct acts, and the toast has to say
   // which just happened — the whole point of that work is that you can never
   // mistake an edit for a copy. This is a fresh archive, so it must be the
@@ -1410,7 +1412,7 @@ check(document.getElementById("toasts").getAttribute("aria-live") !== null,
 
   // placement: it describes the section, so it sits with the name, not with
   // the controls
-  // The title may be wrapped (Stage 13 added .sec-heading around the title and
+  // The title may be wrapped (.sec-heading surrounds the title and
   // its subtitle), so this asks WHERE the glyph sits relative to the naming
   // block rather than assuming the title is a direct child. The intent is
   // unchanged: the glyph describes the section, so it belongs with the name and
