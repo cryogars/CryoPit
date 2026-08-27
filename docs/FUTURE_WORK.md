@@ -59,11 +59,11 @@ The complete collaboration design should also include:
 
 ### Institutional deployment validation
 
-Stage 12 provides the application-side SSO boundary, CSRF controls, security headers, health checks, release configuration, consistent backup/restore tooling, and route-level owner-isolation tests. The institution must still validate its specific SSO gateway, header mapping, TLS policy, logging, monitoring, restore drill, concurrent workload, large archives, large photo queues, and browser quota behavior before production approval. A supported read-only reporting path for supervisors should operate on verified backup copies rather than the live database.
+CryoPit provides the application-side SSO boundary, CSRF controls, security headers, health checks, release configuration, consistent backup/restore tooling, and route-level owner-isolation tests. The institution must still validate its specific SSO gateway, header mapping, TLS policy, logging, monitoring, restore drill, concurrent workload, large archives, large photo queues, and browser quota behavior before production approval. A supported read-only reporting path for supervisors should operate on verified backup copies rather than the live database.
 
 ### Transfer workflow enhancements
 
-Stage 14 delivers checksum-verified, one-way field-to-central transfer bundles,
+CryoPit currently provides checksum-verified, one-way field-to-central transfer bundles,
 append-only revision ancestry, dry-run classification, server-controlled owner
 mapping, idempotent import, fast-forward-only updates, attachment transfer,
 conflict quarantine, and an import audit trail. See [MERGING.md](MERGING.md).
