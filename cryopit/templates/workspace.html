@@ -4,7 +4,7 @@
       <div class="workspace-hero-copy">
         <span class="workspace-kicker">Field workspace</span>
         <h1 id="workspace-title">Cryo<strong>Pit</strong></h1>
-        <p>Build a new snow-pit record, continue work already underway, or return to your archived observations.</p>
+        <p>Build a new snow-pit record, continue work already underway, or edit an archived pit.</p>
       </div>
       <div class="workspace-assurance" aria-label="CryoPit workspace capabilities">
         <span><b aria-hidden="true">●</b> Owner-scoped</span>
@@ -23,7 +23,7 @@
       <button type="button" class="workspace-action" id="workspace-find"
               onclick="openSavedPitsFinder()">
         <span class="workspace-action-mark" aria-hidden="true">⌕</span>
-        <span class="workspace-action-copy"><strong>Find Existing Pit</strong><small>Search your archived observations</small></span>
+        <span class="workspace-action-copy"><strong>Edit Existing Pit</strong><small>Search archived pits and load one for editing</small></span>
         <span class="workspace-action-arrow" aria-hidden="true">→</span>
       </button>
     </div>
@@ -48,7 +48,7 @@
             <span class="workspace-card-icon" aria-hidden="true">◫</span>
             <div><span class="workspace-label">Your archive</span><h2 id="workspace-recent-title">Recent pits</h2></div>
           </div>
-          <button type="button" class="workspace-link" onclick="openSavedPitsFinder()">View all</button>
+          <button type="button" class="workspace-link" onclick="openSavedPitsFinder()">Find pit to edit</button>
         </div>
         <div id="workspace-recent" class="workspace-list" aria-live="polite" aria-busy="true">
           <span class="workspace-empty">Loading recent pits…</span>
