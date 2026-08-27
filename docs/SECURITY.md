@@ -87,7 +87,7 @@ same owner and can access the same pits; startup prints a prominent warning.
 
 ## Authorization limits
 
-Stage 12 does not add supervisors, administrators, teams, or campaign sharing.
+CryoPit does not currently provide supervisors, administrators, teams, or campaign sharing.
 Future role-based access is described in `docs/FUTURE_WORK.md`. Direct database
 reporting remains an operational path for authorized institutional staff, but
 should use a read-only copy rather than the live database.
@@ -102,7 +102,7 @@ pass with its supported Python and browser versions.
 
 ## Field-transfer trust boundary
 
-Stage 14 transfer ZIPs are treated as untrusted input. CryoPit rejects unsafe
+Transfer ZIPs are treated as untrusted input. CryoPit rejects unsafe
 ZIP paths, links, encrypted/duplicate members, undeclared files, excessive
 expanded size, checksum mismatches, invalid UUID/provenance fields, inconsistent
 revision chains, and attachment-manifest discrepancies before modifying the
