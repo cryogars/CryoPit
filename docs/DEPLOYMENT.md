@@ -161,9 +161,9 @@ default limits, three heavy requests can be actively working at once; an
 eight-thread server still has five request slots available for routine work,
 whereas a four-thread server has only one. Requests waiting for a heavy-path
 semaphore still occupy a Waitress thread, so treat 8 as a tested starting
-configuration rather than a guarantee. Stage 6 load/soak testing on the actual
-host should determine whether the deployment should stay at 8 or move higher
-or lower.
+configuration rather than a guarantee. Resource qualification and load/soak testing
+on the actual host should determine whether the deployment should stay at 8 or move
+higher or lower.
 
 CryoPit prints the configured HTTP, HEIC, and profile concurrency values at
 startup so operators can confirm the effective settings from service logs.
@@ -213,17 +213,17 @@ The bundle contains the SQLite database and complete export tree with a checksum
 ## 6. Server resource qualification
 
 Before fixing RAM or worker settings for a shared deployment, install the locked
-dependencies and run the Stage 6 qualification harness on the actual host:
+dependencies and run the resource qualification harness on the actual host:
 
 ```bash
 python -m pip install -r requirements.lock
-python tests/benchmark_resource_stage6.py --qualification --output stage6.json
+python tests/benchmark_server_resources.py --qualification --output server-resources.json
 ```
 
 For the campaign-style stability check, add a multi-hour soak:
 
 ```bash
-python tests/benchmark_resource_stage6.py --qualification --soak-minutes 180 --output stage6-soak.json
+python tests/benchmark_server_resources.py --qualification --soak-minutes 180 --output server-resource-soak.json
 ```
 
 The qualification load runs two complex profile renders, one high-resolution
@@ -243,11 +243,11 @@ full suite before production:
 ./tests/run_all.sh
 ```
 
-Stage 6 measurements are host-specific. Do not treat measurements from a
+Resource measurements are host-specific. Do not treat measurements from a
 development laptop or CI runner as the final RAM requirement for the
 institutional VM.
 
-### Stage 7 sizing decision
+### Server sizing decision
 
 The current resource-hardening evidence supports **3.5 GiB as a reasonable
 initial allocation** for one CryoPit application process with the documented
@@ -262,19 +262,19 @@ actual VM with the locked dependencies and real HEIC support, then evaluate it
 against the 3.5 GiB policy:
 
 ```bash
-python tests/benchmark_resource_stage6.py --qualification \
-  --soak-minutes 180 --output stage6-soak.json
-python tests/evaluate_resource_stage7.py stage6-soak.json \
-  --ram-gib 3.5 --output stage7-sizing.json
+python tests/benchmark_server_resources.py --qualification \
+  --soak-minutes 180 --output server-resource-soak.json
+python tests/evaluate_server_sizing.py server-resource-soak.json \
+  --ram-gib 3.5 --output server-sizing.json
 ```
 
-`PASS` means the target allocation was demonstrated under the Stage 7 policy.
+`PASS` means the target allocation was demonstrated under the server-sizing policy.
 `PROVISIONAL` means the result is encouraging but was not measured under all
 required conditions, such as real HEIC, a target-sized host, or the full soak.
 `FAIL` means the measured workload exceeded one or more deployment guardrails
 and RAM/concurrency should be revisited before production.
 
-The Stage 7 policy reserves substantial headroom rather than sizing to the
+The server-sizing policy reserves substantial headroom rather than sizing to the
 observed peak: CryoPit RSS must remain at or below 70% of the planned RAM,
 minimum host `MemAvailable` must remain at least 15% of planned RAM or 512 MiB
 (whichever is larger), swap growth must stay within 64 MiB, routine p95 latency
@@ -301,7 +301,7 @@ Before institutional release, complete `docs/RELEASE_CHECKLIST.md`, run `tests/r
 
 ## Importing records from field laptops
 
-Stage 14 uses one-way transfer bundles rather than attached SQLite databases or
+CryoPit uses one-way transfer bundles rather than attached SQLite databases or
 row copying. On each field laptop, resolve **Needs recovery**, allow available
 photo uploads to finish, and create a bundle outside the configured export root:
 
