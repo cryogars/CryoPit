@@ -73,10 +73,9 @@ body{
   min-height:36px;border-radius:var(--r-sm);background:var(--surface-raised)}
 .saved-pits-search-row button,.saved-pits-more{border-radius:var(--r-sm);background:var(--surface-raised)}
 .saved-pits-filter-more summary{min-height:32px;display:flex;align-items:center;color:var(--ink2)}
-.pit-entry{margin:3px 8px;width:calc(100% - 16px);border:1px solid transparent;border-radius:10px;padding:9px 10px}
-.pit-entry:hover,.pit-entry:focus-visible{background:var(--surface-raised);border-color:var(--rule2)}
+.pit-entry{margin-inline:10px;width:calc(100% - 20px);padding:10px 6px 9px}
+.pit-entry:hover,.pit-entry:focus-visible{background:var(--surface-soft)}
 .pit-entry .pit-id{font-size:11.5px}
-.pit-status{padding:3px 6px;background:var(--surface-raised)}
 
 /* ---------- form frame ---------- */
 .main{background:transparent}
