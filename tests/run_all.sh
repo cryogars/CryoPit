@@ -18,44 +18,44 @@ run() {
 run "density rules"        "$PYTHON_BIN" tests/test_density.py
 run "density rail parity"  node tests/test_density_rail_parity.mjs
 run "instrument states"     "$PYTHON_BIN" tests/test_instrument_state.py
-run "Stage 1-5 integration"  "$PYTHON_BIN" tests/test_stage6_integration.py
-run "Stage 8 photo manifest" "$PYTHON_BIN" tests/test_stage8_photo_manifest.py
-run "Stage 9 attachment consistency" "$PYTHON_BIN" tests/test_stage9_attachment_consistency.py
-run "Stage 10 Saved Pits" "$PYTHON_BIN" tests/test_stage10_saved_pits.py
-run "Stage 11 workspace" "$PYTHON_BIN" tests/test_stage11_workspace.py
-run "Stage 12 security" "$PYTHON_BIN" tests/test_stage12_security.py
-run "Stage 12 operations" "$PYTHON_BIN" tests/test_stage12_ops.py
-run "Stage 12 storage lifecycle" "$PYTHON_BIN" tests/test_stage12_storage_lifecycle.py
-run "Stage 13 interface" "$PYTHON_BIN" tests/test_stage13_ui.py
-run "Stage 14 field transfer" "$PYTHON_BIN" tests/test_stage14_transfer.py
-run "Resource Stage 1 downloads" "$PYTHON_BIN" tests/test_resource_stage1_downloads.py
-run "Resource Stage 2 uploads" "$PYTHON_BIN" tests/test_resource_stage2_uploads.py
-run "Resource Stage 3 HEIC" "$PYTHON_BIN" tests/test_resource_stage3_heic.py
-run "Resource Stage 4 profiles" "$PYTHON_BIN" tests/test_resource_stage4_profiles.py
-run "Resource Stage 5 threads" "$PYTHON_BIN" tests/test_resource_stage5_threads.py
-run "Resource Stage 6 resilience" "$PYTHON_BIN" tests/test_resource_stage6_resilience.py
-run "Resource Stage 6 live Waitress" "$PYTHON_BIN" tests/test_resource_stage6_live.py
-run "Resource Stage 7 sizing" "$PYTHON_BIN" tests/test_resource_stage7_sizing.py
+run "archive integration"  "$PYTHON_BIN" tests/test_archive_integration.py
+run "photo manifest" "$PYTHON_BIN" tests/test_photo_manifest.py
+run "attachment consistency" "$PYTHON_BIN" tests/test_attachment_consistency.py
+run "Saved Pits" "$PYTHON_BIN" tests/test_saved_pits.py
+run "workspace" "$PYTHON_BIN" tests/test_workspace.py
+run "security core" "$PYTHON_BIN" tests/test_security_core.py
+run "backup / restore" "$PYTHON_BIN" tests/test_backup_restore.py
+run "storage lifecycle" "$PYTHON_BIN" tests/test_storage_lifecycle.py
+run "interface contract" "$PYTHON_BIN" tests/test_interface_contract.py
+run "field transfer" "$PYTHON_BIN" tests/test_field_transfer.py
+run "resource downloads" "$PYTHON_BIN" tests/test_resource_downloads.py
+run "resource uploads" "$PYTHON_BIN" tests/test_resource_uploads.py
+run "resource HEIC" "$PYTHON_BIN" tests/test_resource_heic.py
+run "resource profiles" "$PYTHON_BIN" tests/test_resource_profiles.py
+run "resource threads" "$PYTHON_BIN" tests/test_resource_threads.py
+run "resource resilience" "$PYTHON_BIN" tests/test_resource_resilience.py
+run "resource live server" "$PYTHON_BIN" tests/test_resource_live_server.py
+run "resource sizing" "$PYTHON_BIN" tests/test_resource_sizing.py
 run "weather multi-select" "$PYTHON_BIN" tests/test_weather_multiselect.py
 run "ground-condition multi-select" "$PYTHON_BIN" tests/test_ground_multiselect.py
-run "Stage 13 interface behaviour" "$NODE_BIN" tests/test_stage13_ui.mjs
+run "interface behaviour" "$NODE_BIN" tests/test_interface_ui.mjs
 run "profile-table Enter navigation" "$NODE_BIN" tests/test_table_enter_navigation.mjs
 run "optional radio clear selection" "$NODE_BIN" tests/test_clearable_radios.mjs
 run "weather multi-select UI" "$NODE_BIN" tests/test_weather_multiselect.mjs
 run "ground-condition multi-select UI" "$NODE_BIN" tests/test_ground_multiselect.mjs
-run "Stage 12 CSRF UI" "$NODE_BIN" tests/test_stage12_csrf_ui.mjs
+run "CSRF UI" "$NODE_BIN" tests/test_csrf_ui.mjs
 run "instrument UI"         "$NODE_BIN"    tests/test_instrument_ui.mjs
 run "record workflow UI"    "$NODE_BIN"    tests/test_record_workflow_ui.mjs
 run "attachment outbox"    "$NODE_BIN"    tests/test_attachment_outbox.mjs
 run "attachment uploads"   "$NODE_BIN"    tests/test_attachment_flush.mjs
 run "attachment manifest UI" "$NODE_BIN"   tests/test_attachment_manifest_ui.mjs
-run "Saved Pits finder UI" "$NODE_BIN"   tests/test_stage10_saved_pits_ui.mjs
-run "workspace UI" "$NODE_BIN"   tests/test_stage11_workspace_ui.mjs
+run "Saved Pits finder UI" "$NODE_BIN"   tests/test_saved_pits_ui.mjs
+run "workspace UI" "$NODE_BIN"   tests/test_workspace_ui.mjs
 run "profile empty-state API" "$PYTHON_BIN" tests/test_profile_empty_state.py
 run "profile empty states" "$NODE_BIN" tests/test_profile_empty_state_ui.mjs
 run "profile figure"       "$PYTHON_BIN" tests/test_plot.py
 run "end-to-end smoke"     "$PYTHON_BIN" tests/test_smoke.py
-run "Stage 12 Flask security" "$PYTHON_BIN" tests/test_stage12_flask_security.py
+run "Flask security" "$PYTHON_BIN" tests/test_flask_security.py
 run "coordinate transform" "$NODE_BIN"    tests/test_coords.mjs
 run "DOM behaviour"        "$NODE_BIN"    tests/test_dom.mjs
 
