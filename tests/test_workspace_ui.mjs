@@ -1,4 +1,4 @@
-// Lightweight execution of the real Stage 11 workspace without jsdom.
+// Lightweight execution of the real workspace without jsdom.
 import fs from 'node:fs';
 import vm from 'node:vm';
 
@@ -92,7 +92,7 @@ check(els['workspace-photo-summary'].textContent.includes('server expects 2'),'p
 
 // Finder transition keeps the existing filter DOM untouched.
 context.openSavedPitsFinder();
-check(els.workspace.hidden===true&&els['app-shell'].hidden===false,'Find Existing Pit opens the field shell');
+check(els.workspace.hidden===true&&els['app-shell'].hidden===false,'Edit Existing Pit opens the field shell');
 check(els['saved-pits-search'].focused,'finder search receives focus');
 check(els['saved-pits-search'].value==='Upper Ridge','moving between workspace and finder preserves filters');
 check(indexForce===false,'finder expands the section index without clearing its state');
@@ -125,5 +125,5 @@ context.formDirty=()=>true;
 await context.workspaceStartNewPit();
 check(newPitCalls===1,'dirty Start New Pit delegates to the existing queue-and-draft safeguard');
 
-if(fail){console.error(`${fail} Stage 11 workspace UI tests failed`);process.exit(1);}
-console.log(`${pass} Stage 11 workspace UI tests passed`);
+if(fail){console.error(`${fail} workspace UI tests failed`);process.exit(1);}
+console.log(`${pass} workspace UI tests passed`);

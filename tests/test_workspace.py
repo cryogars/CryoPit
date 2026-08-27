@@ -1,4 +1,4 @@
-"""Stage 11 owner-scoped workspace summary and assembled-page tests."""
+"""Owner-scoped workspace summary and assembled-page tests."""
 from __future__ import annotations
 
 import importlib
@@ -139,6 +139,9 @@ def test_workspace_page_is_the_initial_operational_view():
     assert 'id="workspace"' in html
     assert 'id="workspace-new"' in html
     assert 'id="workspace-find"' in html
+    assert '>Edit Existing Pit<' in html
+    assert 'Search archived pits and load one for editing' in html
+    assert '>Find pit to edit<' in html
     assert 'id="workspace-current"' in html
     assert 'id="workspace-recent"' in html
     assert 'id="workspace-recovery"' in html
@@ -185,5 +188,5 @@ if __name__ == "__main__":
             failures += 1
             print("FAIL", test.__name__, repr(exc))
     if failures:
-        raise SystemExit(f"{failures} Stage 11 workspace tests failed")
-    print(f"{len(TESTS)} Stage 11 workspace tests passed")
+        raise SystemExit(f"{failures} workspace tests failed")
+    print(f"{len(TESTS)} workspace tests passed")
