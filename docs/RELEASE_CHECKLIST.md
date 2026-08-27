@@ -1,4 +1,4 @@
-# Stage 14 release checklist
+# CryoPit release checklist
 
 ## Build
 
