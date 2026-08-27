@@ -62,7 +62,7 @@ campaign and date range; and returns bounded pages ordered by observation date
 (newest first) by default, update time, or Pit ID. Attachment-status counts are calculated from the
 server manifest and attachment rows, not inferred from the filesystem.
 
-The Stage 11 workspace is the initial application view. It requests a compact
+The workspace is the initial application view. It requests a compact
 owner-scoped summary from `/api/workspace`, shows recent pits and recovery work,
 and combines server-side expected-photo counts with the current browser's
 IndexedDB outbox summary. The workspace and field form remain in one assembled
@@ -138,8 +138,8 @@ See [PHOTOGRAPHS.md](PHOTOGRAPHS.md) for image handling and
 
 ## Revision and field-transfer state
 
-Stage 14 adds identities and audit state in SQLite rather than embedding local
-integer database keys in transfer bundles:
+CryoPit stores revision identities and transfer audit state in SQLite rather than
+embedding local integer database keys in transfer bundles:
 
 ```text
 app_metadata.installation_id       persistent UUID for this CryoPit installation
