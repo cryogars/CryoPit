@@ -298,20 +298,27 @@ function _renderSavedPit(p){
   const button=document.createElement('button');
   button.type='button';button.className='pit-entry';button.title='Load '+p.pit_id;
   button.appendChild(_savedPitLine('pit-id',p.pit_id||'Unnamed pit'));
+
+  // The sidebar is fast access, not a second workspace. Keep ordinary rows to
+  // two quiet lines: identity first, then the most useful field context.
+  // Campaign remains searchable/filterable and is only shown as a fallback
+  // when site/location context is unavailable.
   const place=[p.site,p.location].filter(Boolean).join(' · ');
-  const context=[place,p.campaign].filter(Boolean).join(' · ');
-  if(context)button.appendChild(_savedPitLine('pit-context',context));
-  const details=[];
-  if(p.date)details.push(p.date);
-  const updated=p.updated_at?String(p.updated_at).slice(0,10):'';
-  if(updated&&updated!==p.date)details.push(`updated ${updated}`);
-  if(p.attachment_count)details.push(`${p.attachment_count} attachment${p.attachment_count===1?'':'s'}`);
-  if(details.length)button.appendChild(_savedPitLine('pit-date',details.join(' · ')));
-  const statuses=document.createElement('span');statuses.className='pit-statuses';
-  statuses.appendChild(_savedPitLine('pit-status archived','archived'));
-  if(p.pending_photos)statuses.appendChild(_savedPitLine('pit-status pending',`${p.pending_photos} photo${p.pending_photos===1?'':'s'} pending`));
-  if(p.missing_attachments)statuses.appendChild(_savedPitLine('pit-status missing',`${p.missing_attachments} missing`));
-  button.appendChild(statuses);
+  const meta=[];
+  if(place)meta.push(place);
+  else if(p.campaign)meta.push(p.campaign);
+  if(p.date)meta.push(p.date);
+  if(meta.length)button.appendChild(_savedPitLine('pit-meta',meta.join(' · ')));
+
+  // Saved pits are archived by definition, so only show states that require
+  // attention. Plain alert text is easier to scan in a 206 px sidebar than a
+  // row of status pills.
+  if(p.pending_photos||p.missing_attachments){
+    const alerts=document.createElement('span');alerts.className='pit-alerts';
+    if(p.pending_photos)alerts.appendChild(_savedPitLine('pit-alert pending',`${p.pending_photos} photo${p.pending_photos===1?'':'s'} pending`));
+    if(p.missing_attachments)alerts.appendChild(_savedPitLine('pit-alert missing',`${p.missing_attachments} missing`));
+    button.appendChild(alerts);
+  }
   button.addEventListener('click',()=>loadPit(p.site_id,p.pit_id));
   return button;
 }
